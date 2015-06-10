@@ -24,6 +24,7 @@
     <ClCompile Include="DeviceSignal.cpp" />
     <ClCompile Include="BridgeConfig.cpp" />
     <ClCompile Include="AllJoynAbout.cpp" />
+    <ClCompile Include="BridgeLog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -46,5 +47,6 @@
     <ClInclude Include="DsbServiceNames.h" />
     <ClInclude Include="IAdapter.h" />
     <ClInclude Include="AllJoynAbout.h" />
+    <ClInclude Include="BridgeLog.h" />
   </ItemGroup>
 </Project>

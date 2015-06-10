@@ -37,10 +37,14 @@ static const size_t DEVICE_GUID_STRING_LEN = 39;   // 38 chars + terminator null
 
 static const char DEFAULT_LANGUAGE_FOR_ABOUT[] = "en";
 static const WCHAR UNKNOWN_ADAPTER[] = L"Unknown device";
-static const WCHAR DSB_MANUFACTURER[] = L"Microsoft";
-static const WCHAR DSB_VERSION[] = L"0.0.0.0";
-static const WCHAR DSB_MODEL[] = L"DSB";
-static const WCHAR DSB_DESCRIPTION[] = L"Device System Bridge";
+static const WCHAR UNKNOWN_MANUFACTURER[] = L"Unknown";
+static const WCHAR UNKNOWN_VERSION[] = L"0.0.0.0";
+static const WCHAR DSB_DEFAULT_APP_NAME[] = L"Device System Bridge";
+static const WCHAR DSB_DEFAULT_MODEL[] = L"DSB";
+static const WCHAR DSB_DEFAULT_DESCRIPTION[] = L"Device System Bridge";
+// {EF116A26-9888-47C2-AE85-B77142F24EFA}
+static const GUID DSB_DEFAULT_APP_GUID =
+{ 0xef116a26, 0x9888, 0x47c2,{ 0xae, 0x85, 0xb7, 0x71, 0x42, 0xf2, 0x4e, 0xfa } };
 
 AllJoynAbout::AllJoynAbout()
     : m_aboutData(NULL),
@@ -182,9 +186,30 @@ QStatus AllJoynAbout::SetDescription(_In_z_ const wchar_t * value)
     return alljoyn_aboutdata_setdescription(m_aboutData, stringValue.c_str(), DEFAULT_LANGUAGE_FOR_ABOUT);
 }
 
-QStatus AllJoynAbout::SetApplicationName(_In_z_ const char *value)
+QStatus AllJoynAbout::SetApplicationName(_In_z_ const wchar_t *value)
 {
-    return alljoyn_aboutdata_setappname(m_aboutData, value, DEFAULT_LANGUAGE_FOR_ABOUT);
+    std::string stringValue = To_Ascii_String(value);
+    return alljoyn_aboutdata_setappname(m_aboutData, stringValue.c_str(), DEFAULT_LANGUAGE_FOR_ABOUT);
+}
+
+QStatus AllJoynAbout::SetApplicationGuid(_In_ const GUID &value)
+{
+    uint8_t buffer[sizeof(value)];
+    int offset = 0;
+
+    // convert GUID into array of unsigned int 8 using the right endian order
+    *((unsigned long *)&buffer[offset]) = _byteswap_ulong(value.Data1);
+    offset += sizeof(value.Data1);
+    *((unsigned short *)&buffer[offset]) = _byteswap_ushort(value.Data2);
+    offset += sizeof(value.Data2);
+    *((unsigned short *)&buffer[offset]) = _byteswap_ushort(value.Data3);
+    offset += sizeof(value.Data3);
+    for (int index = 0; index < sizeof(value.Data4); index++)
+    {
+        buffer[offset + index] = value.Data4[index];
+    }
+
+    return alljoyn_aboutdata_setappid(m_aboutData, buffer, sizeof(buffer));
 }
 
 QStatus AllJoynAbout::SetDefaultAboutData()
@@ -204,9 +229,6 @@ QStatus AllJoynAbout::SetDefaultAboutData()
     // - Description
     // - SoftwareVersion
 
-    // app Id is always the bridge app Id
-    alljoyn_aboutdata_setappid(m_aboutData, DSB_APP_GUID, sizeof(DSB_APP_GUID));
-
     // default device ID to bridge device Id
     status = GetDeviceID(deviceId);
     if (ER_OK == status)
@@ -216,11 +238,12 @@ QStatus AllJoynAbout::SetDefaultAboutData()
 
     // default about data to bridge about data
     SetDeviceName(UNKNOWN_ADAPTER);
-    SetApplicationName(DSB_APP_NAME);
-    SetManufacturer(DSB_MANUFACTURER);
-    SetModel(DSB_MODEL);
-    SetVersion(DSB_VERSION);
-    SetDescription(DSB_DESCRIPTION);
+    SetApplicationName(DSB_DEFAULT_APP_NAME);
+    SetApplicationGuid(DSB_DEFAULT_APP_GUID);
+    SetManufacturer(UNKNOWN_MANUFACTURER);
+    SetModel(DSB_DEFAULT_MODEL);
+    SetVersion(UNKNOWN_VERSION);
+    SetDescription(DSB_DEFAULT_DESCRIPTION);
 
     if (!alljoyn_aboutdata_isvalid(m_aboutData, DEFAULT_LANGUAGE_FOR_ABOUT))
     {

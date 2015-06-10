@@ -96,6 +96,50 @@ void AllJoynHelper::EncodeStringForServiceName(_In_ Platform::String ^inString, 
     }
 }
 
+void AllJoynHelper::EncodeStringForRootServiceName(Platform::String ^ inString, std::string & encodeString)
+{
+    char currentChar = '\0';
+
+    encodeString.clear();
+
+    // only keep alpha numeric char and '.'
+    for (size_t index = 0; index < inString->Length(); index++)
+    {
+        wchar_t origChar = inString->Data()[index];
+        if (::isalpha(origChar) ||
+            '.' == char(origChar))
+        {
+            encodeString += char(origChar);
+            currentChar = char(origChar);
+        }
+        else if (::isdigit(char(origChar)))
+        {
+            // add '_' before digit if digit immediately follow '.'
+            if ('.' == currentChar)
+            {
+                encodeString += "_";
+            }
+            encodeString += char(origChar);
+            currentChar = char(origChar);
+        }
+    }
+}
+
+void AllJoynHelper::EncodeStringForAppName(Platform::String ^ inString, std::string & encodeString)
+{
+    encodeString.clear();
+
+    // only use alpha numeric char
+    for (size_t index = 0; index < inString->Length(); index++)
+    {
+        wchar_t origChar = inString->Data()[index];
+        if (::isalnum(origChar))
+        {
+            encodeString += char(origChar);
+        }
+    }
+}
+
 QStatus AllJoynHelper::SetMsgArg(_In_ IAdapterValue ^adapterValue, _Inout_ alljoyn_msgarg msgArg)
 {
     QStatus status = ER_OK;

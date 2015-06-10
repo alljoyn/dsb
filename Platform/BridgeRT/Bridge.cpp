@@ -23,12 +23,12 @@
 #include "ConfigManager.h"
 #include "BridgeDevice.h"
 #include "AllJoynHelper.h"
+#include "BridgeLog.h"
 
 using namespace Platform;
 using namespace Platform::Collections;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::Foundation;
-
 using namespace BridgeRT;
 using namespace DsbCommon;
 using namespace std;
@@ -47,16 +47,20 @@ DsbBridge::DsbBridge(IAdapter^ adapter)
 {
     memset(&m_ctrlEvents, 0, sizeof(m_ctrlEvents));
     g_TheOneOnlyInstance = this;
+
+    BridgeLog::Instance()->LogInfo(m_adapter->AdapterName);
 }
 
 DsbBridge::~DsbBridge()
 {
     Shutdown();
-    m_adapter = nullptr;
+    m_adapter = nullptr;   
 }
 
 DWORD WINAPI MonitorThread(LPVOID pContext)
 {
+    BridgeLog::Instance()->LogEnter(__FUNCTIONW__);
+
     const size_t RESET_EVT_IDX = offsetof(SControlEvents, hResetEvt) / sizeof(HANDLE);
     const size_t SHUTDOWN_EVT_IDX = offsetof(SControlEvents, hShutdownEvt) / sizeof(HANDLE);
     // Treat the Struct of HANDLEs as an Array of Handles
@@ -77,9 +81,11 @@ DWORD WINAPI MonitorThread(LPVOID pContext)
             goto Leave;
 
         case RESET_EVT_IDX:
+            BridgeLog::Instance()->LogInfo(L"Adapter Reset Event");
             hr = (HRESULT)g_TheOneOnlyInstance->Reset();
             if (hr != S_OK)
             {
+                BridgeLog::Instance()->LogError("Adapter Reset Failed", hr);
                 goto Leave;
             }
             ResetEvent(pEvents[RESET_EVT_IDX]);
@@ -92,13 +98,16 @@ DWORD WINAPI MonitorThread(LPVOID pContext)
     }
 
 Leave:
+    BridgeLog::Instance()->LogLeave(__FUNCTIONW__, hr);
     return hr;
 }
 
 int32
 DsbBridge::Initialize()
 {
+    BridgeLog::Instance()->LogEnter(__FUNCTIONW__);    
     int32 hr = S_OK;
+
     AutoLock bridgeLocker(&this->m_bridgeLock, true);
 
     // initialize AllJoyn
@@ -107,7 +116,7 @@ DsbBridge::Initialize()
         QStatus status = alljoyn_init();
         if (ER_OK != status)
         {
-            hr = ER_FAIL;
+            hr = HRESULT_FROM_QSTATUS(status);
             goto Leave;
         }
         m_alljoynInitialized = true;
@@ -149,16 +158,18 @@ DsbBridge::Initialize()
 
 Leave:
     if (FAILED(hr))
-    {
+    {        
         this->Shutdown();
     }
 
+    BridgeLog::Instance()->LogLeave(__FUNCTIONW__, hr);
     return hr;
 }
 
 int32
 DsbBridge::InitializeInternal()
 {
+    BridgeLog::Instance()->LogEnter(__FUNCTIONW__);
     int32 hr = S_OK;
     QStatus status = ER_OK;
 
@@ -179,7 +190,7 @@ DsbBridge::InitializeInternal()
     status = this->m_configManager.ConnectToAllJoyn(m_adapter);
     if (ER_OK != status)
     {
-        hr = E_FAIL;
+        hr = HRESULT_FROM_QSTATUS(status);
         goto Leave;
     }
 
@@ -194,6 +205,7 @@ DsbBridge::InitializeInternal()
     hr = this->registerAdapterSignalHandlers(true);
 
 Leave:
+    BridgeLog::Instance()->LogLeave(__FUNCTIONW__);
     return hr;
 }
 
@@ -201,6 +213,7 @@ Leave:
 int32
 DsbBridge::Shutdown()
 {
+    BridgeLog::Instance()->LogInfo(L"DsbBridge::Shutdown");
     int32 hr = S_OK;
     AutoLock bridgeLocker(&this->m_bridgeLock, true);
 
@@ -231,11 +244,14 @@ DsbBridge::Shutdown()
         alljoyn_shutdown();
         m_alljoynInitialized = false;
     }
+
+    BridgeLog::Instance()->LogLeave(__FUNCTIONW__, hr);
     return hr;
 }
 
 int32 DsbBridge::ShutdownInternal()
 {
+    BridgeLog::Instance()->LogEnter(__FUNCTIONW__);
     HRESULT hr = S_OK;
 
     this->m_configManager.Shutdown();
@@ -251,6 +267,7 @@ int32 DsbBridge::ShutdownInternal()
     }
     this->m_deviceList.clear();
 
+    BridgeLog::Instance()->LogLeave(__FUNCTIONW__);
     return hr;
 }
 

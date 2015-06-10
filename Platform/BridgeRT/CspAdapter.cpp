@@ -50,7 +50,7 @@ QStatus CspAdapter::Initialize(_In_ alljoyn_busattachment* bus, _In_ ConfigManag
     try
     {
         m_busObjectPath = "/";
-        m_busObjectPath += DSB_APP_NAME;
+        m_busObjectPath += ROOT_NAME_FOR_CSP_BUSOBJECT;
         m_busObjectPath += "/AdapterConfig";
     }
     catch (std::bad_alloc& exception)
