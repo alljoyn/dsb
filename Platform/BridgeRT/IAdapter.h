@@ -336,6 +336,18 @@ namespace BridgeRT
         {
             Platform::String^ get();
         }
+        property Platform::String^ ExposedAdapterPrefix
+        {
+            Platform::String^ get();
+        }
+        property Platform::String^ ExposedApplicationName
+        {
+            Platform::String^ get();
+        }
+        property Platform::Guid ExposedApplicationGuid
+        {
+            Platform::Guid get();
+        }
 
         // Adapter signals
         property IAdapterSignalVector^ Signals

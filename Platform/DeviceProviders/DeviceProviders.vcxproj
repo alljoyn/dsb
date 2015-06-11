@@ -233,6 +233,7 @@
     <ClInclude Include="AllJoynHelpers.h" />
     <ClInclude Include="AllJoynInterface.h" />
     <ClInclude Include="AllJoynMessageArgStructure.h" />
+    <ClInclude Include="AllJoynMessageArgVariant.h" />
     <ClInclude Include="AllJoynMethod.h" />
     <ClInclude Include="AllJoynProperty.h" />
     <ClInclude Include="AllJoynService.h" />

@@ -36,6 +36,8 @@ namespace BridgeRT
         static void BuildBusObjectName(_In_ Platform::String ^inString, _Inout_ std::string &builtName);
         static void BuildPropertyOrMethodOrSignalName(_In_ Platform::String ^inString, _Inout_ std::string &builtName);
         static void EncodeStringForServiceName(_In_ Platform::String ^inString, _Out_ std::string &encodeString);
+        static void EncodeStringForRootServiceName(_In_ Platform::String ^inString, _Out_ std::string &encodeString);
+        static void EncodeStringForAppName(_In_ Platform::String ^inString, _Out_ std::string &encodeString);
     };
 }
 

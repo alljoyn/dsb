@@ -89,6 +89,8 @@ QStatus BridgeDevice::Initialize(IAdapterDevice ^device)
     }
 
     // set device info in about
+    m_about.SetApplicationName(DsbBridge::SingleInstance()->GetAdapter()->ExposedApplicationName->Data());
+    m_about.SetApplicationGuid(DsbBridge::SingleInstance()->GetAdapter()->ExposedApplicationGuid);
     m_about.SetDeviceName(m_device->Name->Data());
     m_about.SetManufacturer(m_device->Vendor->Data());
     m_about.SetModel(m_device->Model->Data());
@@ -194,26 +196,49 @@ QStatus BridgeDevice::BuildServiceName()
     QStatus status = ER_OK;
     string tempString;
     
-    // set root for all names AllJoyn needs
     m_RootStringForAllJoynNames.clear();
-    m_RootStringForAllJoynNames = DEFAULT_ROOT_SERVICE_NAME + ".";
 
-    //Add Adapter Name to the service name
-    AllJoynHelper::EncodeStringForServiceName(DsbBridge::SingleInstance()->GetAdapter()->AdapterName, tempString);
+    // set root/prefix for AllJoyn service name (aka bus name) and interface names :
+    // 'prefixForAllJoyn'.'AdapterName'.'DeviceName'
+    AllJoynHelper::EncodeStringForRootServiceName(DsbBridge::SingleInstance()->GetAdapter()->ExposedAdapterPrefix, tempString);
+    if (tempString.empty())
+    {
+        status = ER_BUS_BAD_BUS_NAME;
+        goto leave;
+    }
     m_RootStringForAllJoynNames += tempString;
+
+    AllJoynHelper::EncodeStringForServiceName(DsbBridge::SingleInstance()->GetAdapter()->AdapterName, tempString);
+    if (tempString.empty())
+    {
+        status = ER_BUS_BAD_BUS_NAME;
+        goto leave;
+    }
     m_RootStringForAllJoynNames += ".";
+    m_RootStringForAllJoynNames += tempString;
 
     AllJoynHelper::EncodeStringForServiceName(m_device->Name, tempString);
+    if (tempString.empty())
+    {
+        status = ER_BUS_BAD_BUS_NAME;
+        goto leave;
+    }
+    m_RootStringForAllJoynNames += ".";
     m_RootStringForAllJoynNames += tempString;
 
-    // set service name
+    // set service name (aka bus name)
     m_ServiceName.clear();
     m_ServiceName = m_RootStringForAllJoynNames;
-    m_ServiceName += ".";
 
+    // add serial number to service name if not empty
     AllJoynHelper::EncodeStringForServiceName(m_device->SerialNumber, tempString);
-    m_ServiceName += tempString;
+    if (!tempString.empty())
+    {
+        m_ServiceName += ".";
+        m_ServiceName += tempString;
+    }
 
+leave:
     return status;
 }
 
@@ -290,6 +315,7 @@ QStatus BridgeDevice::InitializeAllJoyn()
     QStatus status = ER_OK;
     alljoyn_buslistener_callbacks busListenerCallbacks = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 	ConfigManager *configManager = nullptr;
+    string appName;
 
     // verify if already connected
     if (NULL != m_AJBusAttachment)
@@ -298,7 +324,8 @@ QStatus BridgeDevice::InitializeAllJoyn()
     }
 
     // create the bus attachment
-    m_AJBusAttachment = alljoyn_busattachment_create(DSB_APP_NAME, QCC_TRUE);
+    AllJoynHelper::EncodeStringForAppName(DsbBridge::SingleInstance()->GetAdapter()->ExposedApplicationName, appName);
+    m_AJBusAttachment = alljoyn_busattachment_create(appName.c_str(), QCC_TRUE);
     if (NULL == m_AJBusAttachment)
     {
         status = ER_OUT_OF_MEMORY;
@@ -400,7 +427,7 @@ QStatus BridgeDevice::ConnectToAllJoyn()
         goto Leave;
     }
 
-    status = alljoyn_busattachment_advertisename(m_AJBusAttachment, DSB_SERVICE_NAME, alljoyn_sessionopts_get_transports(opts));
+    status = alljoyn_busattachment_advertisename(m_AJBusAttachment, m_ServiceName.c_str(), alljoyn_sessionopts_get_transports(opts));
     if (ER_OK != status)
     {
         goto Leave;
@@ -419,7 +446,10 @@ void BridgeDevice::ShutdownAllJoyn()
     if (NULL != m_AJBusAttachment)
     {
         // cancel advertised name and session port binding
-        alljoyn_busattachment_canceladvertisename(m_AJBusAttachment, DSB_SERVICE_NAME, ALLJOYN_TRANSPORT_ANY);
+        if (!m_ServiceName.empty())
+        {
+            alljoyn_busattachment_canceladvertisename(m_AJBusAttachment, m_ServiceName.c_str(), ALLJOYN_TRANSPORT_ANY);
+        }
         alljoyn_busattachment_unbindsessionport(m_AJBusAttachment, DSB_SERVICE_PORT);
 
         if (!m_ServiceName.empty())

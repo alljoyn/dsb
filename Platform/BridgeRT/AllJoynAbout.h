@@ -41,7 +41,8 @@ namespace BridgeRT
 		QStatus SetManufacturer(_In_z_ const wchar_t *value);
 		QStatus SetDeviceName(_In_z_ const wchar_t *value);
 		QStatus SetVersion(_In_z_ const wchar_t *value);
-		QStatus SetApplicationName(_In_z_ const char *value);
+        QStatus SetApplicationName(_In_z_ const wchar_t *value);
+        QStatus SetApplicationGuid(_In_ const GUID &value);
         QStatus SetDeviceId(_In_z_ const wchar_t *value);
         QStatus SetModel(_In_z_ const wchar_t *value);
         QStatus SetDescription(_In_z_ const wchar_t *value);

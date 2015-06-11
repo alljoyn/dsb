@@ -127,5 +127,8 @@
     <ClInclude Include="AllJoynStatus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AllJoynMessageArgVariant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -25,6 +25,8 @@ class BridgeConfig;
 
 namespace BridgeRT
 {
+    static const char* ROOT_NAME_FOR_CSP_BUSOBJECT = "BridgeService";
+
     class AllJoynFileTransfer;
     ref class DsbBridge;
 
@@ -57,6 +59,7 @@ namespace BridgeRT
     private:
         QStatus	ShutdownAllJoyn();
         QStatus	InitializeCSPBusObjects();
+        QStatus BuildServiceName();
 
         // callback for session listener and session port listener
         static QCC_BOOL AJ_CALL AcceptSessionJoinerCallback(_In_ const void* context, _In_ alljoyn_sessionport sessionPort, _In_z_ const char* joiner, _In_ const alljoyn_sessionopts opts);
@@ -74,6 +77,7 @@ namespace BridgeRT
         alljoyn_buslistener	m_AJBusListener;
         alljoyn_sessionlistener m_sessionListener;
         alljoyn_sessionportlistener	m_sessionPortListener;
+        std::string m_serviceName;
 
         // authentication management
         BridgeAuthHandler m_authHandler;

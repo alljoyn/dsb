@@ -17,12 +17,14 @@
 #include "pch.h"
 
 #include "Bridge.h"
+#include "BridgeLog.h"
 #include "DsbServiceNames.h"
 #include "CspAdapter.h"
 #include "CspBridge.h"
 #include "AllJoynAbout.h"
 #include "AllJoynFileTransfer.h"
 #include "BridgeConfig.h"
+#include "AllJoynHelper.h"
 
 #include "ConfigManager.h"
 
@@ -81,12 +83,17 @@ int32 ConfigManager::Shutdown()
 
 QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
 {
+    const int MAX_ATTEMPTS = 60;
+    const int ATTEMPT_DELAY_MS = 500;
+
+    BridgeLog::Instance()->LogEnter(__FUNCTIONW__);
     QStatus status = ER_OK;
     alljoyn_buslistener_callbacks busListenerCallbacks = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
     alljoyn_sessionportlistener_callbacks sessionPortListenerCallbacks = { ConfigManager::AcceptSessionJoinerCallback, ConfigManager::SessionJoined };
     alljoyn_sessionlistener_callbacks sessionListenerCallbacks = { NULL, NULL, (alljoyn_sessionlistener_sessionmemberremoved_ptr)ConfigManager::MemberRemoved };
     alljoyn_sessionopts opts = NULL;
     alljoyn_sessionport sp = DSB_SERVICE_PORT;
+    std::string appName;
 
     // sanity check
     if (nullptr == adapter)
@@ -104,10 +111,20 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     // save away adapter
     m_adapter = adapter;
 
+    // build service name
+    status = BuildServiceName();
+    if (ER_OK != status)
+    {
+        BridgeLog::Instance()->LogInfo(L"Could not build service name.");
+        goto Leave;
+    }
+
     // create the bus attachment
-    m_AJBusAttachment = alljoyn_busattachment_create(DSB_APP_NAME, QCC_TRUE);
+    AllJoynHelper::EncodeStringForAppName(m_adapter->ExposedApplicationName, appName);
+    m_AJBusAttachment = alljoyn_busattachment_create(appName.c_str(), QCC_TRUE);
     if (NULL == m_AJBusAttachment)
     {
+        BridgeLog::Instance()->LogInfo(L"Could not create bus attachment.");
         status = ER_OUT_OF_MEMORY;
         goto Leave;
     }
@@ -116,6 +133,7 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     m_AJBusListener = alljoyn_buslistener_create(&busListenerCallbacks, NULL);
     if (NULL == m_AJBusListener)
     {
+        BridgeLog::Instance()->LogInfo(L"Could not create bus listener.");
         status = ER_OUT_OF_MEMORY;
         goto Leave;
     }
@@ -127,6 +145,7 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     status = alljoyn_busattachment_start(m_AJBusAttachment);
     if (ER_OK != status)
     {
+        BridgeLog::Instance()->LogInfo(L"Could not start bus attachment.");
         goto Leave;
     }
 
@@ -134,10 +153,13 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     status = m_about.Initialize(m_AJBusAttachment);
     if (ER_OK != status)
     {
+        BridgeLog::Instance()->LogInfo(L"Could not initialize.");
         goto Leave;
     }
 
     // set adapter info in about
+    m_about.SetApplicationName(m_adapter->ExposedApplicationName->Data());
+    m_about.SetApplicationGuid(m_adapter->ExposedApplicationGuid);
     m_about.SetManufacturer(m_adapter->Vendor->Data());
     m_about.SetDeviceName(m_adapter->AdapterName->Data());
     m_about.SetVersion(m_adapter->Version->Data());
@@ -145,15 +167,40 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     status = InitializeCSPBusObjects();
     if (ER_OK != status)
     {
+        BridgeLog::Instance()->LogInfo(L"Problem initializing CSP Bus Objects.");
         goto Leave;
     }
 
-    // connect the bus attachment
-    status = alljoyn_busattachment_connect(m_AJBusAttachment, NULL);
-    if (ER_OK != status)
+    //
+    // Due to a legacy issue with the FltMgr Driver, it is possible that the NamedPipeTrigger (NpSvcTrigger) filter driver will not
+    // be attached to the Named Pipe Device Driver.  Normally when a client tries to connect to alljoyn, MSAJAPI (the alljoyn library)
+    // will open a pipe connection with the AllJoyn Router Service.  The AllJoyn Router Service is configured as demand start.  The 
+    // act of connecting to the router should trigger the AllJoyn Router Service to start through the NpSvcTrigger filter drive.  On 
+    // boot however, the NpSvcTrigger filter driver isn't properly attached to the Named Pipe Driver for up to 15 seconds.  During this
+    // time, if a client tries to connect to AllJoyn an ER_TRANSPORT_NOT_AVAILABLE error is returned from AllJoyn instead.
+    //
+    // To mitigate this issue, the following loop attempts to reconnect for up to 30 seconds.
+    // 
+    int attempt = 0;
+    for (;;)
     {
-        goto Leave;
+        // connect the bus attachment
+        status = alljoyn_busattachment_connect(m_AJBusAttachment, NULL);
+        if (ER_OK == status)
+        {
+            break;
+        }
+
+        if (attempt >= MAX_ATTEMPTS)
+        {
+            goto Leave;
+        }
+
+        BridgeLog::Instance()->LogInfo(L"Retrying bus attachment.");
+        ++attempt;
+        Sleep(ATTEMPT_DELAY_MS);
     }
+   
 
     /*
     * Advertise this service on the bus.
@@ -163,9 +210,10 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     * 2) Create a session.
     * 3) Advertise the well-known name.
     */
-    status = alljoyn_busattachment_requestname(m_AJBusAttachment, DSB_SERVICE_NAME, DBUS_NAME_FLAG_REPLACE_EXISTING | DBUS_NAME_FLAG_DO_NOT_QUEUE);
+    status = alljoyn_busattachment_requestname(m_AJBusAttachment, m_serviceName.c_str(), DBUS_NAME_FLAG_REPLACE_EXISTING | DBUS_NAME_FLAG_DO_NOT_QUEUE);
     if (ER_OK != status)
     {
+        BridgeLog::Instance()->LogInfo(L"Failed to request bus attachment name.");
         goto Leave;
     }
 
@@ -173,6 +221,7 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     m_sessionListener = alljoyn_sessionlistener_create(&sessionListenerCallbacks, this);
     if (NULL == m_sessionListener)
     {
+        BridgeLog::Instance()->LogInfo(L"Failed to create session listener.");
         status = ER_OUT_OF_MEMORY;
         goto Leave;
     }
@@ -180,6 +229,7 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     m_sessionPortListener = alljoyn_sessionportlistener_create(&sessionPortListenerCallbacks, this);
     if (NULL == m_sessionPortListener)
     {
+        BridgeLog::Instance()->LogInfo(L"Failed to create session port listener.");
         status = ER_OUT_OF_MEMORY;
         goto Leave;
     }
@@ -187,6 +237,7 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     opts = alljoyn_sessionopts_create(ALLJOYN_TRAFFIC_TYPE_MESSAGES, QCC_TRUE, ALLJOYN_PROXIMITY_ANY, ALLJOYN_TRANSPORT_ANY);
     if (NULL == opts)
     {
+        BridgeLog::Instance()->LogInfo(L"Failed to create session options.");
         status = ER_OUT_OF_MEMORY;
         goto Leave;
     }
@@ -194,12 +245,14 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     status = alljoyn_busattachment_bindsessionport(m_AJBusAttachment, &sp, opts, m_sessionPortListener);
     if (ER_OK != status)
     {
+        BridgeLog::Instance()->LogInfo(L"Failed to bind session port.");
         goto Leave;
     }
 
-    status = alljoyn_busattachment_advertisename(m_AJBusAttachment, DSB_SERVICE_NAME, alljoyn_sessionopts_get_transports(opts));
+    status = alljoyn_busattachment_advertisename(m_AJBusAttachment, m_serviceName.c_str(), alljoyn_sessionopts_get_transports(opts));
     if (ER_OK != status)
     {
+        BridgeLog::Instance()->LogInfo(L"Failed to advertise service name");
         goto Leave;
     }
 
@@ -217,6 +270,7 @@ Leave:
         ShutdownAllJoyn();
     }
 
+    BridgeLog::Instance()->LogLeave(__FUNCTIONW__, status);
     return status;
 }
 
@@ -233,7 +287,10 @@ QStatus ConfigManager::ShutdownAllJoyn()
     // note that destruction of all alljoyn bus objects (CSP, about and device related)
     // and interfaces must be performed before bus attachment destruction
     // cancel advertised name and session port binding
-    alljoyn_busattachment_canceladvertisename(this->m_AJBusAttachment, DSB_SERVICE_NAME, ALLJOYN_TRANSPORT_ANY);
+    if (!m_serviceName.empty())
+    {
+        alljoyn_busattachment_canceladvertisename(this->m_AJBusAttachment, m_serviceName.c_str(), ALLJOYN_TRANSPORT_ANY);
+    }
     alljoyn_busattachment_unbindsessionport(this->m_AJBusAttachment, DSB_SERVICE_PORT);
 
     if (NULL != this->m_sessionPortListener)
@@ -242,7 +299,11 @@ QStatus ConfigManager::ShutdownAllJoyn()
         this->m_sessionPortListener = NULL;
     }
 
-    alljoyn_busattachment_releasename(this->m_AJBusAttachment, DSB_SERVICE_NAME);
+    if (!m_serviceName.empty())
+    {
+        alljoyn_busattachment_releasename(this->m_AJBusAttachment, m_serviceName.c_str());
+        m_serviceName.clear();
+    }
     alljoyn_busattachment_disconnect(this->m_AJBusAttachment, nullptr);
 
     // destroy CSP interfaces
@@ -564,4 +625,43 @@ void ConfigManager::MemberRemoved(_In_  void* context, _In_ alljoyn_sessionid se
 
 leave:
     return;
+}
+
+QStatus ConfigManager::BuildServiceName()
+{
+    QStatus status = ER_OK;
+    std::string tempString;
+
+    m_serviceName.clear();
+
+    // sanity check
+    if (nullptr == m_adapter)
+    {
+        status = ER_INVALID_DATA;
+        goto leave;
+    }
+
+    // set root/prefix for AllJoyn service name (aka bus name) and interface names :
+    // 'prefixForAllJoyn'.DeviceSystemBridge.'AdapterName
+    AllJoynHelper::EncodeStringForRootServiceName(m_adapter->ExposedAdapterPrefix, tempString);
+    if (tempString.empty())
+    {
+        status = ER_BUS_BAD_BUS_NAME;
+        goto leave;
+    }
+    m_serviceName += tempString;
+    m_serviceName += ".DeviceSystemBridge";
+
+    AllJoynHelper::EncodeStringForServiceName(DsbBridge::SingleInstance()->GetAdapter()->AdapterName, tempString);
+    if (tempString.empty())
+    {
+        status = ER_BUS_BAD_BUS_NAME;
+        goto leave;
+    }
+    m_serviceName += ".";
+    m_serviceName += tempString;
+
+
+leave:
+    return status;
 }

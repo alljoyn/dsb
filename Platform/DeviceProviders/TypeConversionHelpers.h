@@ -19,6 +19,7 @@
 #include "pch.h"
 #include "AllJoynHelpers.h"
 #include "AllJoynMessageArgStructure.h"
+#include "AllJoynMessageArgVariant.h"
 #include "collection.h"
 
 ref class TypeConversionHelpers
@@ -574,16 +575,15 @@ private:
 
         if (static_cast<alljoyn_typeid>(signature[0]) == ALLJOYN_VARIANT)
         {
-            alljoyn_msgarg variantArg;
-            RETURN_IF_QSTATUS_ERROR(alljoyn_msgarg_get(argument, "v", &variantArg));
+            RETURN_IF_QSTATUS_ERROR(alljoyn_msgarg_get(argument, "v", &argument));
+            alljoyn_msgarg_signature(argument, signature, c_MaximumSignatureLength);
+        }
 
-            alljoyn_msgarg_signature(variantArg, signature, c_MaximumSignatureLength);
-            return GetAllJoynMessageArg(variantArg, signature, value);
-        }
-        else
-        {
-            return GetAllJoynMessageArg(argument, signature, value);
-        }
+        Platform::Object^ variantValue = nullptr;
+        RETURN_IF_QSTATUS_ERROR(GetAllJoynMessageArg(argument, signature, &variantValue));
+
+        *value = ref new DeviceProviders::AllJoynMessageArgVariant(signature, variantValue);
+        return QStatus::ER_OK;
     }
 
     template<class T>

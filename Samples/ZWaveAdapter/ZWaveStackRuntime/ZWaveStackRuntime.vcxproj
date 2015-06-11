@@ -1,0 +1,615 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\aes\aes.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\aes\aescpp.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\aes\aesopt.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\aes\aestab.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\aes\brg_endian.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\aes\brg_types.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Bitfield.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Alarm.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\ApplicationStatus.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Association.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\AssociationCommandConfiguration.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Basic.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\BasicWindowCovering.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Battery.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\ClimateControlSchedule.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Clock.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\CommandClass.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\CommandClasses.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Configuration.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\ControllerReplication.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\CRC16Encap.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\DoorLock.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\DoorLockLogging.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\EnergyProduction.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Hail.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Indicator.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Language.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Lock.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\ManufacturerSpecific.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Meter.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\MeterPulse.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\MultiCmd.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\MultiInstance.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\MultiInstanceAssociation.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\NodeNaming.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\NoOperation.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Powerlevel.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Proprietary.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Protection.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\SceneActivation.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Security.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\SensorAlarm.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\SensorBinary.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\SensorMultilevel.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchAll.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchBinary.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchMultilevel.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchToggleBinary.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchToggleMultilevel.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatFanMode.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatFanState.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatMode.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatOperatingState.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatSetpoint.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\TimeParameters.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\UserCode.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\Version.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\command_classes\WakeUp.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Defs.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\DoxygenMain.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Driver.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Group.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Manager.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Msg.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Node.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Notification.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Options.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\Controller.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\Event.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\FileOps.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\Log.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\Mutex.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\Ref.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\SerialController.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\Stream.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\Thread.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\TimeStamp.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\Wait.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\winRT\EventImpl.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\winRT\FileOpsImpl.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\winRT\HidControllerWinRT.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\winRT\LogImpl.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\winRT\MutexImpl.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\winRT\SerialControllerImpl.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\winRT\ThreadImpl.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\winRT\TimeStampImpl.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\platform\winRT\WaitImpl.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Scene.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\Utils.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\Value.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueBool.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueButton.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueByte.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueDecimal.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueID.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueInt.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueList.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueRaw.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueSchedule.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueShort.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueStore.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueString.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\tinyxml\tinystr.h" />
+    <ClInclude Include="..\openzwave-1.2.919\cpp\tinyxml\tinyxml.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\aes\aescrypt.c">
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\aes\aeskey.c">
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\aes\aestab.c">
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\aes\aes_modes.c">
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">false</CompileAsWinRT>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsWinRT>
+    </ClCompile>
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Alarm.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\ApplicationStatus.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Association.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\AssociationCommandConfiguration.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Basic.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\BasicWindowCovering.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Battery.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\ClimateControlSchedule.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Clock.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\CommandClass.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\CommandClasses.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Configuration.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\ControllerReplication.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\CRC16Encap.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\DoorLock.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\DoorLockLogging.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\EnergyProduction.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Hail.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Indicator.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Language.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Lock.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\ManufacturerSpecific.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Meter.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\MeterPulse.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\MultiCmd.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\MultiInstance.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\MultiInstanceAssociation.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\NodeNaming.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\NoOperation.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Powerlevel.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Proprietary.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Protection.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\SceneActivation.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Security.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\SensorAlarm.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\SensorBinary.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\SensorMultilevel.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchAll.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchBinary.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchMultilevel.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchToggleBinary.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\SwitchToggleMultilevel.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatFanMode.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatFanState.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatMode.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatOperatingState.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\ThermostatSetpoint.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\TimeParameters.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\UserCode.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\Version.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\command_classes\WakeUp.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\Driver.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\Group.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\Manager.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\Msg.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\Node.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\Options.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\Controller.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\Event.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\FileOps.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\Log.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\Mutex.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\SerialController.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\Stream.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\Thread.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\TimeStamp.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\Wait.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\winRT\EventImpl.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\winRT\FileOpsImpl.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\winRT\HidControllerWinRT.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\winRT\LogImpl.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\winRT\MutexImpl.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\winRT\SerialControllerImpl.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\winRT\ThreadImpl.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\winRT\TimeStampImpl.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\platform\winRT\WaitImpl.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\Scene.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\Utils.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\Value.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueBool.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueButton.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueByte.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueDecimal.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueInt.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueList.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueRaw.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueSchedule.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueShort.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueStore.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\value_classes\ValueString.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\src\vers.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\tinyxml\tinystr.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\tinyxml\tinyxml.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\tinyxml\tinyxmlerror.cpp" />
+    <ClCompile Include="..\openzwave-1.2.919\cpp\tinyxml\tinyxmlparser.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="config\2gig\ct100.xml" />
+    <Xml Include="config\2gig\ct30.xml" />
+    <Xml Include="config\act\lfm20.xml" />
+    <Xml Include="config\act\zdm230.xml" />
+    <Xml Include="config\act\zdw103.xml" />
+    <Xml Include="config\act\zdw232.xml" />
+    <Xml Include="config\act\zir010.xml" />
+    <Xml Include="config\act\zrp110.xml" />
+    <Xml Include="config\act\zrw103.xml" />
+    <Xml Include="config\aeon_labs\alms.xml" />
+    <Xml Include="config\aeon_labs\doorwindow.xml" />
+    <Xml Include="config\aeon_labs\hem.xml" />
+    <Xml Include="config\aeon_labs\hemg2.xml" />
+    <Xml Include="config\aeon_labs\keyfob.xml" />
+    <Xml Include="config\aeon_labs\minimote.xml" />
+    <Xml Include="config\aeon_labs\recessed_doorsensor.xml" />
+    <Xml Include="config\aeon_labs\ses.xml" />
+    <Xml Include="config\assa_abloy\RealLivingCapTouch.xml" />
+    <Xml Include="config\BeNext\1poleswitch.xml" />
+    <Xml Include="config\BeNext\2poleswitch.xml" />
+    <Xml Include="config\BeNext\AlarmSound.xml" />
+    <Xml Include="config\BeNext\BuiltinDimmer.xml" />
+    <Xml Include="config\BeNext\DoorSensor.xml" />
+    <Xml Include="config\BeNext\EnergySwitch.xml" />
+    <Xml Include="config\BeNext\Molite.xml" />
+    <Xml Include="config\BeNext\PluginDimmer.xml" />
+    <Xml Include="config\BeNext\TagReader.xml" />
+    <Xml Include="config\danfoss\living.xml" />
+    <Xml Include="config\danfoss\z.xml" />
+    <Xml Include="config\device_classes.xml" />
+    <Xml Include="config\duwi\ZWES1000.xml" />
+    <Xml Include="config\eurotronic\eur_stellaz.xml" />
+    <Xml Include="config\everspringct\hsm02.xml" />
+    <Xml Include="config\everspring\an145.xml" />
+    <Xml Include="config\everspring\an158.xml" />
+    <Xml Include="config\everspring\se812.xml" />
+    <Xml Include="config\everspring\sf812.xml" />
+    <Xml Include="config\everspring\sm103.xml" />
+    <Xml Include="config\everspring\sp103.xml" />
+    <Xml Include="config\everspring\sp814.xml" />
+    <Xml Include="config\everspring\st814.xml" />
+    <Xml Include="config\everspring\st815.xml" />
+    <Xml Include="config\everspring\tse03.xml" />
+    <Xml Include="config\fibaro\fgbs001.xml" />
+    <Xml Include="config\fibaro\fgd211.xml" />
+    <Xml Include="config\fibaro\fgfs101.xml" />
+    <Xml Include="config\fibaro\fgk001.xml" />
+    <Xml Include="config\fibaro\fgms.xml" />
+    <Xml Include="config\fibaro\fgr221.xml" />
+    <Xml Include="config\fibaro\fgrgbwm441.xml" />
+    <Xml Include="config\fibaro\fgrm222.xml" />
+    <Xml Include="config\fibaro\fgs211.xml" />
+    <Xml Include="config\fibaro\fgs221.xml" />
+    <Xml Include="config\fibaro\fgss101.xml" />
+    <Xml Include="config\fibaro\fgwpe.xml" />
+    <Xml Include="config\frostdale\fdn2nxx.xml" />
+    <Xml Include="config\ge\dimmer.xml" />
+    <Xml Include="config\ge\dimmer_module.xml" />
+    <Xml Include="config\ge\relay.xml" />
+    <Xml Include="config\greenwave\powernode1.xml" />
+    <Xml Include="config\greenwave\powernode6.xml" />
+    <Xml Include="config\homeseer\hsm100.xml" />
+    <Xml Include="config\homeseer\ztroller.xml" />
+    <Xml Include="config\honeywell\th8320zw1000.xml" />
+    <Xml Include="config\horstmann\hrt4zw.xml" />
+    <Xml Include="config\intermatic\ca8900.xml" />
+    <Xml Include="config\leviton\rzi10.xml" />
+    <Xml Include="config\leviton\vrcpg.xml" />
+    <Xml Include="config\leviton\vrf01.xml" />
+    <Xml Include="config\leviton\vri06.xml" />
+    <Xml Include="config\leviton\vri10.xml" />
+    <Xml Include="config\manufacturer_specific.xml" />
+    <Xml Include="config\northq\nq92021.xml" />
+    <Xml Include="config\options.xml" />
+    <Xml Include="config\philio\pan04.xml" />
+    <Xml Include="config\philio\psm02.xml" />
+    <Xml Include="config\popp\123580.xml" />
+    <Xml Include="config\popp\123601.xml" />
+    <Xml Include="config\popp\123658.xml" />
+    <Xml Include="config\qees\reto-plugin-switch.xml" />
+    <Xml Include="config\qubino\ZMNHAA2.xml" />
+    <Xml Include="config\qubino\ZMNHBA2.xml" />
+    <Xml Include="config\qubino\ZMNHCA2.xml" />
+    <Xml Include="config\qubino\ZMNHDA2.xml" />
+    <Xml Include="config\rcs\em52-zw.xml" />
+    <Xml Include="config\rcs\pm12-zw.xml" />
+    <Xml Include="config\rcs\therm0005.xml" />
+    <Xml Include="config\rcs\therm0007.xml" />
+    <Xml Include="config\rcs\therm0009.xml" />
+    <Xml Include="config\remotec\zurc.xml" />
+    <Xml Include="config\remotec\zxt-120.xml" />
+    <Xml Include="config\schlagelink\itemp.xml" />
+    <Xml Include="config\trane\TZEMT400AB32MAA.xml" />
+    <Xml Include="config\trane\TZEMT400BB32MAA.xml" />
+    <Xml Include="config\vision\zm1601eu.xml" />
+    <Xml Include="config\vision\zs5101eu.xml" />
+    <Xml Include="config\vitrum\vitrumBS.xml" />
+    <Xml Include="config\waynedalton\WDTC-20.xml" />
+    <Xml Include="config\wenzhou\tz65d.xml" />
+    <Xml Include="config\wenzhou\tz66d.xml" />
+    <Xml Include="config\wenzhou\tz88.xml" />
+    <Xml Include="config\zipato\MiniKeypad.xml" />
+    <Xml Include="config\zipato\RGBBulb.xml" />
+    <Xml Include="config\zwave.me\iTemp.xml" />
+    <Xml Include="config\zwave.me\kfob.xml" />
+    <Xml Include="config\zwave.me\ZME_05431.xml" />
+    <Xml Include="config\zwave.me\ZME_06433.xml" />
+    <Xml Include="config\zwave.me\ZME_06436.xml" />
+    <Xml Include="config\zwave.me\ZME_WCD2.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xsd Include="config\device_classes.xsd">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Xsd>
+    <Xsd Include="config\device_configuration.xsd">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Xsd>
+    <Xsd Include="config\manufacturer_specific.xsd">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Xsd>
+    <Xsd Include="config\options.xsd">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Xsd>
+    <Xsd Include="config\zwcfg.xsd">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Xsd>
+    <Xsd Include="config\zwscene.xsd">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Xsd>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{a8ceb7ba-4d16-45e2-9d40-2f29812a094f}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectName>OpenZwaveStackLibrary</ProjectName>
+    <RootNamespace>ZWaveAdapter</RootNamespace>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <AppContainerApplication>true</AppContainerApplication>
+    <ApplicationType>Windows Store</ApplicationType>
+    <ApplicationTypeRevision>8.2</ApplicationTypeRevision>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <GenerateManifest>false</GenerateManifest>
+    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
+    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <GenerateManifest>false</GenerateManifest>
+    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
+    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>true</CompileAsWinRT>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\openzwave-1.2.919\cpp\src;..\openzwave-1.2.919\cpp\tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WINRT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WarningLevel>Level4</WarningLevel>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <DisableSpecificWarnings>4100;4244;4458;4706;4456;4127;4512;4245;4702;4264</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>true</CompileAsWinRT>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\openzwave-1.2.919\cpp\src;..\openzwave-1.2.919\cpp\tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WINRT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <DisableSpecificWarnings>4100;4244;4458;4706;4456;4127;4512;4245;4702;4264</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>true</CompileAsWinRT>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\openzwave-1.2.919\cpp\src;..\openzwave-1.2.919\cpp\tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WINRT;LITTLE_ENDIAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4244;4458;4706;4456;4127;4512;4245;4702;4264</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>true</CompileAsWinRT>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\openzwave-1.2.919\cpp\src;..\openzwave-1.2.919\cpp\tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WINRT;LITTLE_ENDIAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4244;4458;4706;4456;4127;4512;4245;4702;4264</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>true</CompileAsWinRT>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\openzwave-1.2.919\cpp\src;..\openzwave-1.2.919\cpp\tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WINRT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4244;4458;4706;4456;4127;4512;4245;4702;4264</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>true</CompileAsWinRT>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\openzwave-1.2.919\cpp\src;..\openzwave-1.2.919\cpp\tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WINRT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4244;4458;4706;4456;4127;4512;4245;4702;4264</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

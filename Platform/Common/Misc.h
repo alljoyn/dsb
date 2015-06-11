@@ -40,6 +40,9 @@ namespace DsbCommon
         __forceinline DWORD WIN32_FROM_HRESULT(HRESULT HResult) { return HRESULT_FACILITY(HResult) == FACILITY_WIN32 ? HRESULT_CODE(HResult) : HResult; }
     #endif
 
+    __forceinline HRESULT HRESULT_FROM_QSTATUS(int x) { return MAKE_HRESULT(1,FACILITY_ITF,x); }
+
+
     // Check status-leave helper macro
     #define CHK_HR(stmt) do { hr=(stmt); if (FAILED(hr)) goto CleanUp; } while(0)
 

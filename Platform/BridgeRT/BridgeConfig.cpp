@@ -20,11 +20,11 @@
 #pragma warning(disable:4127)
 
 LPCWSTR BRIDGE_CONFIG_PATH = L"/BridgeConfig";
-LPCWSTR OBJECTS_NODE_PATH = L"/BridgeConfig/Objects";
+LPCWSTR OBJECTS_NODE_PATH = L"/BridgeConfig/AdapterDevices";
 
-LPCWSTR ALLJOYN_OBJECT_PATH_PREFIX = L"/BridgeConfig/Objects/Object[@Id=\"";
+LPCWSTR ALLJOYN_OBJECT_PATH_PREFIX = L"/BridgeConfig/AdapterDevices/Device[@Id=\"";
 LPCWSTR ALLJOYN_OBJECT_PATH_SUFFIX = L"\"]";
-LPCWSTR OBJECT_NODE = L"Object";
+LPCWSTR OBJECT_NODE = L"Device";
 LPCWSTR VISIBLE_ATTR = L"Visible";
 LPCWSTR OBJECT_ID_ATTR = L"Id";
 LPCWSTR DESC_NODE = L"Desc";
@@ -57,8 +57,8 @@ L"       <ECDHEECDSAPRIVATEKEY></ECDHEECDSAPRIVATEKEY>\n"
 L"       <ECDHEECDSACERTCHAIN></ECDHEECDSACERTCHAIN>\n"
 L"    </Device>\n"
 L"  </Settings>\n"
-L"  <Objects>\n"
-L"  </Objects>\n"
+L"  <AdapterDevices>\n"
+L"  </AdapterDevices>\n"
 L"</BridgeConfig>\n";
 
 BridgeConfig::BridgeConfig()
