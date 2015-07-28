@@ -35,7 +35,9 @@
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationType>Windows Store</ApplicationType>
-    <ApplicationTypeRevision>8.2</ApplicationTypeRevision>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -229,6 +231,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AllJoynAboutData.h" />
+    <ClInclude Include="AllJoynAboutIcon.h" />
     <ClInclude Include="AllJoynBusObject.h" />
     <ClInclude Include="AllJoynHelpers.h" />
     <ClInclude Include="AllJoynInterface.h" />
@@ -241,6 +244,7 @@
     <ClInclude Include="AllJoynStatus.h" />
     <ClInclude Include="DebugLifetime.h" />
     <ClInclude Include="IAboutData.h" />
+    <ClInclude Include="IAboutIcon.h" />
     <ClInclude Include="ISignal.h" />
     <ClInclude Include="TypeConversionHelpers.h" />
     <ClInclude Include="AllJoynTypeDefinition.h" />
@@ -258,6 +262,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AllJoynAboutData.cpp" />
+    <ClCompile Include="AllJoynAboutIcon.cpp" />
     <ClCompile Include="AllJoynBusObject.cpp" />
     <ClCompile Include="AllJoynInterface.cpp" />
     <ClCompile Include="AllJoynMethod.cpp" />

@@ -22,6 +22,7 @@
 #include <alljoyn_c/AboutObj.h>
 
 #include "Misc.h"
+#include "DsbServiceNames.h"
 
 namespace BridgeRT
 {
@@ -34,7 +35,7 @@ namespace BridgeRT
 		QStatus Initialize(_In_ alljoyn_busattachment bus);
 		void ShutDown();
 
-		QStatus Announce();
+		QStatus Announce(_In_ alljoyn_sessionport sp=DSB_SERVICE_PORT);
         QStatus AddObject(_In_ alljoyn_busobject busObject, _In_ const alljoyn_interfacedescription interfaceDescription);
         QStatus RemoveObject(_In_ alljoyn_busobject busObject, _In_ const alljoyn_interfacedescription interfaceDescription);
 

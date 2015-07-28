@@ -33,6 +33,19 @@ using namespace BridgeRT;
 using namespace DsbCommon;
 using namespace std;
 
+// Device Arrival Signal
+String^ Constants::device_arrival_signal = ref new Platform::String(L"Device_Arrival");
+String^ Constants::device_arrival__device_handle = ref new Platform::String(L"Device_Handle");
+
+// Device removal signal
+String^ Constants::device_removal_signal = ref new Platform::String(L"Device_Removal");
+String^ Constants::device_removal__device_handle = ref new Platform::String(L"Device_Handle");
+
+// Change Of Value signal
+String^ Constants::change_of_value_signal = ref new Platform::String(L"Change_Of_Value");
+String^ Constants::cov__property_handle = ref new Platform::String(L"Property_Handle");
+String^ Constants::cov__attribute_handle = ref new Platform::String(L"Attribute_Handle");
+
 DsbBridge ^g_TheOneOnlyInstance = nullptr;
 
 DsbBridge^ DsbBridge::SingleInstance()
@@ -105,6 +118,7 @@ Leave:
 int32
 DsbBridge::Initialize()
 {
+
     BridgeLog::Instance()->LogEnter(__FUNCTIONW__);    
     int32 hr = S_OK;
 
@@ -410,13 +424,13 @@ DsbBridge::AdapterSignalHandler(
 
     UNREFERENCED_PARAMETER(Context);
 
-    if (Signal->Name == DEVICE_ARRIVAL_SIGNAL ||
-        Signal->Name == DEVICE_REMOVAL_SIGNAL)
+    if (Signal->Name == Constants::DEVICE_ARRIVAL_SIGNAL ||
+        Signal->Name == Constants::DEVICE_REMOVAL_SIGNAL)
     {
         //look for the device handle
         for (auto param : Signal->Params)
         {
-            if (param->Name == DEVICE_ARRIVAL__DEVICE_HANDLE)
+            if (param->Name == Constants::DEVICE_ARRIVAL__DEVICE_HANDLE)
             {
                 adapterDevice = dynamic_cast<IAdapterDevice^>(param->Data);
                 break;
@@ -428,7 +442,7 @@ DsbBridge::AdapterSignalHandler(
         }
     }
 
-    if (Signal->Name == DEVICE_ARRIVAL_SIGNAL)
+    if (Signal->Name == Constants::DEVICE_ARRIVAL_SIGNAL)
     {
         // get config for the device
         try
@@ -455,7 +469,7 @@ DsbBridge::AdapterSignalHandler(
             CreateDevice(adapterDevice);
         }
     }
-    else if (Signal->Name == DEVICE_REMOVAL_SIGNAL)
+    else if (Signal->Name == Constants::DEVICE_REMOVAL_SIGNAL)
     {
         // remove device
         // note that config doesn't need to be updated, if the device come again

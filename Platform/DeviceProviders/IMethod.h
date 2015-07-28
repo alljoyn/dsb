@@ -16,11 +16,10 @@
 
 #pragma once
 
-#include "ITypeDefinition.h"
-#include "AllJoynStatus.h"
-
 namespace DeviceProviders
 {
+    ref struct ParameterInfo;
+
     public ref struct InvokeMethodResult sealed
     {
         property AllJoynStatus^ Status;
@@ -37,14 +36,19 @@ namespace DeviceProviders
             Windows::Foundation::Collections::IVector<ParameterInfo ^>^ get();
         }
 
-        property Windows::Foundation::Collections::IVector<ITypeDefinition ^>^ OutSignature
+        property Windows::Foundation::Collections::IVector<ParameterInfo ^>^ OutSignature
         {
-            Windows::Foundation::Collections::IVector<ITypeDefinition ^>^ get();
+            Windows::Foundation::Collections::IVector<ParameterInfo ^>^ get();
         }
 
         property Platform::String ^ Name
         {
             Platform::String ^ get();
+        }
+        
+        property IInterface^ Interface
+        {
+            IInterface^ get();
         }
     };
 }

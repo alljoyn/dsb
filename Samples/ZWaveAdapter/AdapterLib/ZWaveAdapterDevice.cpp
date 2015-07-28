@@ -38,8 +38,9 @@ namespace AdapterLib
     ZWaveAdapterDevice::ZWaveAdapterDevice(uint32 homeId, uint8 nodeId)
         : m_homeId(homeId)
         , m_nodeId(nodeId)
-    {   
-        
+        , m_controlPanel(nullptr)
+    {
+
     }
 
     void ZWaveAdapterDevice::AddPropertyValue(const ValueID& value)
@@ -78,7 +79,7 @@ namespace AdapterLib
         if (adapterProperty != m_properties.end())
         {
             (dynamic_cast<ZWaveAdapterProperty^>(*adapterProperty))->UpdateValue();
-        }        
+        }
     }
 
     void ZWaveAdapterDevice::RemovePropertyValue(const ValueID & value)
@@ -89,6 +90,24 @@ namespace AdapterLib
         {
             m_properties.erase(adapterProperty);
         }
+    }
+
+    ZWaveAdapterProperty^ ZWaveAdapterDevice::GetPropertyByName(Platform::String^ name)
+    {
+        // Try to find the specified adapter property
+        auto iter = find_if(begin(Properties), end(Properties), [&name](IAdapterProperty^ adapterProperty)
+        {
+            ZWaveAdapterProperty^ currProperty = dynamic_cast<ZWaveAdapterProperty^>(adapterProperty);
+            return currProperty->Name == name;
+        });
+
+        // return null if not found, or the property reference if it was found
+        IAdapterProperty^ outProperty = nullptr;
+        if (iter != end(Properties))
+        {
+            outProperty = *(iter);
+        }
+        return dynamic_cast<ZWaveAdapterProperty^>(outProperty);
     }
 
     std::vector<BridgeRT::IAdapterProperty^>::iterator ZWaveAdapterDevice::GetProperty(const ValueID & value)
@@ -107,16 +126,16 @@ namespace AdapterLib
         //first clear the list
         m_signals.clear();
 
-        ZWaveAdapterSignal^ signal = ref new ZWaveAdapterSignal(CHANGE_OF_VALUE_SIGNAL);
+        ZWaveAdapterSignal^ signal = ref new ZWaveAdapterSignal(Constants::CHANGE_OF_VALUE_SIGNAL);
 
         //add params
         ValueID value(uint32(0), uint64(0));    //placeholder value
-        
+
         ZWaveAdapterProperty^ tmpProperty = ref new ZWaveAdapterProperty(value);
         ZWaveAdapterValue^ tmpValue = ref new ZWaveAdapterValue(L"CovPlaceHolder", nullptr);
 
-        signal->AddParam(ref new ZWaveAdapterValue(COV__PROPERTY_HANDLE, tmpProperty));
-        signal->AddParam(ref new ZWaveAdapterValue(COV__ATTRIBUTE_HANDLE, tmpValue));
+        signal->AddParam(ref new ZWaveAdapterValue(Constants::COV__PROPERTY_HANDLE, tmpProperty));
+        signal->AddParam(ref new ZWaveAdapterValue(Constants::COV__ATTRIBUTE_HANDLE, tmpValue));
 
         m_signals.push_back(signal);
 

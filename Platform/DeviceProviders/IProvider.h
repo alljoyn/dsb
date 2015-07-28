@@ -16,18 +16,43 @@
 
 #pragma once
 
-#include "IService.h"
-#include "AllJoynStatus.h"
-
 namespace DeviceProviders
 {
+    ref class AllJoynStatus;
+    interface class IService;
+
+    public ref struct ServiceDroppedEventArgs sealed
+    {
+        ServiceDroppedEventArgs(IService^ service, Windows::Devices::AllJoyn::AllJoynSessionLostReason reason)
+        {
+            Service = service;
+            Reason = reason;
+        }
+        property IService^ Service;
+        property Windows::Devices::AllJoyn::AllJoynSessionLostReason Reason;
+    };
+
+    public ref struct ServiceJoinedEventArgs sealed
+    {
+        ServiceJoinedEventArgs(IService^ service)
+        {
+            Service = service;
+        }
+        property IService^ Service;
+    };
+
     public interface class IProvider
     {
         AllJoynStatus^ Start();
-        property Windows::Foundation::Collections::IObservableVector<IService ^>^ Services
-        {
-            Windows::Foundation::Collections::IObservableVector<IService ^>^ get();
-        }
         void Shutdown();
+        Windows::Foundation::Collections::IVector<IService^>^ GetServicesWhichImplementInterface(Platform::String^ interfaceName);
+
+        property Windows::Foundation::Collections::IVector<IService ^>^ Services
+        {
+            Windows::Foundation::Collections::IVector<IService ^>^ get();
+        }
+
+        event Windows::Foundation::TypedEventHandler<IProvider^, ServiceDroppedEventArgs^>^ ServiceDropped;
+        event Windows::Foundation::TypedEventHandler<IProvider^, ServiceJoinedEventArgs^>^ ServiceJoined;       
     };
 }

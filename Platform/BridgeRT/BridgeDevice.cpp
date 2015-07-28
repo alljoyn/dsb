@@ -25,6 +25,7 @@
 #include "PropertyInterface.h"
 #include "DeviceMain.h"
 #include "AllJoynHelper.h"
+#include "ControlPanel.h"
 
 using namespace Platform;
 using namespace Platform::Collections;
@@ -44,7 +45,6 @@ BridgeDevice::BridgeDevice()
     m_AJBusAttachment(NULL),
     m_AJBusListener(NULL),
     m_AJSessionPortListener(NULL),
-    m_uniqueIdForProperties(FIRST_UNIQUE_ID),
     m_uniqueIdForInterfaces(FIRST_UNIQUE_ID),
     m_deviceMain(nullptr),
     m_supportCOVSignal(false)
@@ -56,6 +56,7 @@ BridgeRT::BridgeDevice::~BridgeDevice()
 
 QStatus BridgeDevice::Initialize(IAdapterDevice ^device)
 {
+    const wchar_t CONTROL_PANEL_NAME[] = L"Simple";
     QStatus status = ER_OK;
     HRESULT hr = S_OK;
 
@@ -117,6 +118,24 @@ QStatus BridgeDevice::Initialize(IAdapterDevice ^device)
     {
         goto leave;
     }
+    
+    // Create a control panel if requested by the caller.
+    if (GetAdapterDevice()->ControlPanelHandler != nullptr)
+    {
+        auto controlPanelHandler = GetAdapterDevice()->ControlPanelHandler;
+        if (dynamic_cast<IControlPanelHandlerSimple^>(controlPanelHandler) != nullptr)
+        {
+            m_pControlPanel = new (std::nothrow) ControlPanelSimple((IControlPanelHandlerSimple^)GetAdapterDevice()->ControlPanelHandler, m_device);
+            if (m_pControlPanel == nullptr)
+            {
+                goto leave;
+            }
+
+            // If Control Panel Initialization fails, proceed anyway.  This should not be a blocker
+            m_pControlPanel->Initialize(GetBusAttachment(), GetAdapterDevice()->Name->Begin(), CONTROL_PANEL_NAME);
+        }
+    }
+
     m_about.AddObject(m_deviceMain->GetBusObject(), m_deviceMain->GetInterfaceDescription());
 
     // connect to AllJoyn
@@ -159,13 +178,20 @@ void BridgeDevice::Shutdown()
     // shutdown about
     m_about.ShutDown();
 
+
+    if (nullptr != m_pControlPanel)
+    {
+        delete m_pControlPanel;
+        m_pControlPanel = nullptr;
+    }
+
     // shutdown device properties
     for (auto &var : m_deviceProperties)
     {
         var.second->Shutdown();
         delete var.second;
     }
-    m_deviceProperties.clear();
+    m_deviceProperties.clear(); 
 
     // shutdown main device interface
     if (nullptr != m_deviceMain)
@@ -217,19 +243,18 @@ QStatus BridgeDevice::BuildServiceName()
     m_RootStringForAllJoynNames += ".";
     m_RootStringForAllJoynNames += tempString;
 
-    AllJoynHelper::EncodeStringForServiceName(m_device->Name, tempString);
-    if (tempString.empty())
-    {
-        status = ER_BUS_BAD_BUS_NAME;
-        goto leave;
-    }
-    m_RootStringForAllJoynNames += ".";
-    m_RootStringForAllJoynNames += tempString;
-
     // set service name (aka bus name)
     m_ServiceName.clear();
     m_ServiceName = m_RootStringForAllJoynNames;
 
+    //add device name
+    AllJoynHelper::EncodeStringForServiceName(m_device->Name, tempString);
+    if (!tempString.empty())
+    {
+        m_ServiceName += ".";
+        m_ServiceName += tempString;
+    }
+    
     // add serial number to service name if not empty
     AllJoynHelper::EncodeStringForServiceName(m_device->SerialNumber, tempString);
     if (!tempString.empty())
@@ -265,18 +290,13 @@ QStatus BridgeDevice::CreateDeviceProperties()
             goto leave;
         }
 
-        // look for matching interface 
-        propertyInterface = FindMatchingInterfaceProperty(tempProperty);
-        if (nullptr == propertyInterface)
+        // get the interface 
+        status = GetInterfaceProperty(tempProperty, &propertyInterface);
+        if (ER_OK != status)
         {
-            // no matching interface => create new one
-            status = CreateInterfaceProperty(tempProperty, &propertyInterface);
-            if (ER_OK != status)
-            {
-                goto leave;
-            }
+            goto leave;
         }
-
+        
         status = deviceProperty->Initialize(tempProperty, propertyInterface, this);
         if (ER_OK != status)
         {
@@ -314,7 +334,7 @@ QStatus BridgeDevice::InitializeAllJoyn()
 {
     QStatus status = ER_OK;
     alljoyn_buslistener_callbacks busListenerCallbacks = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-	ConfigManager *configManager = nullptr;
+    ConfigManager *configManager = nullptr;
     string appName;
 
     // verify if already connected
@@ -351,13 +371,13 @@ QStatus BridgeDevice::InitializeAllJoyn()
     }
 
     // set up authentication if necessary
-	configManager = DsbBridge::SingleInstance()->GetConfigManager();
+    configManager = DsbBridge::SingleInstance()->GetConfigManager();
     if (configManager->IsDeviceAccessSecured())
     {
         status = m_authHandler.InitializeWithAllAuthenticationMethods(m_AJBusAttachment,
             configManager->GetBridgeConfig()->DeviceKeyX(),
-			configManager->GetBridgeConfig()->DeviceUsername(), 
-			configManager->GetBridgeConfig()->DevicePassword(),
+            configManager->GetBridgeConfig()->DeviceUsername(),
+            configManager->GetBridgeConfig()->DevicePassword(),
             configManager->GetBridgeConfig()->DeviceEcdheEcdsaPrivateKey(),
             configManager->GetBridgeConfig()->DeviceEcdheEcdsaCertChain());
         if (ER_OK != status)
@@ -487,6 +507,21 @@ void BridgeDevice::ShutdownAllJoyn()
 
 }
 
+PropertyInterface *BridgeDevice::FindMatchingInterfaceProperty(string & interfaceName)
+{
+    PropertyInterface *propertyInterface = nullptr;
+
+    for (auto tempInterface : m_propertyInterfaces)
+    {
+        if ((*tempInterface->GetInterfaceName()) == interfaceName)
+        {
+            propertyInterface = tempInterface;
+            break;
+        }
+    }
+    return propertyInterface;
+}
+
 PropertyInterface *BridgeDevice::FindMatchingInterfaceProperty(IAdapterProperty ^adapterProperty)
 {
     PropertyInterface *propertyInterface = nullptr;
@@ -502,22 +537,12 @@ PropertyInterface *BridgeDevice::FindMatchingInterfaceProperty(IAdapterProperty 
     return propertyInterface;
 }
 
-QStatus BridgeDevice::CreateInterfaceProperty(IAdapterProperty ^adapterProperty, PropertyInterface **propertyInterface)
+QStatus BridgeDevice::CreateInterfaceProperty(IAdapterProperty ^adapterProperty, string & interfaceName, PropertyInterface **propertyInterface)
 {
     QStatus status = ER_OK;
     PropertyInterface *newInterface = nullptr;
-    string interfaceName;
-    string adapterName;
-    std::ostringstream uniqueIdForInterface;
 
     *propertyInterface = nullptr;
-
-    // interface name is made of service name plus a unique Id
-    uniqueIdForInterface << GetUniqueIdForInterface();
-
-    interfaceName = m_RootStringForAllJoynNames;
-    interfaceName += BASE_INTERFACE_NAME;
-    interfaceName += uniqueIdForInterface.str();
 
     // create new interface
     newInterface = new(std::nothrow) PropertyInterface();
@@ -543,6 +568,59 @@ leave:
     {
         delete newInterface;
     }
+    return status;
+}
+
+QStatus BridgeDevice::GetInterfaceProperty(IAdapterProperty ^adapterProperty, PropertyInterface **propertyInterface)
+{
+    string interfaceName;
+    std::ostringstream uniqueIdForInterface;
+    std::string tempString;
+    bool useHint = false;
+    QStatus status = ER_OK;
+
+    //add hint name if hint is provided, else use default interface name generation
+    AllJoynHelper::EncodeStringForInterfaceName(adapterProperty->InterfaceHint, tempString);
+    if (!tempString.empty())
+    {
+        interfaceName = tempString;
+        useHint = true;
+    }
+    else
+    {
+        // interface name is made of service name plus a unique Id
+        uniqueIdForInterface << GetUniqueIdForInterface();
+
+        interfaceName = m_RootStringForAllJoynNames;
+
+        //add device name
+        AllJoynHelper::EncodeStringForServiceName(m_device->Name, tempString);
+        if (!tempString.empty())
+        {
+            interfaceName += ".";
+            interfaceName += tempString;
+        }
+
+        interfaceName += BASE_INTERFACE_NAME;
+        interfaceName += uniqueIdForInterface.str();
+    }
+
+    //Find if the property interface already exist
+    if (useHint)
+    {
+        *propertyInterface = FindMatchingInterfaceProperty(interfaceName);
+    }
+    else
+    {
+        *propertyInterface = FindMatchingInterfaceProperty(adapterProperty);
+    }
+
+    if (nullptr == *propertyInterface)
+    {
+        //interface doesn't exist, create one
+        status = CreateInterfaceProperty(adapterProperty, interfaceName, propertyInterface);
+    }
+
     return status;
 }
 
@@ -605,10 +683,10 @@ void AJ_CALL BridgeDevice::SessionJoined(void * context, alljoyn_sessionport ses
         goto leave;
     }
 
-	{
-		AutoLock bridgeLocker(&DsbBridge::SingleInstance()->GetLock(), true);
-		bridgeDevice->m_activeSessions.push_back(id);
-	}
+    {
+        AutoLock bridgeLocker(&DsbBridge::SingleInstance()->GetLock(), true);
+        bridgeDevice->m_activeSessions.push_back(id);
+    }
 
 leave:
     return;
@@ -630,15 +708,15 @@ void AJ_CALL BridgeDevice::MemberRemoved(void * context, alljoyn_sessionid sessi
     // reset access
     bridgeDevice->m_authHandler.ResetAccess(uniqueName);
 
-	{
-		AutoLock bridgeLocker(&DsbBridge::SingleInstance()->GetLock(), true);
-		auto iter = std::find(bridgeDevice->m_activeSessions.begin(), bridgeDevice->m_activeSessions.end(), sessionid);
+    {
+        AutoLock bridgeLocker(&DsbBridge::SingleInstance()->GetLock(), true);
+        auto iter = std::find(bridgeDevice->m_activeSessions.begin(), bridgeDevice->m_activeSessions.end(), sessionid);
 
-		if (iter != bridgeDevice->m_activeSessions.end())
-		{
-			bridgeDevice->m_activeSessions.erase(iter);
-		}
-	}
+        if (iter != bridgeDevice->m_activeSessions.end())
+        {
+            bridgeDevice->m_activeSessions.erase(iter);
+        }
+    }
 
 leave:
     return;
@@ -675,7 +753,7 @@ void BridgeDevice::VerifyCOVSupport()
     // go through signals, look for COV and verify it is supported
     for (auto signal : m_device->Signals)
     {
-        if (signal->Name == CHANGE_OF_VALUE_SIGNAL)
+        if (signal->Name == Constants::CHANGE_OF_VALUE_SIGNAL)
         {
             m_supportCOVSignal = true;
         }
@@ -686,7 +764,7 @@ void BridgeDevice::AdapterSignalHandler(IAdapterSignal ^Signal, Platform::Object
 {
     UNREFERENCED_PARAMETER(Context);
 
-    if (Signal->Name == CHANGE_OF_VALUE_SIGNAL)
+    if (Signal->Name == Constants::CHANGE_OF_VALUE_SIGNAL)
     {
         HandleCOVSignal(Signal);
     }
@@ -704,11 +782,11 @@ void BridgeDevice::HandleCOVSignal(IAdapterSignal ^ signal)
     // get present value and property name from the signal
     for (auto param : signal->Params)
     {
-        if (param->Name == COV__PROPERTY_HANDLE)
+        if (param->Name == Constants::COV__PROPERTY_HANDLE)
         {
             adapterProperty = dynamic_cast<IAdapterProperty^>(param->Data);
         }
-        else if (param->Name == COV__ATTRIBUTE_HANDLE)
+        else if (param->Name == Constants::COV__ATTRIBUTE_HANDLE)
         {
             newValue = dynamic_cast<IAdapterValue^>(param->Data);
         }
@@ -721,7 +799,7 @@ void BridgeDevice::HandleCOVSignal(IAdapterSignal ^ signal)
         {
             if (val.second->GetAdapterProperty() == adapterProperty)
             {
-				val.second->EmitSignalCOV(newValue, m_activeSessions);
+                val.second->EmitSignalCOV(newValue, m_activeSessions);
                 break;
             }
         }

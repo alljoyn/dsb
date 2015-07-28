@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "AdapterConstants.h"
 #include "BridgeDevice.h"
 
 namespace BridgeRT

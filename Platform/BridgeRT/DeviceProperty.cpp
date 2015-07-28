@@ -84,11 +84,18 @@ QStatus DeviceProperty::Initialize(IAdapterProperty ^deviceProperty, PropertyInt
     AllJoynHelper::BuildBusObjectName(m_deviceProperty->Name, m_AJBusObjectPath);
     if (!parent->IsBusObjectPathUnique(m_AJBusObjectPath))
     {
-        DWORD id = parent->GetUniqueIdForProperty();
-        std::ostringstream tempString;
-        tempString << id;
-        m_AJBusObjectPath += '/';
-        m_AJBusObjectPath += tempString.str();
+        DWORD id = 0;
+        string tempPath;
+        do
+        {
+            tempPath = m_AJBusObjectPath;
+            std::ostringstream tempString;
+            tempString << ++id;
+            tempPath += '/';
+            tempPath += tempString.str();
+        } while (!parent->IsBusObjectPathUnique(tempPath));
+
+        m_AJBusObjectPath = tempPath;
     }
 
     // create alljoyn bus object and register it

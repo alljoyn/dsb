@@ -18,10 +18,13 @@
 #include "AllJoynProvider.h"
 #include "AllJoynService.h"
 #include "AllJoynHelpers.h"
+#include "AllJoynStatus.h"
 
+using namespace Windows::Devices::AllJoyn;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 using namespace Platform::Collections;
+using namespace Platform;
 using namespace concurrency;
 using namespace std;
 
@@ -29,14 +32,12 @@ namespace DeviceProviders
 {
     AllJoynProvider::AllJoynProvider()
         : m_aboutListener(nullptr)
-        , m_isListening(false)
-        , m_isRegistered(false)
-        , m_bus(nullptr)
+        , m_busAttachment(nullptr)
+        , m_busListener(nullptr)
         , m_alljoynInitialized(false)
+        , m_weakThis(this)
     {
         DEBUG_LIFETIME_IMPL(AllJoynProvider);
-
-        m_servicesVector = ref new Vector<IService ^>();
     }
 
     AllJoynProvider::~AllJoynProvider()
@@ -47,128 +48,132 @@ namespace DeviceProviders
     AllJoynStatus^ AllJoynProvider::Start()
     {
         QStatus status = ER_OK;
-        alljoyn_aboutlistener_callback callback = { 0 };
+        try
+        {
+            if (!m_alljoynInitialized)
+            {
+                status = alljoyn_init();
+                if (ER_OK != status)
+                {
+                    goto leave;
+                }
+                m_alljoynInitialized = true;
+            }
 
-		try
-		{
-			// nothing to do if already started (m_bus not null)
-			if (nullptr != m_bus)
-			{
-				goto leave;
-			}
+            if (nullptr == m_busAttachment)
+            {
+                m_busAttachment = alljoyn_busattachment_create(ALLJOYN_APPLICATION_NAME.c_str(), true);
+                if (nullptr == m_busAttachment)
+                {
+                    status = ER_OUT_OF_MEMORY;
+                    goto leave;
+                }
+                status = alljoyn_busattachment_start(m_busAttachment);
+                if (ER_OK != status)
+                {
+                    goto leave;
+                }
+                status = alljoyn_busattachment_connect(m_busAttachment, nullptr);
+                if (ER_OK != status)
+                {
+                    goto leave;
+                }
+            }
 
-			// initialize AllJoyn
-			if (!m_alljoynInitialized)
-			{
-			    status = alljoyn_init();
-			    if (ER_OK != status)
-			    {
-			        goto leave;
-			    }
-			    m_alljoynInitialized = true;
-			}
+            if (nullptr == m_aboutListener)
+            {
+                alljoyn_aboutlistener_callback aboutlistenerCallback = { AboutAnnounced };
+                m_aboutListener = alljoyn_aboutlistener_create(&aboutlistenerCallback, &m_weakThis);
+                if (nullptr == m_aboutListener)
+                {
+                    status = ER_OUT_OF_MEMORY;
+                    goto leave;
+                }
+                alljoyn_busattachment_registeraboutlistener(m_busAttachment, m_aboutListener);
+            }
 
-			// create bus attachment and connect
-			m_bus = alljoyn_busattachment_create(ALLJOYN_APPLICATION_NAME.c_str(), true);
-			if (nullptr == m_bus)
-			{
-				status = ER_OUT_OF_MEMORY;
-				goto leave;
-			}
+            if (nullptr == m_busListener)
+            {
+                alljoyn_buslistener_callbacks buslistenerCallbacks = { nullptr, nullptr, nullptr, nullptr, NameOwnerChanged, nullptr, nullptr, nullptr };
+                m_busListener = alljoyn_buslistener_create(&buslistenerCallbacks, &m_weakThis);
+                if (nullptr == m_aboutListener)
+                {
+                    status = ER_OUT_OF_MEMORY;
+                    goto leave;
+                }
+                alljoyn_busattachment_registerbuslistener(m_busAttachment, m_busListener);
+            }
 
-			status = alljoyn_busattachment_start(m_bus);
-			if (ER_OK != status)
-			{
-				goto leave;
-			}
-
-			status = alljoyn_busattachment_connect(m_bus, NULL);
-			if (ER_OK != status)
-			{
-				goto leave;
-			}
-
-			create_task([this]
-			{
-				m_aboutHandlerQueue.Start();
-			});
-
-			// Register About handler
-			callback.about_listener_announced = (alljoyn_about_announced_ptr)AllJoynProvider::AnnounceDiscovery;
-
-			m_aboutListener = alljoyn_aboutlistener_create(&callback, reinterpret_cast<IInspectable *>(this));
-			if (nullptr == m_aboutListener)
-			{
-				status = ER_OUT_OF_MEMORY;
-				goto leave;
-			}
-
-			alljoyn_busattachment_registeraboutlistener(m_bus, m_aboutListener);
-			m_isRegistered = true;
-
-			status = alljoyn_busattachment_whoimplements_interfaces(m_bus, NULL, 0);
-			if (ER_OK == status)
-			{
-				m_isListening = true;
-			}
-		}
-		catch (...)
-		{
-			status = QStatus::ER_FAIL;
-		}
+            alljoyn_busattachment_whoimplements_interfaces(m_busAttachment, nullptr, 0);
+        }
+        catch (...)
+        {
+            status = QStatus::ER_FAIL;
+        }
 
     leave:
         if (ER_OK != status)
         {
             this->Shutdown();
         }
-
         return ref new AllJoynStatus(status);
     }
 
-    IObservableVector<IService ^>^ AllJoynProvider::Services::get()
+    IVector<IService ^>^ AllJoynProvider::Services::get()
     {
-        return m_servicesVector;
+        auto services = ref new Vector<IService^>();
+
+        AutoLock lock(&m_servicesLock, true);
+        for (auto& service : m_servicesMap)
+        {
+            services->Append(service.second);
+        }
+        return services;
     }
 
     void AllJoynProvider::Shutdown()
     {
-        // Stop the background task which is processing about announcements
-        m_aboutHandlerQueue.PostQuit();
-
-        // Unregister for About announcements before deleting bus attachment
-        if (m_isListening)
+        if (nullptr != m_busAttachment)
         {
-            alljoyn_busattachment_cancelwhoimplements_interfaces(m_bus, NULL, 0);
-            m_isListening = false;
+            alljoyn_busattachment_cancelwhoimplements_interfaces(m_busAttachment, nullptr, 0);
         }
-        if (NULL != m_aboutListener)
-        {
-            if (m_isRegistered)
-            {
-                alljoyn_busattachment_unregisteraboutlistener(m_bus, m_aboutListener);
-                m_isRegistered = false;
-            }
 
+        if (nullptr != m_busListener)
+        {
+            alljoyn_busattachment_unregisterbuslistener(m_busAttachment, m_busListener);
+            alljoyn_buslistener_destroy(m_busListener);
+            m_busListener = nullptr;
+        }
+
+        if (nullptr != m_aboutListener)
+        {
+            alljoyn_busattachment_unregisteraboutlistener(m_busAttachment, m_aboutListener);
             alljoyn_aboutlistener_destroy(m_aboutListener);
-            m_aboutListener = NULL;
+            m_aboutListener = nullptr;
         }
 
-        m_servicesVector->Clear();
-        m_servicesMap.clear();
+        map<string, AllJoynService^> servicesCopy;
+        {
+            AutoLock lock(&m_servicesLock, true);
+            servicesCopy = m_servicesMap;
+            m_servicesMap.clear();
+        }
+
+        for (auto& service : servicesCopy)
+        {
+            RemoveService(service.second, alljoyn_sessionlostreason::ALLJOYN_SESSIONLOST_INVALID);
+        }
+        servicesCopy.clear();
 
         // stop and delete bus attachment
-        if (nullptr != m_bus)
+        if (nullptr != m_busAttachment)
         {
-            alljoyn_busattachment_stop(m_bus);
-            alljoyn_busattachment_join(m_bus);
-            alljoyn_busattachment_destroy(m_bus);
-
-            m_bus = nullptr;
+            alljoyn_busattachment_disconnect(m_busAttachment, nullptr);
+            alljoyn_busattachment_stop(m_busAttachment);
+            alljoyn_busattachment_join(m_busAttachment);
+            alljoyn_busattachment_destroy(m_busAttachment);
+            m_busAttachment = nullptr;
         }
-
-        // Wait for the workitem queue
-        m_aboutHandlerQueue.WaitForQuit();
 
         // shutdown AllJoyn if necessary
         if (m_alljoynInitialized)
@@ -178,52 +183,104 @@ namespace DeviceProviders
         }
     }
 
-    void AJ_CALL AllJoynProvider::AnnounceDiscovery(_In_ void* context,
-        _In_ const char* _serviceName,
+    IVector<IService^>^ AllJoynProvider::GetServicesWhichImplementInterface(Platform::String^ interfaceName)
+    {
+        auto services = ref new Vector<IService^>();
+
+        AutoLock lock(&m_servicesLock, true);
+        for (auto service : m_servicesMap)
+        {
+            if (service.second->ImplementsInterface(interfaceName))
+            {
+                services->Append(service.second);
+            }
+        }
+        return services;
+    }
+
+    void AJ_CALL AllJoynProvider::AboutAnnounced(_In_ const void* context,
+        _In_ const char* serviceName,
         _In_ uint16_t version,
         _In_ alljoyn_sessionport port,
-        _In_ const alljoyn_msgarg _objectDescriptionArg,
-        _In_ const alljoyn_msgarg _aboutDataArg)
+        _In_ const alljoyn_msgarg objectDescriptionArg,
+        _In_ const alljoyn_msgarg aboutDataArg)
     {
         UNREFERENCED_PARAMETER(version);
 
-        AllJoynProvider ^provider = reinterpret_cast<AllJoynProvider ^>(context);
+        AllJoynProvider ^provider = static_cast<const WeakReference *>(context)->Resolve<AllJoynProvider>();
 
-        auto objectDescriptionArg = alljoyn_msgarg_copy(_objectDescriptionArg);
-        auto aboutDataArg = alljoyn_msgarg_copy(_aboutDataArg);
-        string serviceName = _serviceName;
-
-        provider->m_aboutHandlerQueue.PostWorkItem([provider, objectDescriptionArg, aboutDataArg, serviceName, port]
+        if (provider != nullptr)
         {
-            auto iter = provider->m_servicesMap.find(serviceName);
-            if (iter != provider->m_servicesMap.end())
+            AllJoynService ^ newService = nullptr;
             {
-                iter->second->Initialize(aboutDataArg, objectDescriptionArg);
-            }
-            else
-            {
-                AllJoynService ^ service = ref new AllJoynService(provider, serviceName, port);
-                service->Initialize(aboutDataArg, objectDescriptionArg);
+                AutoLock lock(&provider->m_servicesLock, true);
 
-                provider->m_servicesMap[serviceName] = service;
-                provider->m_servicesVector->Append(service);
+                auto iter = provider->m_servicesMap.find(serviceName);
+                if (iter != provider->m_servicesMap.end())
+                {
+                    iter->second->Initialize(aboutDataArg, objectDescriptionArg);
+                }
+                else
+                {
+                    newService = ref new AllJoynService(provider, serviceName, port);
+                    newService->Initialize(aboutDataArg, objectDescriptionArg);
+
+                    provider->m_servicesMap[serviceName] = newService;
+                }
             }
-        });
+            if (newService)
+            {
+                try
+                {
+                    provider->ServiceJoined(provider, ref new ServiceJoinedEventArgs(newService));
+                }
+                catch (Exception^ ex)
+                {
+                    OutputDebugString(ex->Message->Data());
+                }
+            }
+        }
     }
 
-    void AllJoynProvider::RemoveSession(AllJoynService ^ service)
+    void AJ_CALL AllJoynProvider::NameOwnerChanged(const void* context, const char* busName, const char* previousOwner, const char* newOwner)
     {
-        m_aboutHandlerQueue.PostWorkItem([this, service]
+        AllJoynProvider ^provider = static_cast<const WeakReference *>(context)->Resolve<AllJoynProvider>();
+
+        if (provider != nullptr && newOwner == nullptr)
         {
-            unsigned int index = 0;
-            if (m_servicesVector->IndexOf(service, &index))
+            AllJoynService^ service = nullptr;
             {
-                m_servicesVector->RemoveAt(index);
+                AutoLock lock(&provider->m_servicesLock, true);
+                auto iter = provider->m_servicesMap.find(previousOwner);
+                if (iter != provider->m_servicesMap.end() && iter->second->SessionId == 0)
+                {
+                    service = iter->second;
+                }
             }
 
-            m_servicesMap.erase(AllJoynHelpers::PlatformToMultibyteStandardString(service->Name));
+            if (service)
+            {
+                provider->RemoveService(service, alljoyn_sessionlostreason::ALLJOYN_SESSIONLOST_INVALID);
+            }
+        }
+    }
 
-            service->Shutdown();
-        });
+    void AllJoynProvider::RemoveService(AllJoynService ^ service, alljoyn_sessionlostreason reason)
+    {
+        {
+            AutoLock lock(&m_servicesLock, true);
+            m_servicesMap.erase(AllJoynHelpers::PlatformToMultibyteStandardString(service->Name));
+        }
+
+        try
+        {
+            ServiceDropped(this, ref new ServiceDroppedEventArgs(service, static_cast<AllJoynSessionLostReason>(reason)));
+        }
+        catch (Exception^ ex)
+        {
+            OutputDebugString(ex->Message->Data());
+        }
+
+        delete service;
     }
 }

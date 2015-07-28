@@ -17,6 +17,7 @@
 #pragma once
 
 #include <vector>
+#include "AdapterConstants.h"
 #include "BridgeAuthHandler.h"
 #include "AllJoynAbout.h"
 
@@ -25,6 +26,7 @@ namespace BridgeRT
     class DeviceMain;
     class DeviceProperty;
     class PropertyInterface;
+    class ControlPanel;
 
     ref class BridgeDevice sealed : IAdapterSignalListener
     {
@@ -46,10 +48,6 @@ namespace BridgeRT
         std::string GetBusObjectPath(_In_ IAdapterProperty ^adapterProperty);
         bool IsEqual(_In_ IAdapterDevice ^device);
         bool IsBusObjectPathUnique(std::string &path);
-        inline DWORD GetUniqueIdForProperty()
-        {
-            return m_uniqueIdForProperties++;
-        }
         inline DWORD GetUniqueIdForInterface()
         {
             return m_uniqueIdForInterfaces++;
@@ -84,8 +82,10 @@ namespace BridgeRT
         void ShutdownAllJoyn();
 
         QStatus CreateDeviceProperties();
+        QStatus GetInterfaceProperty(_In_ IAdapterProperty ^adapterProperty, _Out_ PropertyInterface **propertyInterface);
+        PropertyInterface *FindMatchingInterfaceProperty(_In_ std::string & interfaceName);
         PropertyInterface *FindMatchingInterfaceProperty(_In_ IAdapterProperty ^adapterProperty);
-        QStatus CreateInterfaceProperty(_In_ IAdapterProperty ^adapterProperty, _Out_ PropertyInterface **propertyInterface);
+        QStatus CreateInterfaceProperty(_In_ IAdapterProperty ^adapterProperty, _In_ std::string & interfaceName, _Out_ PropertyInterface **propertyInterface);
 
         QStatus BuildServiceName();
 
@@ -95,13 +95,14 @@ namespace BridgeRT
         static void AJ_CALL MemberRemoved(_In_ void* context, _In_ alljoyn_sessionid sessionid, _In_z_ const char* uniqueName);
 
         // list of active sessions
-		std::vector<alljoyn_sessionid> m_activeSessions;
-		
-		// list of device properties
-        std::map<std::string, DeviceProperty *>	m_deviceProperties;
+        std::vector<alljoyn_sessionid> m_activeSessions;
+
+        // list of device properties
+        std::map<std::string, DeviceProperty *> m_deviceProperties;
+
         // list of AllJoyn interfaces that a device property can expose
-        std::vector<PropertyInterface *>	m_propertyInterfaces;
-        DWORD m_uniqueIdForProperties;
+        std::vector<PropertyInterface *>    m_propertyInterfaces;
+
         DWORD m_uniqueIdForInterfaces;
 
         // main interface
@@ -117,8 +118,8 @@ namespace BridgeRT
 
         // AllJoyn related data
         alljoyn_busattachment m_AJBusAttachment;
-        alljoyn_buslistener	m_AJBusListener;
-        alljoyn_sessionportlistener	m_AJSessionPortListener;
+        alljoyn_buslistener m_AJBusListener;
+        alljoyn_sessionportlistener m_AJSessionPortListener;
         alljoyn_sessionlistener m_AJsessionListener;
 
         std::string m_RootStringForAllJoynNames;
@@ -126,5 +127,8 @@ namespace BridgeRT
 
         // about service
         AllJoynAbout m_about;
+
+        // An optional Alljoyn Control Panel
+        ControlPanel* m_pControlPanel;
     };
 }

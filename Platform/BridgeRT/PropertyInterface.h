@@ -29,7 +29,7 @@ namespace BridgeRT
         PropertyInterface();
         virtual ~PropertyInterface();
 
-        QStatus Create(_In_ IAdapterProperty ^adapterProperty, _In_ std::string &name, _In_ BridgeDevice ^parent);
+        QStatus Create(_In_ IAdapterProperty ^adapterProperty, _In_ std::string &name, _In_ BridgeDevice ^device);
         bool InterfaceMatchWithAdapterProperty(_In_ IAdapterProperty ^adapterProperty);
 
         inline alljoyn_interfacedescription GetInterfaceDescription()
@@ -53,9 +53,6 @@ namespace BridgeRT
         }
 
     private:
-        // parent class
-        BridgeDevice ^m_parent;
-
         // alljoyn related
         alljoyn_interfacedescription m_interfaceDescription;
         std::string m_interfaceName;

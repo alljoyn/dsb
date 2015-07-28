@@ -39,7 +39,7 @@ namespace DeviceProviders
 
         for (size_t i = 0; i < interfaceCount; ++i)
         {
-            m_interfacesFromAbout.insert(interfaceNames[i]);
+            m_interfaces.insert(make_pair<string, WeakReference>(interfaceNames[i], WeakReference(nullptr)));
         }
     }
 
@@ -54,7 +54,18 @@ namespace DeviceProviders
 
     AllJoynBusObject::~AllJoynBusObject()
     {
-        m_interfacesFromAbout.clear();
+        {
+            AutoLock lock(&m_interfacesLock, true);
+            for (auto iter : m_interfaces)
+            {
+                auto iface = iter.second.Resolve<AllJoynInterface>();
+                if (iface != nullptr)
+                {
+                    delete iface;
+                }
+            }
+            m_interfaces.clear();
+        }
 
         if (nullptr != m_proxyBusObject)
         {
@@ -89,7 +100,7 @@ namespace DeviceProviders
         return m_introspectedSuccessfully;
     }
 
-    IObservableVector<IInterface ^>^ AllJoynBusObject::Interfaces::get()
+    IVector<IInterface ^>^ AllJoynBusObject::Interfaces::get()
     {
         auto interfaces = ref new Vector<IInterface ^>();
 
@@ -98,14 +109,23 @@ namespace DeviceProviders
             return interfaces;
         }     
 
-        // First create the interfaces mentioned in the about Announcement
-        for (auto& interfaceNameIterator : m_interfacesFromAbout)
+        AutoLock lock(&m_interfacesLock, true);
+
+        // First check for interfaces we already know about. Not sure this is necessary. It will only matter if there are interface mention in the
+        // About announcement but not returned in alljoyn_proxybusobject_getinterfaces
+        for (auto& interfaceNameIterator : m_interfaces)
         {
-            alljoyn_interfacedescription description = alljoyn_proxybusobject_getinterface(m_proxyBusObject, interfaceNameIterator.data());
-            if (nullptr != description)
+            auto iface = interfaceNameIterator.second.Resolve<AllJoynInterface>();
+            if (iface == nullptr)
             {
-                interfaces->Append(ref new AllJoynInterface(this, description));
+                alljoyn_interfacedescription description = alljoyn_proxybusobject_getinterface(m_proxyBusObject, interfaceNameIterator.first.data());
+                if (nullptr != description)
+                {
+                    iface = ref new AllJoynInterface(this, description);                    
+                }
             }
+            interfaces->Append(iface);
+            m_interfaces[interfaceNameIterator.first] = WeakReference(iface);
         }
 
         size_t interfaceCount = alljoyn_proxybusobject_getinterfaces(m_proxyBusObject, nullptr, 0);
@@ -115,20 +135,24 @@ namespace DeviceProviders
             auto interfaceDescriptions = vector<alljoyn_interfacedescription>(interfaceCount);
             alljoyn_proxybusobject_getinterfaces(m_proxyBusObject, interfaceDescriptions.data(), interfaceCount);
 
-            for (size_t i = 0; i < interfaceCount; ++i)
+            for (auto& description : interfaceDescriptions)
             {
-                // if the interface was already created because it was part of the about announcement, don't create it again
-                string interfaceName = alljoyn_interfacedescription_getname(interfaceDescriptions[i]);
-                if (m_interfacesFromAbout.find(interfaceName) == m_interfacesFromAbout.end())
+                // if the interface has already been created (and still exists) don't create it again
+                string interfaceName = alljoyn_interfacedescription_getname(description);
+
+                auto iter = m_interfaces.find(interfaceName);
+                if (iter == m_interfaces.end() || iter->second.Resolve<AllJoynInterface>() == nullptr)
                 {
-                    interfaces->Append(ref new AllJoynInterface(this, interfaceDescriptions[i]));
+                    auto iface = ref new AllJoynInterface(this, description);
+                    interfaces->Append(iface);
+                    m_interfaces[interfaceName] = WeakReference(iface);
                 }
             }
         }
         return interfaces;
     }
 
-    IObservableVector<IBusObject ^>^ AllJoynBusObject::ChildObjects::get()
+    IVector<IBusObject ^>^ AllJoynBusObject::ChildObjects::get()
     {
         auto childObjects = ref new Vector<IBusObject ^>();
 
@@ -149,16 +173,8 @@ namespace DeviceProviders
                 string path = alljoyn_proxybusobject_getpath(children[i]);
 
                 // Check if we have already created this bus object based on the About announcement
-                auto service = this->GetService();
-                auto busObject = service->GetBusObject(path);
-                if (busObject != nullptr)
-                {
-                    childObjects->Append(busObject);
-                }
-                else
-                {
-                    childObjects->Append(ref new AllJoynBusObject(service, path, children[i]));
-                }
+                auto busObject = m_service->GetOrCreateBusObject(path);
+                childObjects->Append(busObject ? busObject : ref new AllJoynBusObject(m_service, path, children[i]));
             }
         }
         return childObjects;
@@ -167,5 +183,33 @@ namespace DeviceProviders
     String ^ AllJoynBusObject::Path::get()
     {
         return AllJoynHelpers::MultibyteToPlatformString(m_path.c_str());
+    }
+
+    IInterface^ AllJoynBusObject::GetInterface(Platform::String^ interfaceName)
+    {
+        if (!this->Introspect())
+        {
+            return nullptr;
+        }
+
+        string name = AllJoynHelpers::PlatformToMultibyteStandardString(interfaceName);
+
+        AutoLock lock(&m_interfacesLock, true);
+
+        auto iter = m_interfaces.find(name);
+        if (iter != m_interfaces.end() && iter->second.Resolve<IInterface>() != nullptr)
+        {
+            return iter->second.Resolve<IInterface>();
+        }
+
+        auto interfaceDescription = alljoyn_proxybusobject_getinterface(m_proxyBusObject, name.data());
+        if (interfaceDescription != nullptr)
+        {
+            IInterface^ iface = ref new AllJoynInterface(this, interfaceDescription);
+            m_interfaces[name] = WeakReference(iface);
+            return iface;
+        }
+
+        return nullptr;
     }
 }

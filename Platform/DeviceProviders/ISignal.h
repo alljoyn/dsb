@@ -16,11 +16,13 @@
 
 #pragma once
 
-#include "IAboutData.h"
-#include "ITypeDefinition.h"
-
 namespace DeviceProviders
 {
+    interface class IAboutData;
+    interface class ITypeDefinition;
+    interface class IInterface;
+    ref struct ParameterInfo;
+
     public interface class ISignal
     {
         event Windows::Foundation::TypedEventHandler<ISignal^, Windows::Foundation::Collections::IVector<Object^>^>^ SignalRaised;
@@ -48,6 +50,11 @@ namespace DeviceProviders
         property IAboutData ^ AboutData
         {
             IAboutData ^ get();
+        }
+
+        property IInterface ^ Interface
+        {
+            IInterface ^ get();
         }
     };
 }

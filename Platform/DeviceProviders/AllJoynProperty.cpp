@@ -35,6 +35,7 @@ namespace DeviceProviders
         : m_interface(parent)
         , m_name(propertyDescription.name)
         , m_signature(propertyDescription.signature)
+        , m_weakThis(this)
     {
         DEBUG_LIFETIME_IMPL(AllJoynProperty);
 
@@ -48,17 +49,40 @@ namespace DeviceProviders
             &namePtr,
             1,
             AllJoynProperty::OnPropertyChanged,
-            reinterpret_cast<IInspectable *>(this));
+            &m_weakThis);
 
         auto typeDefinitons = AllJoynTypeDefinition::CreateTypeDefintions(m_signature);
         if (typeDefinitons->Size == 1)
         {
             m_typeInfo = typeDefinitons->GetAt(0);
         }
+
+        //annotations
+        auto annotations = ref new Map<String^, String^>();
+        auto nCount = alljoyn_interfacedescription_property_getannotationscount(propertyDescription);
+        for (size_t i = 0; i < nCount; ++i)
+        {
+            size_t nSizeName = 0;
+            size_t nSizeValue = 0;
+
+            //get the buffer size for name and value pair
+            alljoyn_interfacedescription_property_getannotationatindex(propertyDescription, i, nullptr, &nSizeName, nullptr, &nSizeValue);
+            auto pName = vector<char>(nSizeName);
+            auto pValue = vector<char>(nSizeValue);
+
+            //get the annotation at index i
+            alljoyn_interfacedescription_property_getannotationatindex(propertyDescription, i, pName.data(), &nSizeName, pValue.data(), &nSizeValue);
+            annotations->Insert(AllJoynHelpers::MultibyteToPlatformString(pName.data()), AllJoynHelpers::MultibyteToPlatformString(pValue.data()));
+        }
+        m_annotations = annotations->GetView();
     }
 
     AllJoynProperty::~AllJoynProperty()
     {
+        alljoyn_proxybusobject_unregisterpropertieschangedlistener(
+            m_interface->GetBusObject()->GetProxyBusObject(),
+            m_interface->GetName().c_str(),
+            AllJoynProperty::OnPropertyChanged);
     }
 
     void AllJoynProperty::OnPropertyChanged(_In_ alljoyn_proxybusobject busObject,
@@ -70,17 +94,32 @@ namespace DeviceProviders
         UNREFERENCED_PARAMETER(invalidated);
         UNREFERENCED_PARAMETER(busObject);
 
-        int32 status = ER_OK;
-        AllJoynProperty ^ allJoynProperty = reinterpret_cast<AllJoynProperty ^> (context);
+        AllJoynProperty ^allJoynProperty = static_cast<const WeakReference *>(context)->Resolve<AllJoynProperty>();
 
-        IVectorView<IKeyValuePair<Object ^, Object ^>^>^ changedProperties;
-        status = TypeConversionHelpers::GetAllJoynMessageArg(changed, "a{sv}", &changedProperties);
-
-        if (ER_OK == status &&
-            changedProperties->Size > 0 &&
-            changedProperties->GetAt(0)->Key->ToString() == allJoynProperty->Name)
+        if (allJoynProperty)
         {
-            allJoynProperty->ValueChanged(allJoynProperty, changedProperties->GetAt(0)->Value);
+            IVector<IKeyValuePair<Object ^, Object ^>^>^ changedProperties;
+            int32 status = TypeConversionHelpers::GetAllJoynMessageArg(changed, "a{sv}", &changedProperties);
+
+            if (ER_OK == status && changedProperties->Size > 0)
+            {
+                auto key = changedProperties->GetAt(0)->Key->ToString();
+                auto value = dynamic_cast<AllJoynMessageArgVariant^>(changedProperties->GetAt(0)->Value);
+
+                if (key == allJoynProperty->Name &&
+                    value != nullptr &&
+                    value->TypeDefinition->Type == allJoynProperty->TypeInfo->Type)
+                {
+                    try
+                    {
+                        allJoynProperty->ValueChanged(allJoynProperty, value->Value);
+                    }
+                    catch (Exception^ ex)
+                    {
+                        OutputDebugString(ex->Message->Data());
+                    }
+                }
+            }
         }
         return;
     }
@@ -90,17 +129,18 @@ namespace DeviceProviders
         return create_async([this]()-> ReadValueResult ^
         {
             auto result = ref new ReadValueResult();
-            auto parent = this->GetParent();
 
             auto msgarg = alljoyn_msgarg_create();
             auto status = alljoyn_proxybusobject_getproperty(
-                parent->GetBusObject()->GetProxyBusObject(),
-                parent->GetName().c_str(),
+                m_interface->GetBusObject()->GetProxyBusObject(),
+                m_interface->GetName().c_str(),
                 m_name.c_str(),
                 msgarg);
 
             if (ER_OK == status)
             {
+                // Property queries wrap the result in a variant, so first unpack it here
+                alljoyn_msgarg_get(msgarg, "v", &msgarg);
                 Object ^ value;
                 status = (QStatus)TypeConversionHelpers::GetAllJoynMessageArg(msgarg, m_signature.c_str(), &value);
                 result->Value = value;
@@ -115,14 +155,13 @@ namespace DeviceProviders
     {
         return create_async([this, newValue]() -> AllJoynStatus^
         {
-            auto parent = this->GetParent();
             auto msgarg = alljoyn_msgarg_create();
             auto status = (QStatus)TypeConversionHelpers::SetAllJoynMessageArg(msgarg, m_signature.c_str(), newValue);
             if (status == ER_OK)
             {
                 status = alljoyn_proxybusobject_setproperty(
-                    parent->GetBusObject()->GetProxyBusObject(),
-                    parent->GetName().c_str(),
+                    m_interface->GetBusObject()->GetProxyBusObject(),
+                    m_interface->GetName().c_str(),
                     m_name.c_str(),
                     msgarg);
 

@@ -194,7 +194,7 @@ internal:
         return ER_OK;
     }
 
-    static _Check_return_ int32 SetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _In_ Windows::Foundation::Collections::IVectorView<Object^>^ value)
+    static _Check_return_ int32 SetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _In_ Windows::Foundation::Collections::IVector<Object^>^ value)
     {
         if (static_cast<alljoyn_typeid>(signature[0]) != ALLJOYN_ARRAY)
         {
@@ -215,20 +215,7 @@ internal:
         return static_cast<int32>(status);
     }
 
-    static _Check_return_ int32 GetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _Out_ Windows::Foundation::Collections::IVectorView<Platform::Object^>^* value)
-    {
-        Windows::Foundation::Collections::IVector<Platform::Object^>^ result;
-        int32 status = GetAllJoynMessageArg(argument, signature, &result);
-        *value = result->GetView();
-        return status;
-    }
-
-    static _Check_return_ int32 SetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _In_ Windows::Foundation::Collections::IVector<Platform::Object^>^ value)
-    {
-        return SetAllJoynMessageArg(argument, signature, value->GetView());
-    }
-
-    static _Check_return_ int32 GetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _Out_ Windows::Foundation::Collections::IVectorView<Windows::Foundation::Collections::IKeyValuePair<Platform::Object^, Platform::Object^>^>^* value)
+    static _Check_return_ int32 GetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _Out_ Windows::Foundation::Collections::IVector<Windows::Foundation::Collections::IKeyValuePair<Platform::Object^, Platform::Object^>^>^* value)
     {
         std::string keyType, valueType;
         RETURN_IF_QSTATUS_ERROR(GetDictionaryTypeSignatures(signature, keyType, valueType));
@@ -255,12 +242,11 @@ internal:
             }
         }
 
-        (*value) = result->GetView();
+        (*value) = result;
         return ER_OK;
     }
 
-    template<class T, class U>
-    static _Check_return_ int32 SetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _In_ Windows::Foundation::Collections::IMapView<T, U>^ value)
+    static _Check_return_ int32 SetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _In_ Windows::Foundation::Collections::IVector<Windows::Foundation::Collections::IKeyValuePair<Platform::Object^, Platform::Object^>^>^ value)
     {
         std::string keyType, valueType;
         RETURN_IF_QSTATUS_ERROR(GetDictionaryTypeSignatures(signature, keyType, valueType));
@@ -272,7 +258,15 @@ internal:
         {
             alljoyn_msgarg keyArg = alljoyn_msgarg_create();
             alljoyn_msgarg valueArg = alljoyn_msgarg_create();
+
             RETURN_IF_QSTATUS_ERROR(SetAllJoynMessageArg(keyArg, keyType.data(), dictionaryElement->Key));
+            if (static_cast<alljoyn_typeid>(keyType[0]) == ALLJOYN_WILDCARD)
+            {
+                char actualKeySignature[c_MaximumSignatureLength];
+                alljoyn_msgarg_signature(keyArg, actualKeySignature, c_MaximumSignatureLength);
+                keyType = actualKeySignature;
+            }
+
             RETURN_IF_QSTATUS_ERROR(SetAllJoynMessageArg(valueArg, valueType.data(), dictionaryElement->Value));
 
             RETURN_IF_QSTATUS_ERROR(alljoyn_msgarg_set_and_stabilize(alljoyn_msgarg_array_element(dictionaryArg, i++), "{**}", keyArg, valueArg));
@@ -280,19 +274,24 @@ internal:
             alljoyn_msgarg_destroy(valueArg);
         }
 
-        QStatus status = alljoyn_msgarg_set_and_stabilize(argument, signature, (size_t)value->Size, dictionaryArg);
+        std::string actualSignature = "a{" + keyType + valueType + "}";
+
+        QStatus status = alljoyn_msgarg_set_and_stabilize(argument, actualSignature.data(), (size_t)value->Size, dictionaryArg);
         alljoyn_msgarg_destroy(dictionaryArg);
         return static_cast<int32>(status);
     }
 
-    template<class T, class U>
-    static _Check_return_ int32 SetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _In_ Windows::Foundation::Collections::IMap<T, U>^ value)
+    static _Check_return_ int32 GetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR s, _Out_ DeviceProviders::AllJoynMessageArgStructure^* value)
     {
-        return SetAllJoynMessageArg(argument, signature, value->GetView());
-    }
+        char signature[c_MaximumSignatureLength];
+        alljoyn_msgarg_signature(argument, signature, c_MaximumSignatureLength);
 
-    static _Check_return_ int32 GetAllJoynMessageArg(_In_ alljoyn_msgarg argument, _In_ PCSTR signature, _Out_ DeviceProviders::AllJoynMessageArgStructure^* value)
-    {
+        if (static_cast<alljoyn_typeid>(signature[0]) == ALLJOYN_VARIANT)
+        {
+            RETURN_IF_QSTATUS_ERROR(alljoyn_msgarg_get(argument, "v", &argument));
+            alljoyn_msgarg_signature(argument, signature, c_MaximumSignatureLength);
+        }
+
         size_t memberCount = alljoyn_msgarg_getnummembers(argument);
         std::vector<std::string> fieldSignatures;
         RETURN_IF_QSTATUS_ERROR(GetFieldTypesFromStructSignature(signature, fieldSignatures));
@@ -406,11 +405,11 @@ internal:
             }
             if (static_cast<alljoyn_typeid>(signature[1]) == ALLJOYN_DICT_ENTRY_OPEN)
             {
-                return GetAllJoynMessageArgHelper<Windows::Foundation::Collections::IVectorView<Windows::Foundation::Collections::IKeyValuePair<Platform::Object^, Platform::Object^>^>^>(argument, signature, value);
+                return GetAllJoynMessageArgHelper<Windows::Foundation::Collections::IVector<Windows::Foundation::Collections::IKeyValuePair<Platform::Object^, Platform::Object^>^>^>(argument, signature, value);
             }
             else
             {
-                return GetAllJoynMessageArgHelper<Windows::Foundation::Collections::IVectorView<Platform::Object^>^>(argument, signature, value);
+                return GetAllJoynMessageArgHelper<Windows::Foundation::Collections::IVector<Platform::Object^>^>(argument, signature, value);
             }
         }
         default:
@@ -485,57 +484,11 @@ internal:
         {
             return SetAllJoynMessageArgHelper(argument, "av", signature, vectorValue);
         }
-        auto byteMapValue = dynamic_cast<Windows::Foundation::Collections::IMap<byte, Platform::Object^>^>(value);
-        if (byteMapValue != nullptr)
+        auto mapValue = dynamic_cast<Windows::Foundation::Collections::IVector<Windows::Foundation::Collections::IKeyValuePair<Platform::Object^, Platform::Object^>^>^>(value);
+        if (mapValue != nullptr)
         {
-            return SetAllJoynMessageArgHelper(argument, "a{yv}", signature, byteMapValue);
+            return SetAllJoynMessageArgHelper(argument, "a{*v}", signature, mapValue);
         }
-        auto boolMapValue = dynamic_cast<Windows::Foundation::Collections::IMap<bool, Platform::Object^>^>(value);
-        if (boolMapValue != nullptr)
-        {
-            return SetAllJoynMessageArgHelper(argument, "a{bv}", signature, boolMapValue);
-        }
-        auto int16MapValue = dynamic_cast<Windows::Foundation::Collections::IMap<int16, Platform::Object^>^>(value);
-        if (int16MapValue != nullptr)
-        {
-            return SetAllJoynMessageArgHelper(argument, "a{nv}", signature, int16MapValue);
-        }
-        auto uint16MapValue = dynamic_cast<Windows::Foundation::Collections::IMap<uint16, Platform::Object^>^>(value);
-        if (uint16MapValue != nullptr)
-        {
-            return SetAllJoynMessageArgHelper(argument, "a{qv}", signature, uint16MapValue);
-        }
-        auto int32MapValue = dynamic_cast<Windows::Foundation::Collections::IMap<int32, Platform::Object^>^>(value);
-        if (int32MapValue != nullptr)
-        {
-            return SetAllJoynMessageArgHelper(argument, "a{iv}", signature, int32MapValue);
-        }
-        auto uint32MapValue = dynamic_cast<Windows::Foundation::Collections::IMap<uint32, Platform::Object^>^>(value);
-        if (uint32MapValue != nullptr)
-        {
-            return SetAllJoynMessageArgHelper(argument, "a{uv}", signature, uint32MapValue);
-        }
-        auto int64MapValue = dynamic_cast<Windows::Foundation::Collections::IMap<int64, Platform::Object^>^>(value);
-        if (int64MapValue != nullptr)
-        {
-            return SetAllJoynMessageArgHelper(argument, "a{xv}", signature, int64MapValue);
-        }
-        auto uint64MapValue = dynamic_cast<Windows::Foundation::Collections::IMap<uint64, Platform::Object^>^>(value);
-        if (uint64MapValue != nullptr)
-        {
-            return SetAllJoynMessageArgHelper(argument, "a{tv}", signature, uint64MapValue);
-        }
-        auto doubleMapValue = dynamic_cast<Windows::Foundation::Collections::IMap<double, Platform::Object^>^>(value);
-        if (doubleMapValue != nullptr)
-        {
-            return SetAllJoynMessageArgHelper(argument, "a{dv}", signature, doubleMapValue);
-        }
-        auto stringMapValue = dynamic_cast<Windows::Foundation::Collections::IMap<Platform::String^, Platform::Object^>^>(value);
-        if (stringMapValue != nullptr)
-        {
-            return SetAllJoynMessageArgHelper(argument, "a{sv}", signature, stringMapValue);
-        }
-
         return ER_BUS_BAD_VALUE_TYPE;
     }
 
@@ -553,11 +506,16 @@ private:
     template<class T>
     static _Check_return_ int32 SetAllJoynMessageArgHelper(_In_ alljoyn_msgarg argument, _In_ PCSTR expectedSignature, _In_ PCSTR providedSignature, _In_ T value)
     {
-        // Use the provided signature for non-variant msgargs.  If the provided signature does not match the type of the value passed in,
-        // we will get an error later so there is no need to check here.
-        if (static_cast<alljoyn_typeid>(providedSignature[0]) == ALLJOYN_VARIANT)
+        // Unless the provided signature is variant or wildcard, use it.
+
+        auto typeId = static_cast<alljoyn_typeid>(providedSignature[0]);
+        if (typeId == ALLJOYN_VARIANT)
         {
             return SetVariantArg(argument, expectedSignature, value);
+        }
+        else if (typeId == ALLJOYN_WILDCARD)
+        {
+            return SetAllJoynMessageArg(argument, expectedSignature, value);
         }
         else
         {

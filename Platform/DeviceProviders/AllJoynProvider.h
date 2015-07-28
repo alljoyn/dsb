@@ -18,7 +18,6 @@
 
 #include "pch.h"
 #include "IProvider.h"
-#include "WorkItemQueue.h"
 
 namespace DeviceProviders
 {
@@ -32,38 +31,41 @@ namespace DeviceProviders
         AllJoynProvider();
 
         virtual AllJoynStatus^ Start();
-        virtual property Windows::Foundation::Collections::IObservableVector<IService ^>^ Services
-        {
-            Windows::Foundation::Collections::IObservableVector<IService ^>^ get();
-        }
         virtual void Shutdown();
+        virtual Windows::Foundation::Collections::IVector<IService^>^ GetServicesWhichImplementInterface(Platform::String^ interfaceName);
+
+        virtual property Windows::Foundation::Collections::IVector<IService ^>^ Services
+        {
+            Windows::Foundation::Collections::IVector<IService ^>^ get();
+        }
+
+        virtual event Windows::Foundation::TypedEventHandler<IProvider^, ServiceDroppedEventArgs^>^ ServiceDropped;
+        virtual event Windows::Foundation::TypedEventHandler<IProvider^, ServiceJoinedEventArgs^>^ ServiceJoined;
 
     internal:
-        static void AJ_CALL AnnounceDiscovery(_In_ void* context,
-            _In_ const char* serviceName,
-            _In_ uint16_t version,
-            _In_ alljoyn_sessionport port,
-            _In_ const alljoyn_msgarg objectDescriptionArg,
-            _In_ const alljoyn_msgarg aboutDataArg);
+        static void AJ_CALL AboutAnnounced(const void* context,
+            const char* serviceName,
+            uint16_t version,
+            alljoyn_sessionport port,
+            const alljoyn_msgarg objectDescriptionArg,
+            const alljoyn_msgarg aboutDataArg);
 
-        inline alljoyn_busattachment GetBusAttachment() const { return m_bus; }
-        void RemoveSession(AllJoynService^ service);
+        static void AJ_CALL NameOwnerChanged(const void* context, const char* busName, const char* previousOwner, const char* newOwner);
 
+        inline alljoyn_busattachment GetBusAttachment() const { return m_busAttachment; }
+        void RemoveService(AllJoynService^ service, alljoyn_sessionlostreason reason);
 
     private:
         ~AllJoynProvider();
 
-        // about service related
-        alljoyn_aboutlistener m_aboutListener;
-        bool m_isRegistered;
-        bool m_isListening;
-        WorkItemQueue m_aboutHandlerQueue;
-
-        // main alljoyn objects
         bool m_alljoynInitialized;
-        alljoyn_busattachment m_bus;
+        Platform::WeakReference m_weakThis;
 
-        Platform::Collections::Vector<IService ^>^ m_servicesVector;
         std::map<std::string, AllJoynService ^> m_servicesMap;
+        CSLock m_servicesLock;
+
+        alljoyn_aboutlistener m_aboutListener;
+        alljoyn_busattachment m_busAttachment;
+        alljoyn_buslistener m_busListener;
     };
 }

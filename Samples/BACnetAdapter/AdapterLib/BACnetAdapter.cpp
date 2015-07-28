@@ -51,11 +51,12 @@ namespace AdapterLib
         Windows::ApplicationModel::PackageId^ packageId = package->Id;
         Windows::ApplicationModel::PackageVersion versionFromPkg = packageId->Version;
 
-        this->vendor = L"Microsoft";
-        this->adapterName = L"DSB BACnet Adapter";
+        this->vendor = ref new String(cVendor.c_str());
+        this->adapterName = ref new String(cAdapterName.c_str());
         // the adapter prefix must be something like "com.mycompany" (only alpha num and dots)
         // it is used by the Device System Bridge as root string for all services and interfaces it exposes
-        this->exposedAdapterPrefix = L"com." + DsbCommon::ToLower(this->vendor->Data());
+        this->exposedAdapterPrefix = ref new String(cAdapterPrefix.c_str());
+
         this->exposedApplicationGuid = Platform::Guid(DSB_BACNET_APPLICATION_GUID);
 
         if (nullptr != package &&
@@ -588,13 +589,13 @@ namespace AdapterLib
         {
             // Device arrival signal
             {
-                BACnetAdapterSignal^ signal = ref new BACnetAdapterSignal(DEVICE_ARRIVAL_SIGNAL, this);
+                BACnetAdapterSignal^ signal = ref new BACnetAdapterSignal(Constants::DEVICE_ARRIVAL_SIGNAL, this);
 
                 //
                 // Signal parameters
                 //
                 signal += ref new BACnetAdapterValue(
-                                    DEVICE_ARRIVAL__DEVICE_HANDLE, 
+                                    Constants::DEVICE_ARRIVAL__DEVICE_HANDLE,
                                     signal, 
                                     ref new BACnetAdapterDevice(L"DsbDevice", this) // For signature spec
                                     );
@@ -725,7 +726,7 @@ namespace AdapterLib
             // Send 'Device Arrival' notification... 
             //
 
-            IAdapterSignal^ deviceArrivalSignal = this->getSignalByName(DEVICE_ARRIVAL_SIGNAL);
+            IAdapterSignal^ deviceArrivalSignal = this->getSignalByName(Constants::DEVICE_ARRIVAL_SIGNAL);
             if (deviceArrivalSignal == nullptr)
             {
                 DSB_ASSERT(FALSE);

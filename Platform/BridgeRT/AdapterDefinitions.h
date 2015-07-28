@@ -45,22 +45,4 @@ namespace BridgeRT
     interface class IAdapterDevice;
     typedef Platform::Collections::Vector<IAdapterDevice^> AdapterDeviceVector;
     typedef Windows::Foundation::Collections::IVector<IAdapterDevice^> IAdapterDeviceVector;
-
-
-    //
-    // Adapter level signals and parameters names
-    //
-
-    // Device arrival signal
-    static Platform::String^ DEVICE_ARRIVAL_SIGNAL = ref new Platform::String(L"Device_Arrival");
-    static Platform::String^ DEVICE_ARRIVAL__DEVICE_HANDLE = ref new Platform::String(L"Device_Handle");
-    
-    // Device removal signal
-    static Platform::String^ DEVICE_REMOVAL_SIGNAL = ref new Platform::String(L"Device_Removal");
-    static Platform::String^ DEVICE_REMOVAL__DEVICE_HANDLE = ref new Platform::String(L"Device_Handle");
-
-    // Change Of Value signal
-    static Platform::String^ CHANGE_OF_VALUE_SIGNAL = ref new Platform::String(L"Change_Of_Value");
-    static Platform::String^ COV__PROPERTY_HANDLE = ref new Platform::String(L"Property_Handle");
-    static Platform::String^ COV__ATTRIBUTE_HANDLE = ref new Platform::String(L"Attribute_Handle");
 }

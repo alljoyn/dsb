@@ -31,34 +31,41 @@ namespace DeviceProviders
         AllJoynBusObject(AllJoynService ^ service, const std::string& path, alljoyn_proxybusobject proxyBusObject);
 
         inline const std::string& GetPath() const { return m_path; }
-        inline AllJoynService^ GetService() const { return m_service.Resolve<AllJoynService>(); }
+        inline AllJoynService^ GetService() const { return m_service; }
         inline alljoyn_proxybusobject GetProxyBusObject() const { return m_proxyBusObject; }
-        inline alljoyn_busattachment GetBusAttachment() const { return this->GetService()->GetBusAttachment(); }
+        inline alljoyn_busattachment GetBusAttachment() const { return m_service->GetBusAttachment(); }
 
     public:
         virtual ~AllJoynBusObject();
 
-        virtual property Windows::Foundation::Collections::IObservableVector<IInterface ^>^ Interfaces
+        virtual property Windows::Foundation::Collections::IVector<IInterface ^>^ Interfaces
         {
-            Windows::Foundation::Collections::IObservableVector<IInterface ^>^ get();
+            Windows::Foundation::Collections::IVector<IInterface ^>^ get();
         }
-        virtual property Windows::Foundation::Collections::IObservableVector<IBusObject ^>^ ChildObjects
+        virtual property Windows::Foundation::Collections::IVector<IBusObject ^>^ ChildObjects
         {
-            Windows::Foundation::Collections::IObservableVector<IBusObject ^>^ get();
+            Windows::Foundation::Collections::IVector<IBusObject ^>^ get();
         }
         virtual property Platform::String ^ Path
         {
             Platform::String ^ get();
         }
+        virtual property IService^ Service
+        {
+            inline IService^ get() { return m_service; }
+        }
+
+        virtual IInterface^ GetInterface(Platform::String^ interfaceName);
 
     private:
-        Platform::WeakReference m_service;
+        AllJoynService ^ m_service;
         alljoyn_proxybusobject m_proxyBusObject;
         std::string m_path;      
         bool m_introspectedSuccessfully;
         
         bool AllJoynBusObject::Introspect();
 
-        std::set<std::string> m_interfacesFromAbout;
+        std::map<std::string, Platform::WeakReference> m_interfaces;
+        CSLock m_interfacesLock;
     };
 }

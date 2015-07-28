@@ -16,12 +16,13 @@
 
 #pragma once
 
-#include "IMethod.h"
-#include "IProperty.h"
-#include "ISignal.h"
-
 namespace DeviceProviders
 {
+    interface class IBusObject;
+    interface class IProperty;
+    interface class ISignal;
+    interface class IMethod;
+
     public interface class IInterface
     {
         property Windows::Foundation::Collections::IVectorView<IProperty ^>^ Properties
@@ -44,5 +45,13 @@ namespace DeviceProviders
         {
             Platform::String ^ get();
         }
+        property IBusObject^ BusObject
+        {
+            IBusObject^ get();
+        }
+
+        IProperty^ GetProperty(Platform::String^ propertyName);
+        IMethod^ GetMethod(Platform::String^ methodName);
+        ISignal^ GetSignal(Platform::String^ SignalName);
     };
 }

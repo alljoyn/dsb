@@ -152,9 +152,19 @@ QStatus DeviceMain::CreateMethodsAndSignals()
     QStatus status = ER_OK;
     DeviceMethod *method = nullptr;
     DeviceSignal *signal = nullptr;
+    std::string tempString;
 
     // 1st create the interface
     m_interfaceName = m_parent->GetRootNameForInterface();
+
+    //add device name
+    AllJoynHelper::EncodeStringForServiceName(m_parent->GetAdapterDevice()->Name, tempString);
+    if (!tempString.empty())
+    {
+        m_interfaceName += ".";
+        m_interfaceName += tempString;
+    }
+
     m_interfaceName += INTERFACE_NAME_FOR_MAIN_DEVICE;
 
     // create interface
@@ -199,7 +209,7 @@ QStatus DeviceMain::CreateMethodsAndSignals()
     {
         for (auto adapterSignal : m_parent->GetAdapterDevice()->Signals)
         {
-            if (adapterSignal->Name == CHANGE_OF_VALUE_SIGNAL)
+            if (adapterSignal->Name == Constants::CHANGE_OF_VALUE_SIGNAL)
             {
                 // change of value signal only concerns IAdapterProperty hence not this class
                 continue;

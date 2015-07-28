@@ -18,10 +18,10 @@
 
 #include "pch.h"
 #include "IProperty.h"
+#include "AllJoynInterface.h"
 
 namespace DeviceProviders
 {
-    ref class AllJoynInterface;
     interface class ITypeDefinition;
 
     ref class AllJoynProperty : public IProperty
@@ -30,7 +30,7 @@ namespace DeviceProviders
 
     internal:
         AllJoynProperty(_In_ AllJoynInterface ^ parent, const alljoyn_interfacedescription_property& propertyDescription);
-        AllJoynInterface ^ GetParent() const { return m_interface.Resolve<AllJoynInterface>(); }
+        inline const std::string& GetName() const { return m_name; }
 
         static void AJ_CALL OnPropertyChanged(_In_ alljoyn_proxybusobject busObject,
             _In_ const char* interfaceName,
@@ -64,14 +64,26 @@ namespace DeviceProviders
             inline bool get() { return m_canWrite; }
         }
 
+        virtual property IInterface^ Interface
+        {
+            inline IInterface^ get() { return m_interface; }
+        }
+
+        virtual property Windows::Foundation::Collections::IMapView<Platform::String^, Platform::String^> ^ Annotations
+        {
+            Windows::Foundation::Collections::IMapView<Platform::String^, Platform::String^> ^ get() { return m_annotations; }
+        }
+
         virtual event Windows::Foundation::TypedEventHandler<IProperty^, Object^>^ ValueChanged;
 
     private:
-        ::Platform::WeakReference m_interface;
+        Platform::WeakReference m_weakThis;
+        AllJoynInterface ^ m_interface;
         ITypeDefinition ^ m_typeInfo;
         std::string m_signature;
         std::string m_name;
         bool m_canRead;
         bool m_canWrite;
+        Windows::Foundation::Collections::IMapView<Platform::String^, Platform::String^> ^ m_annotations;
     };
 }

@@ -83,6 +83,12 @@ namespace AdapterLib
         {
             Platform::String^ get() { return this->name; }
         }
+
+        virtual property Platform::String^ InterfaceHint
+        {
+            Platform::String^ get() { return this->interfaceHint; }
+        }
+
         virtual property Platform::Object^ Parent
         {
             Platform::Object^ get() { return this->parent; }
@@ -115,6 +121,7 @@ namespace AdapterLib
     private:
         // Generic
         Platform::String^ name;
+        Platform::String^ interfaceHint;
         Platform::Object^ parent;
 
         const MOCK_PROPERTY_DESCRIPTOR* mockDescPtr;
@@ -308,7 +315,7 @@ namespace AdapterLib
         virtual property Platform::String^ Description
         {
             Platform::String^ get() { return this->description; }
-        }
+        }       
 
         // Device properties
         virtual property BridgeRT::IAdapterPropertyVector^ Properties
@@ -331,6 +338,20 @@ namespace AdapterLib
             BridgeRT::IAdapterSignalVector^ get()
             {
                 return ref new BridgeRT::AdapterSignalVector(this->signals);
+            }
+        }
+
+        // Control Panel Handler
+        virtual property BridgeRT::IControlPanelHandler^ ControlPanelHandler
+        {
+            BridgeRT::IControlPanelHandler^ get()
+            {
+                return controlPanelHandler;
+            }
+
+            void set(BridgeRT::IControlPanelHandler^ handler)
+            {
+                controlPanelHandler = handler;
             }
         }
 
@@ -367,6 +388,7 @@ namespace AdapterLib
         Platform::String^ firmwareVersion;
         Platform::String^ serialNumber;
         Platform::String^ description;
+        BridgeRT::IControlPanelHandler^ controlPanelHandler;
 
         // Sync object
         DsbCommon::CSLock lock;

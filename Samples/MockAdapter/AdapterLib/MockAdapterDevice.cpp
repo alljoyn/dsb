@@ -79,6 +79,7 @@ namespace AdapterLib
         : name(Name)
         , parent(ParentObject)
         , mockDescPtr(nullptr)
+        , interfaceHint(ref new String(L""))
     {
         // Used only for signature spec
     }
@@ -88,6 +89,8 @@ namespace AdapterLib
         , name(MockPropertyDescPtr->Name)
         , mockDescPtr(MockPropertyDescPtr)
     {
+        std::wstring wszIfName = cAdapterPrefix + L"." + cAdapterName + L"." + MockPropertyDescPtr->InterfaceHint->Data();
+        interfaceHint = ref new String(wszIfName.c_str());
         (void)this->Reset();
     }
 
@@ -97,6 +100,7 @@ namespace AdapterLib
         , parent(Other->parent)
         , attributes(Other->attributes)
         , mockDescPtr(Other->mockDescPtr)
+        , interfaceHint(Other->interfaceHint)
     {
     }
 
@@ -258,7 +262,7 @@ namespace AdapterLib
         MockAdapterDevice^ device = dynamic_cast<MockAdapterDevice^>(this->parent);
         DSB_ASSERT(device != nullptr);
 
-        device->SendSignal(CHANGE_OF_VALUE_SIGNAL, this, Attribute);
+        device->SendSignal(Constants::CHANGE_OF_VALUE_SIGNAL, this, Attribute);
     }
 
 
@@ -331,6 +335,7 @@ namespace AdapterLib
         , firmwareVersion(MockDeviceDescPtr->Version)
         , serialNumber(MockDeviceDescPtr->SerialNumer)
         , description(MockDeviceDescPtr->Description)
+        , controlPanelHandler(nullptr)
     {
         for (int propInx = 0; propInx <= ARRAYSIZE(MockDeviceDescPtr->PropertyDescriptors); ++propInx)
         {
@@ -403,7 +408,7 @@ namespace AdapterLib
 
         AutoLock sync(&this->lock, true);
 
-        if (targetSignal->Name == CHANGE_OF_VALUE_SIGNAL)
+        if (targetSignal->Name == Constants::CHANGE_OF_VALUE_SIGNAL)
         {
             DSB_ASSERT(Property != nullptr);
             DSB_ASSERT(Attribute != nullptr);
@@ -492,7 +497,7 @@ namespace AdapterLib
     {
         // Device arrival signal
         {
-            MockAdapterSignal^ signal = ref new MockAdapterSignal(CHANGE_OF_VALUE_SIGNAL, this);
+            MockAdapterSignal^ signal = ref new MockAdapterSignal(Constants::CHANGE_OF_VALUE_SIGNAL, this);
 
             //
             // Signal parameters
@@ -502,8 +507,8 @@ namespace AdapterLib
                 MockAdapterProperty^ tmpltProperty = ref new MockAdapterProperty(L"AdapterProperty", this);
                 MockAdapterValue^ tmpltValue = ref new MockAdapterValue(L"AdapterValue", tmpltProperty);
 
-                signal += ref new MockAdapterValue(COV__PROPERTY_HANDLE, signal, tmpltProperty);
-                signal += ref new MockAdapterValue(COV__ATTRIBUTE_HANDLE, signal, tmpltValue);
+                signal += ref new MockAdapterValue(Constants::COV__PROPERTY_HANDLE, signal, tmpltProperty);
+                signal += ref new MockAdapterValue(Constants::COV__ATTRIBUTE_HANDLE, signal, tmpltValue);
             }
 
             this->signals.push_back(std::move(signal));

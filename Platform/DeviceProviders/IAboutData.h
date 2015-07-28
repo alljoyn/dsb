@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "IAboutIcon.h"
+
 namespace DeviceProviders
 {
     public interface class IAboutData
@@ -87,5 +89,7 @@ namespace DeviceProviders
         {
             Windows::Foundation::Collections::IMapView<Platform::String^, Platform::Object^> ^ get();
         }
+
+        Windows::Foundation::IAsyncOperation<IAboutIcon^>^ GetIconAsync();
     };
 }

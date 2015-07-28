@@ -16,23 +16,30 @@
 
 #pragma once
 
-#include "IInterface.h"
-
 namespace DeviceProviders
 {
+    interface class IInterface;
+    interface class IService;
+
     public interface class IBusObject
     {
-        property Windows::Foundation::Collections::IObservableVector<IInterface ^>^ Interfaces
+        property Windows::Foundation::Collections::IVector<IInterface ^>^ Interfaces
         {
-            Windows::Foundation::Collections::IObservableVector<IInterface ^>^ get();
+            Windows::Foundation::Collections::IVector<IInterface ^>^ get();
         }
-        property Windows::Foundation::Collections::IObservableVector<IBusObject ^>^ ChildObjects
+        property Windows::Foundation::Collections::IVector<IBusObject ^>^ ChildObjects
         {
-            Windows::Foundation::Collections::IObservableVector<IBusObject ^>^ get();
+            Windows::Foundation::Collections::IVector<IBusObject ^>^ get();
         }
         property Platform::String ^ Path
         {
             Platform::String ^ get();
         }
+        property IService^ Service
+        {
+            IService^ get();
+        }
+
+        IInterface^ GetInterface(Platform::String^ interfaceName);
     };
 }

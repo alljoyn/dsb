@@ -42,7 +42,7 @@ PropertyInterface::~PropertyInterface()
     m_AJProperties.clear();
 }
 
-QStatus PropertyInterface::Create(IAdapterProperty ^adapterProperty, _In_ string &name, BridgeDevice ^parent)
+QStatus PropertyInterface::Create(IAdapterProperty ^adapterProperty, _In_ string &name, BridgeDevice ^device)
 {
     QStatus status = ER_OK;
     string tempName;
@@ -59,24 +59,23 @@ QStatus PropertyInterface::Create(IAdapterProperty ^adapterProperty, _In_ string
         status = ER_BAD_ARG_2;
         goto leave;
     }
-    if (nullptr == parent)
+    if (nullptr == device)
     {
         status = ER_BAD_ARG_3;
         goto leave;
     }
 
     m_interfaceName = name; 
-    m_parent = parent;
 
     // create alljoyn interface 
     // note that the interface isn't suppose to already exist => ER_BUS_IFACE_ALREADY_EXISTS is an error
     if (DsbBridge::SingleInstance()->GetConfigManager()->IsDeviceAccessSecured())
     {
-        status = alljoyn_busattachment_createinterface_secure(m_parent->GetBusAttachment(), m_interfaceName.c_str(), &m_interfaceDescription, AJ_IFC_SECURITY_REQUIRED);
+        status = alljoyn_busattachment_createinterface_secure(device->GetBusAttachment(), m_interfaceName.c_str(), &m_interfaceDescription, AJ_IFC_SECURITY_REQUIRED);
     }
     else
     {
-        status = alljoyn_busattachment_createinterface(m_parent->GetBusAttachment(), m_interfaceName.c_str(), &m_interfaceDescription);
+        status = alljoyn_busattachment_createinterface(device->GetBusAttachment(), m_interfaceName.c_str(), &m_interfaceDescription);
     }
     if (ER_OK != status)
     {
@@ -115,7 +114,7 @@ QStatus PropertyInterface::Create(IAdapterProperty ^adapterProperty, _In_ string
         // note: 
         // COV signal is at adapter device level hence either supported for all interfaces
         // or not supported by any interface
-        if (parent->IsCOVSupported())
+        if (device->IsCOVSupported())
         {
             status = alljoyn_interfacedescription_addpropertyannotation(m_interfaceDescription,
                 ajProperty->GetName()->c_str(),

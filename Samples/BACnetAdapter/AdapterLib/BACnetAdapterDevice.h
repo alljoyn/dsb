@@ -68,11 +68,11 @@ namespace AdapterLib
             _Out_ BACNET_APPLICATION_DATA_VALUE& BACnetValue
             );
 
-		static uint32 TranslateAttributeValue(
-			_Inout_ BACnetAdapterValue^ Attribute,
-			_In_ ULONG BACnetPropertyId,
-			_In_ bool IsFromBACnet
-			);
+        static uint32 TranslateAttributeValue(
+            _Inout_ BACnetAdapterValue^ Attribute,
+            _In_ ULONG BACnetPropertyId,
+            _In_ bool IsFromBACnet
+            );
 
         bool IsModified() const { return this->isModified; }
         void SetModified(bool IsModified) { this->isModified = IsModified; }
@@ -81,7 +81,7 @@ namespace AdapterLib
         // Generic
         Platform::String^ name;
         Platform::Object^ parent;
-		
+
         Platform::Object^ data;
 
         bool isModified;
@@ -103,6 +103,12 @@ namespace AdapterLib
         {
             Platform::String^ get() { return this->name; }
         }
+
+        virtual property Platform::String^ InterfaceHint
+        {
+            Platform::String^ get() { return this->interfaceHint; }
+        }
+
         virtual property Platform::Object^ Parent
         {
             Platform::Object^ get() { return this->parent; }
@@ -118,8 +124,8 @@ namespace AdapterLib
         }
 
     internal:
-        BACnetAdapterProperty(Platform::String^ Name, Platform::Object^ ParentObject);
-        BACnetAdapterProperty(ULONG BACnetObjectId, Platform::Object^ ParentObject);
+        BACnetAdapterProperty(Platform::String^ Name, Platform::Object^ ParentObject, Platform::String^ ifHint = L"");
+        BACnetAdapterProperty(ULONG BACnetObjectId, Platform::Object^ ParentObject, Platform::String^ ifHint = L"");
         BACnetAdapterProperty(const BACnetAdapterProperty^ Other);
 
         uint32 Set(BridgeRT::IAdapterProperty^ Other);
@@ -149,6 +155,7 @@ namespace AdapterLib
     private:
         // Generic
         Platform::String^ name;
+        Platform::String^ interfaceHint;
         Platform::Object^ parent;
 
         std::vector<BridgeRT::IAdapterValue^> attributes;
@@ -309,6 +316,15 @@ namespace AdapterLib
             BridgeRT::IAdapterSignalVector^ get()
             {
                 return ref new BridgeRT::AdapterSignalVector(this->signals);
+            }
+        }
+
+        // Control Panel Handler
+        virtual property BridgeRT::IControlPanelHandler^ ControlPanelHandler
+        {
+            BridgeRT::IControlPanelHandler^ get()
+            {
+                return nullptr;
             }
         }
 

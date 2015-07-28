@@ -49,6 +49,7 @@ namespace AdapterLib
                     1,                          // Property ID
                     OBJECT_BINARY_OUTPUT,       // Property type
                     L"Switch 1",                // Name
+                    L"BinaryOutput",            //Interface Hint
                     AdapterPropertyAccessRW,        // Access
                     UNITS_NO_UNITS,             // Units
 
@@ -69,6 +70,7 @@ namespace AdapterLib
                     2,                          // Property ID
                     OBJECT_BINARY_OUTPUT,       // Property type
                     L"Switch 2",                // Name
+                    L"BinaryOutput",            //Interface Hint
                     AdapterPropertyAccessRW,        // Access
                     UNITS_NO_UNITS,             // Units
 
@@ -106,6 +108,7 @@ namespace AdapterLib
                     1,                          // Property ID
                     OBJECT_BINARY_OUTPUT,       // Property type
                     L"Switch",                  // Name
+                    L"BinaryOutput",            //Interface Hint
                     AdapterPropertyAccessRW,        // Access
                     UNITS_NO_UNITS,             // Units
 
@@ -126,6 +129,7 @@ namespace AdapterLib
                     2,                          // Property ID
                     OBJECT_ANALOG_OUTPUT,       // Property type
                     L"Dim Control",             // Name
+                    L"AnalogOutput",            //Interface Hint
                     AdapterPropertyAccessRW,        // Access
                     UNITS_PERCENT,              // Units
 
@@ -163,6 +167,7 @@ namespace AdapterLib
                     1,                          // Property ID
                     OBJECT_ANALOG_INPUT,        // Property type
                     L"Temperature",             // Name
+                    L"AnalogInput",             //Interface Hint
                     AdapterPropertyAccessRO,        // Access
                     UNITS_DEGREES_FAHRENHEIT,   // Units
 

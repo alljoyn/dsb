@@ -1,0 +1,409 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.22823.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Runtime", "Runtime", "{D5245031-A887-4A29-9119-8F77308DAB31}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UWP", "UWP", "{18FF0C78-D0C1-49A1-A9F8-B695E7457750}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ajtcl", "ajtcl", "{3EC70565-5A76-4596-BAD2-C13BAF10FB74}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ajtcl", "Runtime\ajtcl\ajtcl.vcxproj", "{9FA725B1-32B9-4916-8E18-08F498F4FB68}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{1F8474C1-0966-4EE1-8A76-40C4782F807D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ajtcl", "ajtcl", "{0FB323BF-F2C9-4BF7-B61D-9CBFBB213991}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "crypto", "crypto", "{64AEBAC4-22DA-4CB5-8D57-0C5191C544DE}"
+	ProjectSection(SolutionItems) = preProject
+		External\ajtcl\crypto\aj_sw_crypto.c = External\ajtcl\crypto\aj_sw_crypto.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ecc", "ecc", "{B5B0E51C-E4E2-40E4-917F-29719BAB3323}"
+	ProjectSection(SolutionItems) = preProject
+		External\ajtcl\crypto\ecc\aj_crypto_ecc.c = External\ajtcl\crypto\ecc\aj_crypto_ecc.c
+		External\ajtcl\crypto\ecc\aj_crypto_sha2.c = External\ajtcl\crypto\ecc\aj_crypto_sha2.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "malloc", "malloc", "{E2F20C9F-21F6-4C11-9C54-3E97A2B5DBA6}"
+	ProjectSection(SolutionItems) = preProject
+		External\ajtcl\malloc\aj_malloc.c = External\ajtcl\malloc\aj_malloc.c
+		External\ajtcl\malloc\aj_malloc.h = External\ajtcl\malloc\aj_malloc.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D1CD5654-4B05-4832-84EA-C6B9C237405C}"
+	ProjectSection(SolutionItems) = preProject
+		External\ajtcl\src\aj_about.c = External\ajtcl\src\aj_about.c
+		External\ajtcl\src\aj_ardp.c = External\ajtcl\src\aj_ardp.c
+		External\ajtcl\src\aj_authentication.c = External\ajtcl\src\aj_authentication.c
+		External\ajtcl\src\aj_bufio.c = External\ajtcl\src\aj_bufio.c
+		External\ajtcl\src\aj_bus.c = External\ajtcl\src\aj_bus.c
+		External\ajtcl\src\aj_cert.c = External\ajtcl\src\aj_cert.c
+		External\ajtcl\src\aj_connect.c = External\ajtcl\src\aj_connect.c
+		External\ajtcl\src\aj_crc16.c = External\ajtcl\src\aj_crc16.c
+		External\ajtcl\src\aj_creds.c = External\ajtcl\src\aj_creds.c
+		External\ajtcl\src\aj_crypto.c = External\ajtcl\src\aj_crypto.c
+		External\ajtcl\src\aj_debug.c = External\ajtcl\src\aj_debug.c
+		External\ajtcl\src\aj_disco.c = External\ajtcl\src\aj_disco.c
+		External\ajtcl\src\aj_guid.c = External\ajtcl\src\aj_guid.c
+		External\ajtcl\src\aj_helper.c = External\ajtcl\src\aj_helper.c
+		External\ajtcl\src\aj_init.c = External\ajtcl\src\aj_init.c
+		External\ajtcl\src\aj_introspect.c = External\ajtcl\src\aj_introspect.c
+		External\ajtcl\src\aj_link_timeout.c = External\ajtcl\src\aj_link_timeout.c
+		External\ajtcl\src\aj_msg.c = External\ajtcl\src\aj_msg.c
+		External\ajtcl\src\aj_nvram.c = External\ajtcl\src\aj_nvram.c
+		External\ajtcl\src\aj_peer.c = External\ajtcl\src\aj_peer.c
+		External\ajtcl\src\aj_serial.c = External\ajtcl\src\aj_serial.c
+		External\ajtcl\src\aj_serial_rx.c = External\ajtcl\src\aj_serial_rx.c
+		External\ajtcl\src\aj_serial_tx.c = External\ajtcl\src\aj_serial_tx.c
+		External\ajtcl\src\aj_std.c = External\ajtcl\src\aj_std.c
+		External\ajtcl\src\aj_util.c = External\ajtcl\src\aj_util.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "target", "target", "{06C91DBE-0AD6-4E00-B353-3384E2B7110B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "win32", "win32", "{939A00D4-E707-43DF-84A9-0F18504FF5D1}"
+	ProjectSection(SolutionItems) = preProject
+		External\ajtcl\target\win32\aj_net.c = External\ajtcl\target\win32\aj_net.c
+		External\ajtcl\target\win32\aj_target.h = External\ajtcl\target\win32\aj_target.h
+		External\ajtcl\target\win32\aj_target_crypto.c = External\ajtcl\target\win32\aj_target_crypto.c
+		External\ajtcl\target\win32\aj_target_nvram.c = External\ajtcl\target\win32\aj_target_nvram.c
+		External\ajtcl\target\win32\aj_target_nvram.h = External\ajtcl\target\win32\aj_target_nvram.h
+		External\ajtcl\target\win32\aj_target_util.c = External\ajtcl\target\win32\aj_target_util.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{5BB8D623-96D0-4CF1-AAE9-894AA7C6009B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sha2", "sha2", "{55EA1781-DF3B-4B61-A16E-578346A515CB}"
+	ProjectSection(SolutionItems) = preProject
+		External\ajtcl\external\sha2\sha2.c = External\ajtcl\external\sha2\sha2.c
+		External\ajtcl\external\sha2\sha2.h = External\ajtcl\external\sha2\sha2.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "duktape", "duktape", "{2C4947D2-A51B-4B74-86EA-CB253A2F3717}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C5E5779D-3F4C-4AE7-82E7-28A3A86C6EA3}"
+	ProjectSection(SolutionItems) = preProject
+		External\duktape\src\duktape.c = External\duktape\src\duktape.c
+		External\duktape\src\duktape.h = External\duktape\src\duktape.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "base_tcl", "base_tcl", "{FABBBEA2-2B8B-4ED5-B849-27A32FE90398}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services_common", "services_common", "{36954625-32F6-4F33-A071-0C836A6F2AED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "notification", "notification", "{7E473552-CE4E-4657-A37D-4934C2F45843}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{07BED5C4-FC54-4BD0-93AA-38A8A6AD763A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NotificationCommon", "NotificationCommon", "{418FF472-06E2-41F4-A8B5-B5658F83EEF9}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\notification\src\NotificationCommon\NotificationCommon.c = External\base_tcl\notification\src\NotificationCommon\NotificationCommon.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NotificationProducer", "NotificationProducer", "{912A1133-ABFC-4DF2-A3A5-F0AB9488E8C2}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\notification\src\NotificationProducer\NotificationProducer.c = External\base_tcl\notification\src\NotificationProducer\NotificationProducer.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{FDAB52BB-FDA6-4DBD-8BE7-01E453EF632D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{31FA4772-F933-4735-A253-77E156851DA2}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\config\src\ConfigService.c = External\base_tcl\config\src\ConfigService.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "controlpanel", "controlpanel", "{AB9DFB16-BAC6-4E68-A1BE-DDDA1F2BCD32}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{82A43434-757C-4857-9509-DE9A60885105}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CPSControllee", "CPSControllee", "{DF297CB0-357C-4315-BFC9-186FB72024AE}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\controlpanel\src\CPSControllee\ControlPanelInterfaces.c = External\base_tcl\controlpanel\src\CPSControllee\ControlPanelInterfaces.c
+		External\base_tcl\controlpanel\src\CPSControllee\ControlPanelService.c = External\base_tcl\controlpanel\src\CPSControllee\ControlPanelService.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{8B0EBC5B-46ED-4220-A98F-394ABDF68FC1}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\controlpanel\src\CPSControllee\Common\BaseWidget.c = External\base_tcl\controlpanel\src\CPSControllee\Common\BaseWidget.c
+		External\base_tcl\controlpanel\src\CPSControllee\Common\ConstraintList.c = External\base_tcl\controlpanel\src\CPSControllee\Common\ConstraintList.c
+		External\base_tcl\controlpanel\src\CPSControllee\Common\ConstraintRange.c = External\base_tcl\controlpanel\src\CPSControllee\Common\ConstraintRange.c
+		External\base_tcl\controlpanel\src\CPSControllee\Common\ControlMarshalUtil.c = External\base_tcl\controlpanel\src\CPSControllee\Common\ControlMarshalUtil.c
+		External\base_tcl\controlpanel\src\CPSControllee\Common\DateTimeUtil.c = External\base_tcl\controlpanel\src\CPSControllee\Common\DateTimeUtil.c
+		External\base_tcl\controlpanel\src\CPSControllee\Common\HttpControl.c = External\base_tcl\controlpanel\src\CPSControllee\Common\HttpControl.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Widgets", "Widgets", "{474E3179-6DA9-47AC-899E-EDE433B773D7}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\controlpanel\src\CPSControllee\Widgets\ActionWidget.c = External\base_tcl\controlpanel\src\CPSControllee\Widgets\ActionWidget.c
+		External\base_tcl\controlpanel\src\CPSControllee\Widgets\ContainerWidget.c = External\base_tcl\controlpanel\src\CPSControllee\Widgets\ContainerWidget.c
+		External\base_tcl\controlpanel\src\CPSControllee\Widgets\DialogWidget.c = External\base_tcl\controlpanel\src\CPSControllee\Widgets\DialogWidget.c
+		External\base_tcl\controlpanel\src\CPSControllee\Widgets\LabelWidget.c = External\base_tcl\controlpanel\src\CPSControllee\Widgets\LabelWidget.c
+		External\base_tcl\controlpanel\src\CPSControllee\Widgets\PropertyWidget.c = External\base_tcl\controlpanel\src\CPSControllee\Widgets\PropertyWidget.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A31D32B8-B1EB-4AD4-AF5C-46E546852F53}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\services_common\src\ServicesCommon.c = External\base_tcl\services_common\src\ServicesCommon.c
+		External\base_tcl\services_common\src\ServicesHandlers.c = External\base_tcl\services_common\src\ServicesHandlers.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "inc", "inc", "{B9BB61F8-13F6-4B91-8FF8-B74FAFE20657}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "alljoyn", "alljoyn", "{6C911928-51E8-4139-86A5-72DAFCDC5451}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{3799FE8B-52F4-442F-90AA-038ECEA3FD7F}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\config\inc\alljoyn\config\ConfigService.h = External\base_tcl\config\inc\alljoyn\config\ConfigService.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "inc", "inc", "{2DC39CEF-0F51-4976-BC07-B0C4355CC543}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "alljoyn", "alljoyn", "{0E08DDE1-3067-4AE0-9576-2A2DBD33827B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "controlpanel", "controlpanel", "{01DA7402-D2EA-4585-85CD-47D5711BF802}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\ControlPanelInterfaces.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\ControlPanelInterfaces.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\ControlPanelService.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\ControlPanelService.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Definitions.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Definitions.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{DCC31D54-93A7-49E2-9051-A221B8E8BC32}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\BaseWidget.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\BaseWidget.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\ConstraintList.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\ConstraintList.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\ConstraintRange.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\ConstraintRange.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\ControlMarshalUtil.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\ControlMarshalUtil.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\DateTimeUtil.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\DateTimeUtil.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\HttpControl.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Common\HttpControl.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Widgets", "Widgets", "{557892A3-6B9C-48D7-B31F-1609A878F282}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\ActionWidget.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\ActionWidget.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\ContainerWidget.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\ContainerWidget.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\DialogWidget.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\DialogWidget.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\LabelWidget.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\LabelWidget.h
+		External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\PropertyWidget.h = External\base_tcl\controlpanel\inc\alljoyn\controlpanel\Widgets\PropertyWidget.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "inc", "inc", "{95DDEB4E-2D42-40CF-843D-27C416A45F1C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "alljoyn", "alljoyn", "{868D696A-CAC1-47E8-BFB4-11225BCFC699}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "notification", "notification", "{ABC9CFF3-2E0C-458B-870D-B3421D7F2619}"
+	ProjectSection(SolutionItems) = preProject
+		External\base_tcl\notification\inc\alljoyn\notification\NotificationCommon.h = External\base_tcl\notification\inc\alljoyn\notification\NotificationCommon.h
+		External\base_tcl\notification\inc\alljoyn\notification\NotificationConsumer.h = External\base_tcl\notification\inc\alljoyn\notification\NotificationConsumer.h
+		External\base_tcl\notification\inc\alljoyn\notification\NotificationProducer.h = External\base_tcl\notification\inc\alljoyn\notification\NotificationProducer.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "alljoyn-js", "alljoyn-js", "{791CA495-288A-4EFE-BB3D-26E08CAA0CDC}"
+	ProjectSection(SolutionItems) = preProject
+		External\alljoyn-js\ajs.c = External\alljoyn-js\ajs.c
+		External\alljoyn-js\ajs.h = External\alljoyn-js\ajs.h
+		External\alljoyn-js\ajs_attach.c = External\alljoyn-js\ajs_attach.c
+		External\alljoyn-js\ajs_cmdline.c = External\alljoyn-js\ajs_cmdline.c
+		External\alljoyn-js\ajs_cmdline.h = External\alljoyn-js\ajs_cmdline.h
+		External\alljoyn-js\ajs_console.c = External\alljoyn-js\ajs_console.c
+		External\alljoyn-js\ajs_cps.c = External\alljoyn-js\ajs_cps.c
+		External\alljoyn-js\ajs_ctrlpanel.c = External\alljoyn-js\ajs_ctrlpanel.c
+		External\alljoyn-js\ajs_ctrlpanel.h = External\alljoyn-js\ajs_ctrlpanel.h
+		External\alljoyn-js\ajs_debugger.c = External\alljoyn-js\ajs_debugger.c
+		External\alljoyn-js\ajs_debugger.h = External\alljoyn-js\ajs_debugger.h
+		External\alljoyn-js\ajs_duk.h = External\alljoyn-js\ajs_duk.h
+		External\alljoyn-js\ajs_extstr.c = External\alljoyn-js\ajs_extstr.c
+		External\alljoyn-js\ajs_handlers.c = External\alljoyn-js\ajs_handlers.c
+		External\alljoyn-js\ajs_heap.c = External\alljoyn-js\ajs_heap.c
+		External\alljoyn-js\ajs_heap.h = External\alljoyn-js\ajs_heap.h
+		External\alljoyn-js\ajs_io.c = External\alljoyn-js\ajs_io.c
+		External\alljoyn-js\ajs_io.h = External\alljoyn-js\ajs_io.h
+		External\alljoyn-js\ajs_marshal.c = External\alljoyn-js\ajs_marshal.c
+		External\alljoyn-js\ajs_msgloop.c = External\alljoyn-js\ajs_msgloop.c
+		External\alljoyn-js\ajs_notif.c = External\alljoyn-js\ajs_notif.c
+		External\alljoyn-js\ajs_obs_stubs.c = External\alljoyn-js\ajs_obs_stubs.c
+		External\alljoyn-js\ajs_propstore.c = External\alljoyn-js\ajs_propstore.c
+		External\alljoyn-js\ajs_propstore.h = External\alljoyn-js\ajs_propstore.h
+		External\alljoyn-js\ajs_services.c = External\alljoyn-js\ajs_services.c
+		External\alljoyn-js\ajs_services.h = External\alljoyn-js\ajs_services.h
+		External\alljoyn-js\ajs_sessions.c = External\alljoyn-js\ajs_sessions.c
+		External\alljoyn-js\ajs_tables.c = External\alljoyn-js\ajs_tables.c
+		External\alljoyn-js\ajs_target.h = External\alljoyn-js\ajs_target.h
+		External\alljoyn-js\ajs_timer.c = External\alljoyn-js\ajs_timer.c
+		External\alljoyn-js\ajs_translations.c = External\alljoyn-js\ajs_translations.c
+		External\alljoyn-js\ajs_translations.h = External\alljoyn-js\ajs_translations.h
+		External\alljoyn-js\ajs_unmarshal.c = External\alljoyn-js\ajs_unmarshal.c
+		External\alljoyn-js\ajs_util.c = External\alljoyn-js\ajs_util.c
+		External\alljoyn-js\ajs_util.h = External\alljoyn-js\ajs_util.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "win32", "win32", "{AD2076DE-D262-45D4-9C16-70FEA3D1CFDB}"
+	ProjectSection(SolutionItems) = preProject
+		External\alljoyn-js\win32\ajs_main.c = External\alljoyn-js\win32\ajs_main.c
+		External\alljoyn-js\win32\ajs_malloc.c = External\alljoyn-js\win32\ajs_malloc.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "io", "io", "{DDF8A9A9-E039-424D-9102-4C6A013B4202}"
+	ProjectSection(SolutionItems) = preProject
+		External\alljoyn-js\win32\io\io_info.c = External\alljoyn-js\win32\io\io_info.c
+		External\alljoyn-js\win32\io\io_simulation.c = External\alljoyn-js\win32\io\io_simulation.c
+		External\alljoyn-js\win32\io\io_stubs.c = External\alljoyn-js\win32\io\io_stubs.c
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "inc", "inc", "{3D57BF15-553A-4067-94A2-2B7D127DFFE0}"
+	ProjectSection(SolutionItems) = preProject
+		External\ajtcl\inc\aj_about.h = External\ajtcl\inc\aj_about.h
+		External\ajtcl\inc\aj_ardp.h = External\ajtcl\inc\aj_ardp.h
+		External\ajtcl\inc\aj_auth_listener.h = External\ajtcl\inc\aj_auth_listener.h
+		External\ajtcl\inc\aj_authentication.h = External\ajtcl\inc\aj_authentication.h
+		External\ajtcl\inc\aj_bufio.h = External\ajtcl\inc\aj_bufio.h
+		External\ajtcl\inc\aj_bus.h = External\ajtcl\inc\aj_bus.h
+		External\ajtcl\inc\aj_cert.h = External\ajtcl\inc\aj_cert.h
+		External\ajtcl\inc\aj_config.h = External\ajtcl\inc\aj_config.h
+		External\ajtcl\inc\aj_connect.h = External\ajtcl\inc\aj_connect.h
+		External\ajtcl\inc\aj_crc16.h = External\ajtcl\inc\aj_crc16.h
+		External\ajtcl\inc\aj_creds.h = External\ajtcl\inc\aj_creds.h
+		External\ajtcl\inc\aj_crypto.h = External\ajtcl\inc\aj_crypto.h
+		External\ajtcl\inc\aj_crypto_ecc.h = External\ajtcl\inc\aj_crypto_ecc.h
+		External\ajtcl\inc\aj_crypto_sha2.h = External\ajtcl\inc\aj_crypto_sha2.h
+		External\ajtcl\inc\aj_debug.h = External\ajtcl\inc\aj_debug.h
+		External\ajtcl\inc\aj_disco.h = External\ajtcl\inc\aj_disco.h
+		External\ajtcl\inc\aj_guid.h = External\ajtcl\inc\aj_guid.h
+		External\ajtcl\inc\aj_helper.h = External\ajtcl\inc\aj_helper.h
+		External\ajtcl\inc\aj_init.h = External\ajtcl\inc\aj_init.h
+		External\ajtcl\inc\aj_introspect.h = External\ajtcl\inc\aj_introspect.h
+		External\ajtcl\inc\aj_link_timeout.h = External\ajtcl\inc\aj_link_timeout.h
+		External\ajtcl\inc\aj_msg.h = External\ajtcl\inc\aj_msg.h
+		External\ajtcl\inc\aj_msg_priv.h = External\ajtcl\inc\aj_msg_priv.h
+		External\ajtcl\inc\aj_net.h = External\ajtcl\inc\aj_net.h
+		External\ajtcl\inc\aj_nvram.h = External\ajtcl\inc\aj_nvram.h
+		External\ajtcl\inc\aj_peer.h = External\ajtcl\inc\aj_peer.h
+		External\ajtcl\inc\aj_serial.h = External\ajtcl\inc\aj_serial.h
+		External\ajtcl\inc\aj_serial_rx.h = External\ajtcl\inc\aj_serial_rx.h
+		External\ajtcl\inc\aj_serial_tx.h = External\ajtcl\inc\aj_serial_tx.h
+		External\ajtcl\inc\aj_serio.h = External\ajtcl\inc\aj_serio.h
+		External\ajtcl\inc\aj_status.h = External\ajtcl\inc\aj_status.h
+		External\ajtcl\inc\aj_std.h = External\ajtcl\inc\aj_std.h
+		External\ajtcl\inc\aj_util.h = External\ajtcl\inc\aj_util.h
+		External\ajtcl\inc\aj_version.h = External\ajtcl\inc\aj_version.h
+		External\ajtcl\inc\aj_wifi_ctrl.h = External\ajtcl\inc\aj_wifi_ctrl.h
+		External\ajtcl\inc\alljoyn.h = External\ajtcl\inc\alljoyn.h
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AllJoynJSHostApp", "UWP\HostApp\AllJoynJSHostApp.vcxproj", "{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}"
+	ProjectSection(ProjectDependencies) = postProject
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC} = {411F9F07-CC91-4940-8EA7-CE4622EF53BC}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AllJoynJSBackgroundService", "UWP\BackgroundService\AllJoynJSBackgroundService.vcxproj", "{411F9F07-CC91-4940-8EA7-CE4622EF53BC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM = Release|ARM
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Debug|ARM.ActiveCfg = Debug|ARM
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Debug|ARM.Build.0 = Debug|ARM
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Debug|x64.ActiveCfg = Debug|x64
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Debug|x64.Build.0 = Debug|x64
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Debug|x86.ActiveCfg = Debug|Win32
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Debug|x86.Build.0 = Debug|Win32
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Release|ARM.ActiveCfg = Release|ARM
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Release|ARM.Build.0 = Release|ARM
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Release|x64.ActiveCfg = Release|x64
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Release|x64.Build.0 = Release|x64
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Release|x86.ActiveCfg = Release|Win32
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68}.Release|x86.Build.0 = Release|Win32
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Debug|ARM.ActiveCfg = Debug|ARM
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Debug|ARM.Build.0 = Debug|ARM
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Debug|ARM.Deploy.0 = Debug|ARM
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Debug|x64.ActiveCfg = Debug|x64
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Debug|x64.Build.0 = Debug|x64
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Debug|x64.Deploy.0 = Debug|x64
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Debug|x86.ActiveCfg = Debug|Win32
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Debug|x86.Build.0 = Debug|Win32
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Debug|x86.Deploy.0 = Debug|Win32
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Release|ARM.ActiveCfg = Release|ARM
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Release|ARM.Build.0 = Release|ARM
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Release|ARM.Deploy.0 = Release|ARM
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Release|x64.ActiveCfg = Release|x64
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Release|x64.Build.0 = Release|x64
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Release|x64.Deploy.0 = Release|x64
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Release|x86.ActiveCfg = Release|Win32
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Release|x86.Build.0 = Release|Win32
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734}.Release|x86.Deploy.0 = Release|Win32
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Debug|ARM.ActiveCfg = Debug|ARM
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Debug|ARM.Build.0 = Debug|ARM
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Debug|ARM.Deploy.0 = Debug|ARM
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Debug|x64.ActiveCfg = Debug|x64
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Debug|x64.Build.0 = Debug|x64
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Debug|x64.Deploy.0 = Debug|x64
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Debug|x86.ActiveCfg = Debug|Win32
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Debug|x86.Build.0 = Debug|Win32
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Debug|x86.Deploy.0 = Debug|Win32
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Release|ARM.ActiveCfg = Release|ARM
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Release|ARM.Build.0 = Release|ARM
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Release|ARM.Deploy.0 = Release|ARM
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Release|x64.ActiveCfg = Release|x64
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Release|x64.Build.0 = Release|x64
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Release|x64.Deploy.0 = Release|x64
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Release|x86.ActiveCfg = Release|Win32
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Release|x86.Build.0 = Release|Win32
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC}.Release|x86.Deploy.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3EC70565-5A76-4596-BAD2-C13BAF10FB74} = {D5245031-A887-4A29-9119-8F77308DAB31}
+		{9FA725B1-32B9-4916-8E18-08F498F4FB68} = {3EC70565-5A76-4596-BAD2-C13BAF10FB74}
+		{0FB323BF-F2C9-4BF7-B61D-9CBFBB213991} = {1F8474C1-0966-4EE1-8A76-40C4782F807D}
+		{64AEBAC4-22DA-4CB5-8D57-0C5191C544DE} = {0FB323BF-F2C9-4BF7-B61D-9CBFBB213991}
+		{B5B0E51C-E4E2-40E4-917F-29719BAB3323} = {64AEBAC4-22DA-4CB5-8D57-0C5191C544DE}
+		{E2F20C9F-21F6-4C11-9C54-3E97A2B5DBA6} = {0FB323BF-F2C9-4BF7-B61D-9CBFBB213991}
+		{D1CD5654-4B05-4832-84EA-C6B9C237405C} = {0FB323BF-F2C9-4BF7-B61D-9CBFBB213991}
+		{06C91DBE-0AD6-4E00-B353-3384E2B7110B} = {0FB323BF-F2C9-4BF7-B61D-9CBFBB213991}
+		{939A00D4-E707-43DF-84A9-0F18504FF5D1} = {06C91DBE-0AD6-4E00-B353-3384E2B7110B}
+		{5BB8D623-96D0-4CF1-AAE9-894AA7C6009B} = {0FB323BF-F2C9-4BF7-B61D-9CBFBB213991}
+		{55EA1781-DF3B-4B61-A16E-578346A515CB} = {5BB8D623-96D0-4CF1-AAE9-894AA7C6009B}
+		{2C4947D2-A51B-4B74-86EA-CB253A2F3717} = {1F8474C1-0966-4EE1-8A76-40C4782F807D}
+		{C5E5779D-3F4C-4AE7-82E7-28A3A86C6EA3} = {2C4947D2-A51B-4B74-86EA-CB253A2F3717}
+		{FABBBEA2-2B8B-4ED5-B849-27A32FE90398} = {1F8474C1-0966-4EE1-8A76-40C4782F807D}
+		{36954625-32F6-4F33-A071-0C836A6F2AED} = {FABBBEA2-2B8B-4ED5-B849-27A32FE90398}
+		{7E473552-CE4E-4657-A37D-4934C2F45843} = {FABBBEA2-2B8B-4ED5-B849-27A32FE90398}
+		{07BED5C4-FC54-4BD0-93AA-38A8A6AD763A} = {7E473552-CE4E-4657-A37D-4934C2F45843}
+		{418FF472-06E2-41F4-A8B5-B5658F83EEF9} = {07BED5C4-FC54-4BD0-93AA-38A8A6AD763A}
+		{912A1133-ABFC-4DF2-A3A5-F0AB9488E8C2} = {07BED5C4-FC54-4BD0-93AA-38A8A6AD763A}
+		{FDAB52BB-FDA6-4DBD-8BE7-01E453EF632D} = {FABBBEA2-2B8B-4ED5-B849-27A32FE90398}
+		{31FA4772-F933-4735-A253-77E156851DA2} = {FDAB52BB-FDA6-4DBD-8BE7-01E453EF632D}
+		{AB9DFB16-BAC6-4E68-A1BE-DDDA1F2BCD32} = {FABBBEA2-2B8B-4ED5-B849-27A32FE90398}
+		{82A43434-757C-4857-9509-DE9A60885105} = {AB9DFB16-BAC6-4E68-A1BE-DDDA1F2BCD32}
+		{DF297CB0-357C-4315-BFC9-186FB72024AE} = {82A43434-757C-4857-9509-DE9A60885105}
+		{8B0EBC5B-46ED-4220-A98F-394ABDF68FC1} = {DF297CB0-357C-4315-BFC9-186FB72024AE}
+		{474E3179-6DA9-47AC-899E-EDE433B773D7} = {DF297CB0-357C-4315-BFC9-186FB72024AE}
+		{A31D32B8-B1EB-4AD4-AF5C-46E546852F53} = {36954625-32F6-4F33-A071-0C836A6F2AED}
+		{B9BB61F8-13F6-4B91-8FF8-B74FAFE20657} = {FDAB52BB-FDA6-4DBD-8BE7-01E453EF632D}
+		{6C911928-51E8-4139-86A5-72DAFCDC5451} = {B9BB61F8-13F6-4B91-8FF8-B74FAFE20657}
+		{3799FE8B-52F4-442F-90AA-038ECEA3FD7F} = {6C911928-51E8-4139-86A5-72DAFCDC5451}
+		{2DC39CEF-0F51-4976-BC07-B0C4355CC543} = {AB9DFB16-BAC6-4E68-A1BE-DDDA1F2BCD32}
+		{0E08DDE1-3067-4AE0-9576-2A2DBD33827B} = {2DC39CEF-0F51-4976-BC07-B0C4355CC543}
+		{01DA7402-D2EA-4585-85CD-47D5711BF802} = {0E08DDE1-3067-4AE0-9576-2A2DBD33827B}
+		{DCC31D54-93A7-49E2-9051-A221B8E8BC32} = {01DA7402-D2EA-4585-85CD-47D5711BF802}
+		{557892A3-6B9C-48D7-B31F-1609A878F282} = {01DA7402-D2EA-4585-85CD-47D5711BF802}
+		{95DDEB4E-2D42-40CF-843D-27C416A45F1C} = {7E473552-CE4E-4657-A37D-4934C2F45843}
+		{868D696A-CAC1-47E8-BFB4-11225BCFC699} = {95DDEB4E-2D42-40CF-843D-27C416A45F1C}
+		{ABC9CFF3-2E0C-458B-870D-B3421D7F2619} = {868D696A-CAC1-47E8-BFB4-11225BCFC699}
+		{791CA495-288A-4EFE-BB3D-26E08CAA0CDC} = {1F8474C1-0966-4EE1-8A76-40C4782F807D}
+		{AD2076DE-D262-45D4-9C16-70FEA3D1CFDB} = {791CA495-288A-4EFE-BB3D-26E08CAA0CDC}
+		{DDF8A9A9-E039-424D-9102-4C6A013B4202} = {AD2076DE-D262-45D4-9C16-70FEA3D1CFDB}
+		{3D57BF15-553A-4067-94A2-2B7D127DFFE0} = {0FB323BF-F2C9-4BF7-B61D-9CBFBB213991}
+		{0EE4A69E-D8F4-4053-BF63-BE930DAE0734} = {18FF0C78-D0C1-49A1-A9F8-B695E7457750}
+		{411F9F07-CC91-4940-8EA7-CE4622EF53BC} = {18FF0C78-D0C1-49A1-A9F8-B695E7457750}
+	EndGlobalSection
+EndGlobal

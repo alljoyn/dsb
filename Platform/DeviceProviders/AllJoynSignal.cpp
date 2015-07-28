@@ -44,7 +44,7 @@ namespace DeviceProviders
         , m_subscriberCount(0)
     {
         DEBUG_LIFETIME_IMPL(AllJoynSignal);
-        m_signature = AllJoynTypeDefinition::CreateParameterInfo(m_signatureString, signalDescription.argNames);
+        m_signature = AllJoynTypeDefinition::CreateParameterInfo(m_signatureString, AllJoynHelpers::TokenizeArgNamesString(signalDescription.argNames));
 
         {
             AutoLock lockScope(&s_signalMapLock, true);
@@ -55,15 +55,10 @@ namespace DeviceProviders
 
     AllJoynSignal::~AllJoynSignal()
     {
-        auto parent = this->GetParent();
-
-        if (parent != nullptr)
-        {
-            (void)alljoyn_busattachment_unregistersignalhandler(parent->GetBusAttachment(),
-                AllJoynSignal::OnSignal,
-                m_member,
-                parent->GetBusObject()->GetPath().c_str());
-        }
+        (void) alljoyn_busattachment_unregistersignalhandler(m_interface->GetBusAttachment(),
+            AllJoynSignal::OnSignal,
+            m_member,
+            m_interface->GetBusObject()->GetPath().c_str());
     }
 
     string AllJoynSignal::BuildSignalMapKey(const char *objectPath, const char *interfaceName, const char *signalName)
@@ -158,14 +153,10 @@ namespace DeviceProviders
     {
         if (m_subscriberCount++ == 0)
         {
-            auto parent = this->GetParent();
-            if (parent != nullptr)
-            {
-                alljoyn_busattachment_registersignalhandler(parent->GetBusAttachment(), 
-                    AllJoynSignal::OnSignal, 
-                    m_member, 
-                    parent->GetBusObject()->GetPath().c_str());
-            }
+            alljoyn_busattachment_registersignalhandler(m_interface->GetBusAttachment(),
+                AllJoynSignal::OnSignal,
+                m_member,
+                m_interface->GetBusObject()->GetPath().c_str());
         }
         return m_signalRaised += handler;
     }
@@ -174,14 +165,10 @@ namespace DeviceProviders
     {
         if (--m_subscriberCount == 0)
         {
-            auto parent = this->GetParent();
-            if (parent != nullptr)
-            {
-                alljoyn_busattachment_unregistersignalhandler(parent->GetBusAttachment(),
-                    AllJoynSignal::OnSignal,
-                    m_member,
-                    parent->GetBusObject()->GetPath().c_str());
-            }
+            alljoyn_busattachment_unregistersignalhandler(m_interface->GetBusAttachment(),
+                AllJoynSignal::OnSignal,
+                m_member,
+                m_interface->GetBusObject()->GetPath().c_str());
         }
         m_signalRaised -= token;
     }

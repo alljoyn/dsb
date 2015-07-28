@@ -25,6 +25,15 @@
     <ClCompile Include="BridgeConfig.cpp" />
     <ClCompile Include="AllJoynAbout.cpp" />
     <ClCompile Include="BridgeLog.cpp" />
+    <ClCompile Include="ControlPanel.cpp" />
+    <ClCompile Include="Widget.cpp" />
+    <ClCompile Include="WidgetContainer.cpp" />
+    <ClCompile Include="WidgetAction.cpp" />
+    <ClCompile Include="WidgetProperty.cpp" />
+    <ClCompile Include="WidgetPropertySwitch.cpp" />
+    <ClCompile Include="WidgetPropertyTextBox.cpp" />
+    <ClCompile Include="WidgetPropertyLabel.cpp" />
+    <ClCompile Include="WidgetSignalHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -48,5 +57,17 @@
     <ClInclude Include="IAdapter.h" />
     <ClInclude Include="AllJoynAbout.h" />
     <ClInclude Include="BridgeLog.h" />
+    <ClInclude Include="ControlPanel.h" />
+    <ClInclude Include="Widget.h" />
+    <ClInclude Include="WidgetContainer.h" />
+    <ClInclude Include="WidgetAction.h" />
+    <ClInclude Include="WidgetConsts.h" />
+    <ClInclude Include="WidgetProperty.h" />
+    <ClInclude Include="WidgetPropertySwitch.h" />
+    <ClInclude Include="WidgetPropertyTextBox.h" />
+    <ClInclude Include="WidgetPropertyLabel.h" />
+    <ClInclude Include="IControlPanelHandler.h" />
+    <ClInclude Include="WidgetSignalHandler.h" />
+    <ClInclude Include="AdapterConstants.h" />
   </ItemGroup>
 </Project>

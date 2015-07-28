@@ -21,4 +21,4 @@
 static const char* DSB_DEVICENOTIFICATION_SIGNAL = "DeviceNotificationSignal";
 static const char* DSB_SENDMSGTODEVICE_METHOD = "SendMessageToDeviceSynchronous";
 
-static const alljoyn_sessionport DSB_SERVICE_PORT = 27;
+static const alljoyn_sessionport DSB_SERVICE_PORT = 1000;

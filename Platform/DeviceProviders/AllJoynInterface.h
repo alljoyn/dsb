@@ -30,9 +30,9 @@ namespace DeviceProviders
     internal:
         AllJoynInterface(AllJoynBusObject ^ parent, alljoyn_interfacedescription interfaceDescription);
 
-        inline AllJoynBusObject ^ GetBusObject() const { return m_parent.Resolve<AllJoynBusObject>(); }
-        inline alljoyn_proxybusobject GetProxyBusObject() const { return this->GetBusObject()->GetProxyBusObject(); }
-        inline alljoyn_busattachment GetBusAttachment() const { return this->GetBusObject()->GetBusAttachment(); }
+        inline AllJoynBusObject ^ GetBusObject() const { return m_parent; }
+        inline alljoyn_proxybusobject GetProxyBusObject() const { return m_parent->GetProxyBusObject(); }
+        inline alljoyn_busattachment GetBusAttachment() const { return m_parent->GetBusAttachment(); }
         inline const std::string& GetName() const { return m_name; }
 
     public:
@@ -58,9 +58,17 @@ namespace DeviceProviders
         {
             Platform::String ^ get();
         }
+        virtual property IBusObject^ BusObject
+        {
+            inline IBusObject^ get() { return m_parent; }
+        }
+
+        virtual IProperty^ GetProperty(Platform::String^ propertyName);
+        virtual IMethod^ GetMethod(Platform::String^ methodName);
+        virtual ISignal^ GetSignal(Platform::String^ signalName);
 
     private:
-        Platform::WeakReference m_parent;
+        AllJoynBusObject ^ m_parent;
         alljoyn_interfacedescription m_interfaceDescription;
         std::string m_name;
         std::string m_introspectXml;

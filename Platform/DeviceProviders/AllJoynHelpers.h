@@ -115,4 +115,18 @@ public:
         const auto& stringVector = PlatformToMultibyteString(str);
         return std::string(stringVector.data());
     }
+
+    static std::vector<std::string> TokenizeArgNamesString(_In_ std::string argNames)
+    {
+        std::vector<std::string> argNamesVector;
+
+        for (size_t index = 0; index < argNames.size();)
+        {
+            size_t commaIndex = argNames.find(',', index);
+            size_t len = commaIndex == std::string::npos ? commaIndex : commaIndex - index;
+            argNamesVector.push_back(argNames.substr(index, len));
+            index = commaIndex == std::string::npos ? commaIndex : commaIndex + 1;
+        }
+        return argNamesVector;
+    }
 };

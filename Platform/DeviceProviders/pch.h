@@ -37,6 +37,7 @@
 #include <alljoyn_c/Init.h>
 #include <alljoyn_c/AboutObjectDescription.h>
 #include <alljoyn_c/AboutData.h>
+#include <alljoyn_c/AboutIcon.h>
 #include <alljoyn_c/AboutProxy.h>
 #include <alljoyn_c/BusAttachment.h>
 #include <alljoyn_c/ProxyBusObject.h>

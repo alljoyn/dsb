@@ -49,6 +49,9 @@
     <ClCompile Include="AllJoynStatus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AllJoynAboutIcon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AllJoynProvider.h">
@@ -128,6 +131,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AllJoynMessageArgVariant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IAboutIcon.h">
+      <Filter>Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="AllJoynAboutIcon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

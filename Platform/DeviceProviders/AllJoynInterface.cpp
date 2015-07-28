@@ -47,16 +47,28 @@ namespace DeviceProviders
     {
         if (nullptr != m_properties)
         {
+            for (auto prop : m_properties)
+            {
+                delete prop;
+            }
             m_properties->Clear();
             m_properties = nullptr;
         }
         if (nullptr != m_methods)
         {
+            for (auto method : m_methods)
+            {
+                delete method;
+            }
             m_methods->Clear();
             m_methods = nullptr;
         }
         if (nullptr != m_signals)
         {
+            for (auto signal : m_signals)
+            {
+                delete signal;
+            }
             m_signals->Clear();
             m_signals = nullptr;
         }
@@ -139,5 +151,32 @@ namespace DeviceProviders
     String ^ AllJoynInterface::Name::get()
     {
         return AllJoynHelpers::MultibyteToPlatformString(m_name.c_str());
+    }
+
+    IProperty^ AllJoynInterface::GetProperty(Platform::String^ propertyName)
+    {
+        auto iter = std::find_if(begin(Properties), end(Properties), [&propertyName](IProperty^ prop) -> bool
+        {
+            return prop->Name == propertyName;
+        });
+        return iter == end(Properties) ? nullptr : *iter;
+    }
+
+    IMethod^ AllJoynInterface::GetMethod(Platform::String^ methodName)
+    {
+        auto iter = std::find_if(begin(Methods), end(Methods), [&methodName](IMethod^ method) -> bool
+        {
+            return method->Name == methodName;
+        });
+        return iter == end(Methods) ? nullptr : *iter;
+    }
+
+    ISignal^ AllJoynInterface::GetSignal(Platform::String^ signalName)
+    {
+        auto iter = std::find_if(begin(Signals), end(Signals), [&signalName](ISignal^ signal) -> bool
+        {
+            return signal->Name == signalName;
+        });
+        return iter == end(Signals) ? nullptr : *iter;
     }
 }

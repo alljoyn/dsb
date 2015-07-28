@@ -36,3 +36,9 @@
 
 #include <windows.h>
 #include <tchar.h>
+
+#include "ControlPanel.h"
+#include "Widget.h"
+
+#define CHK_AJSTATUS(x) { status = (x); if ((ER_OK != status))  { goto leave; }}
+#define CHK_POINTER(x) {if ((nullptr == x)) { status = ER_OUT_OF_MEMORY; goto leave; }}

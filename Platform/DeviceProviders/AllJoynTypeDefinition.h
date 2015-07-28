@@ -22,7 +22,7 @@
 
 namespace DeviceProviders
 {
-    ref class AllJoynTypeDefinition sealed : public ITypeDefinition
+    public ref class AllJoynTypeDefinition sealed : public ITypeDefinition
     {
         DEBUG_LIFETIME_DECL(AllJoynTypeDefinition);
 
@@ -54,9 +54,12 @@ namespace DeviceProviders
         {
             inline ITypeDefinition ^ get() { return m_valueType; }
         }
+
+        static Windows::Foundation::Collections::IVector<ITypeDefinition ^>^ CreateTypeDefintions(Platform::String^ signature);
+
     internal:
         static Platform::Collections::Vector<ITypeDefinition ^>^ CreateTypeDefintions(const std::string& signature);
-        static Platform::Collections::Vector<ParameterInfo ^>^ CreateParameterInfo(const std::string& signature, const std::string& argNames);
+        static Platform::Collections::Vector<ParameterInfo ^>^ CreateParameterInfo(const std::string& signature, const std::vector<std::string>& argNames);
         static std::string GetAllJoynSignatureString(ITypeDefinition^ typeDefinition);
 
     private:

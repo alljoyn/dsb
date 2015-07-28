@@ -18,15 +18,18 @@
 
 #include "pch.h"
 #include "IAboutData.h"
+#include "IAboutIcon.h"
 
 namespace DeviceProviders
 {
+    ref class AllJoynService;
+
     private ref class AllJoynAboutData sealed : public IAboutData
     {
         DEBUG_LIFETIME_DECL(AllJoynAboutData);
 
     internal:
-        AllJoynAboutData(alljoyn_msgarg aboutDataMsgArg);
+        AllJoynAboutData(AllJoynService^ service, alljoyn_msgarg aboutDataMsgArg);
 
     public:
         virtual ~AllJoynAboutData();
@@ -55,11 +58,13 @@ namespace DeviceProviders
         {
             Windows::Foundation::Collections::IMapView<Platform::String^, Platform::Object ^> ^ get();
         }
+        virtual Windows::Foundation::IAsyncOperation<IAboutIcon ^>^ GetIconAsync();
 
     private:
         const char* GetCurrentLanguage() const { return m_currentLanguage.empty() ? nullptr : m_currentLanguage.c_str(); }
 
     private:
+        AllJoynService^ m_service;
         alljoyn_aboutdata m_aboutData;
         std::string m_currentLanguage;
         

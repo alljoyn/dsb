@@ -23,6 +23,12 @@
 
 namespace AdapterLib
 {
+    //const definitions
+    static const std::wstring cVendor = L"Microsoft";
+    static const std::wstring cAdapterName = L"BACnetAdapter";
+    static const std::wstring cDomainPrefix = L"com";
+    static const std::wstring cAdapterPrefix = cDomainPrefix + L"." + DsbCommon::ToLower(cVendor.c_str())->Data();
+
     //
     // BACnetAdapter class.
     // Description:

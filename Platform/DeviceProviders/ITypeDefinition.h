@@ -45,6 +45,7 @@ namespace DeviceProviders
         Uint16Array     = ('q' << 8) | ArrayByte,    // maps to ALLJOYN_UINT16_ARRAY
         Uint64Array     = ('t' << 8) | ArrayByte,    // maps to ALLJOYN_UINT64_ARRAY
         Uint32Array     = ('u' << 8) | ArrayByte,    // maps to ALLJOYN_UINT32_ARRAY
+        VariantArray    = ('v' << 8) | ArrayByte,    // no AllJoyn typeid equivalent defined
         Int64Array      = ('x' << 8) | ArrayByte,    // maps to ALLJOYN_INT64_ARRAY
         Uint8Array      = ('y' << 8) | ArrayByte,    // maps to ALLJOYN_BYTE_ARRAY
         SignatureArray  = ('g' << 8) | ArrayByte,    // no AllJoyn typeid equivalent defined

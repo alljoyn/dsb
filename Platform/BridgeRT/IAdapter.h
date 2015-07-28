@@ -17,6 +17,7 @@
 #pragma once
 
 #include "AdapterDefinitions.h"
+#include "IControlPanelHandler.h"
 
 namespace BridgeRT
 {
@@ -83,6 +84,12 @@ namespace BridgeRT
     {
         // Object name
         property Platform::String^ Name
+        {
+            Platform::String^ get();
+        }
+
+        // hint for the interface name
+        property Platform::String^ InterfaceHint
         {
             Platform::String^ get();
         }
@@ -229,6 +236,11 @@ namespace BridgeRT
         {
             IAdapterSignalVector^ get();
         }
+
+        property IControlPanelHandler^ ControlPanelHandler
+        {
+            BridgeRT::IControlPanelHandler^ get();
+        }
     };
 
 
@@ -310,6 +322,7 @@ namespace BridgeRT
         CACHE_ONLY = 0,
         FORCE_REFRESH
     };
+
 
     //
     // IAdapter interface class.

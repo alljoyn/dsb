@@ -12,6 +12,7 @@
     <ClCompile Include="AdapterConfig.cpp" />
     <ClCompile Include="MockAdapter.cpp" />
     <ClCompile Include="MockAdapterDevice.cpp" />
+    <ClCompile Include="ControlPanelHandlers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -21,5 +22,6 @@
     <ClInclude Include="AdapterConfig.h" />
     <ClInclude Include="MockAdapter.h" />
     <ClInclude Include="MockAdapterDevice.h" />
+    <ClInclude Include="ControlPanelHandlers.h" />
   </ItemGroup>
 </Project>

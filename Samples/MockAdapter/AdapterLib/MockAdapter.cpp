@@ -19,6 +19,7 @@
 #include "MockAdapterDevice.h"
 #include "MockDevices.h"
 #include "BfiDefinitions.h"
+#include "ControlPanelHandlers.h"
 
 using namespace Platform;
 using namespace Platform::Collections;
@@ -41,11 +42,11 @@ namespace AdapterLib
         Windows::ApplicationModel::PackageId^ packageId = package->Id;
         Windows::ApplicationModel::PackageVersion versionFromPkg = packageId->Version;
 
-        this->vendor = L"Microsoft";
-        this->adapterName = L"DSB Mock Adapter";
+        this->vendor = ref new String(cVendor.c_str());
+        this->adapterName = ref new String(cAdapterName.c_str());
         // the adapter prefix must be something like "com.mycompany" (only alpha num and dots)
         // it is used by the Device System Bridge as root string for all services and interfaces it exposes
-        this->exposedAdapterPrefix = L"com." + DsbCommon::ToLower(this->vendor->Data());
+        this->exposedAdapterPrefix = ref new String(cAdapterPrefix.c_str());
         this->exposedApplicationGuid = Platform::Guid(APPLICATION_GUID);
 
         if (nullptr != package &&
@@ -494,6 +495,16 @@ namespace AdapterLib
             {
                 MockAdapterDevice^ newDevice = ref new MockAdapterDevice(mockDeviceDescPtr, this);
 
+                // Attach a Simple Control Panel Temperature Handler for the Temperature Sensor
+                if (mockDeviceDescPtr->Name==L"Mock BACnet Temperature Sensor")
+                {
+                    newDevice->ControlPanelHandler = ref new ControlPanelHandlerTempSensor(newDevice);
+                }
+                else if (mockDeviceDescPtr->Name == L"Mock BACnet Dimmable Switch")
+                {
+                    newDevice->ControlPanelHandler = ref new ControlPanelHandlerDimmerSwitch(newDevice);
+                }
+
                 this->devices.push_back(std::move(newDevice));
             }
             catch (OutOfMemoryException^)
@@ -515,13 +526,13 @@ namespace AdapterLib
         {
             // Device arrival signal
             {
-                MockAdapterSignal^ signal = ref new MockAdapterSignal(DEVICE_ARRIVAL_SIGNAL, this);
+                MockAdapterSignal^ signal = ref new MockAdapterSignal(Constants::DEVICE_ARRIVAL_SIGNAL, this);
 
                 //
                 // Signal parameters
                 // 
                 signal += ref new MockAdapterValue(
-                                    DEVICE_ARRIVAL__DEVICE_HANDLE, 
+                                    Constants::DEVICE_ARRIVAL__DEVICE_HANDLE,
                                     signal, 
                                     ref new MockAdapterDevice(L"DsbDevice", this) // For signature spec
                                     );

@@ -1,0 +1,11 @@
+*.o
+*.os
+.sconsign.dblite
+*.a
+*.so
+*.obj
+*.lib
+*.dll
+*.DS_Store
+.cproject
+.project

@@ -19,8 +19,11 @@
 
 #include "value_classes\ValueID.h"
 
+
 namespace AdapterLib
 {
+    ref class ZWaveAdapterProperty;
+
     ref class ZWaveAdapterDevice : BridgeRT::IAdapterDevice
     {
     public:
@@ -86,6 +89,19 @@ namespace AdapterLib
                 return ref new BridgeRT::AdapterSignalVector(m_signals);
             }
         }
+
+        // Control Panel Handler
+        virtual property BridgeRT::IControlPanelHandler^ ControlPanelHandler
+        {
+            BridgeRT::IControlPanelHandler^ get()
+            {
+                return m_controlPanel;
+            }
+            void set(BridgeRT::IControlPanelHandler^ controlPanel)
+            {
+                m_controlPanel = controlPanel;
+            }
+        }
     
     internal:
         friend ref class ZWaveAdapter;
@@ -98,10 +114,12 @@ namespace AdapterLib
         void UpdatePropertyValue(const OpenZWave::ValueID& value);
 
         void RemovePropertyValue(const OpenZWave::ValueID& value);
-        
+
+        ZWaveAdapterProperty^ GetPropertyByName(Platform::String^ name);
+        BridgeRT::IAdapterSignal^ GetSignal(Platform::String^ name);
+
     private:
         std::vector<BridgeRT::IAdapterProperty^>::iterator GetProperty(const OpenZWave::ValueID& value);
-        BridgeRT::IAdapterSignal^ GetSignal(Platform::String^ name);
 
         void BuildSignals();
 
@@ -124,6 +142,9 @@ namespace AdapterLib
 
         // Device signals 
         std::vector<BridgeRT::IAdapterSignal^> m_signals;
+
+        // Control Panel for this device
+        BridgeRT::IControlPanelHandler^ m_controlPanel;
 
         uint32 m_homeId;
         uint8 m_nodeId;

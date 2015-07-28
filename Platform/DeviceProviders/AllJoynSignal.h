@@ -22,6 +22,7 @@
 
 namespace DeviceProviders
 {
+    interface class IInterface;
     ref class AllJoynInterface;
 
     ref class AllJoynSignal sealed : public ISignal
@@ -30,7 +31,6 @@ namespace DeviceProviders
 
     internal:
         AllJoynSignal(_In_ AllJoynInterface ^ _interface, const alljoyn_interfacedescription_member& signalDescription);
-        AllJoynInterface ^ GetParent() const { return m_interface.Resolve<AllJoynInterface>(); }
 
         static void AJ_CALL OnSignal(_In_ const alljoyn_interfacedescription_member *member,
             _In_ const char* srcPath,
@@ -71,8 +71,13 @@ namespace DeviceProviders
             IAboutData ^ get();
         }
 
+        virtual property IInterface ^ Interface
+        {
+            inline IInterface ^ get() { return m_interface; }
+        }
+
     private:
-        Platform::WeakReference m_interface;
+        AllJoynInterface ^ m_interface;
 
         Platform::Collections::Vector<ParameterInfo ^>^ m_signature;
         std::string m_signatureString;

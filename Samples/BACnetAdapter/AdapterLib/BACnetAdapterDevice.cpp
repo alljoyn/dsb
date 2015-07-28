@@ -286,82 +286,82 @@ namespace AdapterLib
     }
 
 
-	_Use_decl_annotations_
-	uint32
-	BACnetAdapterValue::TranslateAttributeValue(
-		BACnetAdapterValue^ Attribute,
-		ULONG BACnetPropertyId,
-		bool IsFromBACnet
-		)
-	{
-		IPropertyValue^ ipv = dynamic_cast<IPropertyValue^>(Attribute->Data);
-		const wchar_t* translatedAttrWsz = nullptr;
-		UINT32 translatedAttr = UINT32(-1);
+    _Use_decl_annotations_
+    uint32
+    BACnetAdapterValue::TranslateAttributeValue(
+        BACnetAdapterValue^ Attribute,
+        ULONG BACnetPropertyId,
+        bool IsFromBACnet
+        )
+    {
+        IPropertyValue^ ipv = dynamic_cast<IPropertyValue^>(Attribute->Data);
+        const wchar_t* translatedAttrWsz = nullptr;
+        UINT32 translatedAttr = UINT32(-1);
 
-		DSB_ASSERT(ipv != nullptr);
+        DSB_ASSERT(ipv != nullptr);
 
-		switch (BACnetPropertyId)
-		{
-		case PROP_UNITS:
-		{
-			if (IsFromBACnet)
-			{
-				BACNET_ENGINEERING_UNITS units = BACNET_ENGINEERING_UNITS(ipv->GetUInt32());
-				translatedAttrWsz = AdapterLib::ToString(units);
-			}
-			else
-			{
-				DSB_ASSERT(ipv->GetString() != nullptr);
+        switch (BACnetPropertyId)
+        {
+        case PROP_UNITS:
+        {
+            if (IsFromBACnet)
+            {
+                BACNET_ENGINEERING_UNITS units = BACNET_ENGINEERING_UNITS(ipv->GetUInt32());
+                translatedAttrWsz = AdapterLib::ToString(units);
+            }
+            else
+            {
+                DSB_ASSERT(ipv->GetString() != nullptr);
 
-				AdapterLib::FromString(
-					ipv->GetString()->Data(),
-					reinterpret_cast<BACNET_ENGINEERING_UNITS*>(&translatedAttr)
-					);
-			}
+                AdapterLib::FromString(
+                    ipv->GetString()->Data(),
+                    reinterpret_cast<BACNET_ENGINEERING_UNITS*>(&translatedAttr)
+                    );
+            }
 
-			break;
+            break;
 
-		} // PROP_UNITS
+        } // PROP_UNITS
 
-		case PROP_POLARITY:
-		{
-			if (IsFromBACnet)
-			{
-				BACNET_POLARITY polarity = BACNET_POLARITY(ipv->GetUInt32());
-				translatedAttrWsz = AdapterLib::ToString(polarity);
-			}
-			else
-			{
-				DSB_ASSERT(ipv->GetString() != nullptr);
+        case PROP_POLARITY:
+        {
+            if (IsFromBACnet)
+            {
+                BACNET_POLARITY polarity = BACNET_POLARITY(ipv->GetUInt32());
+                translatedAttrWsz = AdapterLib::ToString(polarity);
+            }
+            else
+            {
+                DSB_ASSERT(ipv->GetString() != nullptr);
 
-				AdapterLib::FromString(
-					ipv->GetString()->Data(),
-					reinterpret_cast<BACNET_POLARITY*>(&translatedAttr)
-					);
-			}
+                AdapterLib::FromString(
+                    ipv->GetString()->Data(),
+                    reinterpret_cast<BACNET_POLARITY*>(&translatedAttr)
+                    );
+            }
 
-			break;
+            break;
 
-		} // PROP_POLARITY
+        } // PROP_POLARITY
 
-		default:
-			return ERROR_NOT_FOUND;
+        default:
+            return ERROR_NOT_FOUND;
 
-		} // switch 
+        } // switch 
 
-		if (translatedAttrWsz != nullptr)
-		{
-			DSB_ASSERT(translatedAttr == UINT32(-1));
+        if (translatedAttrWsz != nullptr)
+        {
+            DSB_ASSERT(translatedAttr == UINT32(-1));
 
-			Attribute->Data = ref new String(translatedAttrWsz);
-		}
-		else if (translatedAttr != UINT32(-1))
-		{
-			Attribute->Data = PropertyValue::CreateUInt32(translatedAttr);
-		}
+            Attribute->Data = ref new String(translatedAttrWsz);
+        }
+        else if (translatedAttr != UINT32(-1))
+        {
+            Attribute->Data = PropertyValue::CreateUInt32(translatedAttr);
+        }
 
-		return ERROR_SUCCESS;
-	}
+        return ERROR_SUCCESS;
+    }
 
 
     //
@@ -369,18 +369,21 @@ namespace AdapterLib
     // Description:
     //  The class that implements BridgeRT::IAdapterProperty.
     //
-    BACnetAdapterProperty::BACnetAdapterProperty(String^ Name, Object^ ParentObject)
+    BACnetAdapterProperty::BACnetAdapterProperty(String^ Name, Object^ ParentObject, String^ ifHint)
         : name(Name)
         , parent(ParentObject)
     {
-        // Used only for signature spec
+        std::wstring wszIfName = cAdapterPrefix + L"." + cAdapterName + L"." + ifHint->Data();
+        interfaceHint = ref new String(wszIfName.c_str());
     }
 
 
-    BACnetAdapterProperty::BACnetAdapterProperty(ULONG BACnetObjectId, Object^ ParentObject)
+    BACnetAdapterProperty::BACnetAdapterProperty(ULONG BACnetObjectId, Object^ ParentObject, String^ ifHint)
         : parent(ParentObject)
         , objectId(BACnetObjectId)
     {
+        std::wstring wszIfName = cAdapterPrefix + L"." + cAdapterName + L"." + ifHint->Data();
+        interfaceHint = ref new String(wszIfName.c_str());
     }
 
 
@@ -389,6 +392,7 @@ namespace AdapterLib
         , parent(Other->parent)
         , attributes(Other->attributes)
         , objectId(Other->objectId)
+        , interfaceHint(Other->interfaceHint)
     {
     }
 
@@ -524,7 +528,7 @@ namespace AdapterLib
         IAdapterValue^ presentValue = this->GetPresentValue();
         DSB_ASSERT(presentValue != nullptr);
 
-        device->SendSignal(CHANGE_OF_VALUE_SIGNAL, this, presentValue);
+        device->SendSignal(Constants::CHANGE_OF_VALUE_SIGNAL, this, presentValue);
     }
 
 
@@ -826,13 +830,13 @@ namespace AdapterLib
                 status = BACnetAdapterValue::TranslateAttributeValue(
                                             attribute,
                                             bacnetAttrDescDsec->Id,
-								            true // From BACnet
+                                            true // From BACnet
                                             );
-				if (status == ERROR_NOT_FOUND)
-				{
-					// Translation not needed
-					status = ERROR_SUCCESS;
-				}
+                if (status == ERROR_NOT_FOUND)
+                {
+                    // Translation not needed
+                    status = ERROR_SUCCESS;
+                }
 
                 if (status != ERROR_SUCCESS)
                 {
@@ -927,11 +931,11 @@ namespace AdapterLib
         if (bacnetAttribute->Data != nullptr)
         {
             status = BACnetAdapterValue::TranslateAttributeValue(bacnetAttribute, propId, true);
-			if (status == ERROR_NOT_FOUND)
-			{
-				// Translation not needed
-				status = ERROR_SUCCESS;
-			}
+            if (status == ERROR_NOT_FOUND)
+            {
+                // Translation not needed
+                status = ERROR_SUCCESS;
+            }
         }
 
         return status;
@@ -1236,7 +1240,7 @@ namespace AdapterLib
                 continue;
             }
 
-            BACnetAdapterProperty^ newProperty = ref new BACnetAdapterProperty(objectId.Ulong, this);
+            BACnetAdapterProperty^ newProperty = ref new BACnetAdapterProperty(objectId.Ulong, this, StringReference(AdapterLib::ToString(BACNET_OBJECT_TYPE(objectId.Bits.Type))));
 
             status = this->ReadProperty(objectId.Ulong, newProperty, nullptr);
             if (status != ERROR_SUCCESS)
@@ -1488,7 +1492,7 @@ namespace AdapterLib
 
         try
         {
-            BACnetAdapterSignal^ adapterCovSignal = ref new BACnetAdapterSignal(CHANGE_OF_VALUE_SIGNAL, this);
+            BACnetAdapterSignal^ adapterCovSignal = ref new BACnetAdapterSignal(Constants::CHANGE_OF_VALUE_SIGNAL, this);
 
             //
             // Signal parameters
@@ -1498,8 +1502,8 @@ namespace AdapterLib
                 BACnetAdapterProperty^ tmpltProperty = ref new BACnetAdapterProperty(L"DsbProperty", this);
                 BACnetAdapterValue^ tmpltValue = ref new BACnetAdapterValue(L"DsbValue", tmpltProperty);
 
-                adapterCovSignal += ref new BACnetAdapterValue(COV__PROPERTY_HANDLE, adapterCovSignal, tmpltProperty);
-                adapterCovSignal += ref new BACnetAdapterValue(COV__ATTRIBUTE_HANDLE, adapterCovSignal, tmpltValue);
+                adapterCovSignal += ref new BACnetAdapterValue(Constants::COV__PROPERTY_HANDLE, adapterCovSignal, tmpltProperty);
+                adapterCovSignal += ref new BACnetAdapterValue(Constants::COV__ATTRIBUTE_HANDLE, adapterCovSignal, tmpltValue);
             }
 
             *CovSignalPtr = adapterCovSignal;
@@ -1628,7 +1632,7 @@ namespace AdapterLib
 
         AutoLock sync(&this->lock, true);
 
-        if (targetSignal->Name == CHANGE_OF_VALUE_SIGNAL)
+        if (targetSignal->Name == Constants::CHANGE_OF_VALUE_SIGNAL)
         {
             DSB_ASSERT(Property != nullptr);
             DSB_ASSERT(Attribute != nullptr);

@@ -16,11 +16,12 @@
 
 #pragma once
 
-#include "ITypeDefinition.h"
-#include "AllJoynStatus.h"
-
 namespace DeviceProviders
 {
+    interface class ITypeDefinition;
+    interface class IInterface;
+    ref class AllJoynStatus;
+
     public ref struct ReadValueResult sealed
     {
         property AllJoynStatus^ Status;
@@ -50,6 +51,16 @@ namespace DeviceProviders
         property bool CanWrite
         {
             bool get();
+        }
+
+        property IInterface^ Interface
+        {
+            IInterface^ get();
+        }
+
+        property Windows::Foundation::Collections::IMapView<Platform::String^, Platform::String^> ^ Annotations
+        {
+            Windows::Foundation::Collections::IMapView<Platform::String^, Platform::String^> ^ get();
         }
 
         event Windows::Foundation::TypedEventHandler<IProperty^, Object^>^ ValueChanged;

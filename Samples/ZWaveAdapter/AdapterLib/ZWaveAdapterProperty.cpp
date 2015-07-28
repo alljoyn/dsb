@@ -18,6 +18,7 @@
 #include "ZWaveAdapterProperty.h"
 #include "ZWaveAdapterValue.h"
 #include "Misc.h"
+#include "ZWaveAdapter.h"
 
 #include "Manager.h"
 #include "value_classes\ValueID.h"
@@ -40,13 +41,43 @@ namespace AdapterLib
 {
     ZWaveAdapterProperty::ZWaveAdapterProperty(const OpenZWave::ValueID & value)
         : m_valueId(value)
+        , m_InterfaceHint(ref new String(L""))
     {   
     }
 
     void ZWaveAdapterProperty::Initialize()
     {
+        //Get Command Class Info
+        string cmdClassName;
+        string propertyName;
+        string strClass, strLabel;
+        if (Manager::Get()->GetNodeClassInformation(m_valueId.GetHomeId(), m_valueId.GetNodeId(), m_valueId.GetCommandClassId(), &cmdClassName))
+        {
+            //Command class name starts with COMMAND_CLASS_xxx, ignore the COMMAND_CLASS_ part and take the rest
+            propertyName = cmdClassName.substr(string("COMMAND_CLASS_").size());
+            strClass = EncodePropertyName(propertyName);
+        }
+        strLabel = EncodePropertyName(Manager::Get()->GetValueLabel(m_valueId));
+
+        propertyName = strClass;
+
+        //if the class name and label are same, just take one of them.
+        //This will avoid duplication in interface names like SwitchAll.SwitchAll
+        if (strClass != strLabel)
+        {
+            if (!strClass.empty())
+            {
+                propertyName += '.';
+            }
+            propertyName += strLabel;
+        }
+        
         //name
-        m_name = ref new String(ConvertTo<wstring>(Manager::Get()->GetValueLabel(m_valueId)).c_str());
+        m_name = ref new String(ConvertTo<wstring>(propertyName).c_str());
+
+        std::wstring wszIfName = cAdapterPrefix + L"." + cAdapterName + L"." + ConvertTo<wstring>(propertyName);
+        m_InterfaceHint = ref new String(wszIfName.c_str());
+
         GetAttributes();
     }
 
@@ -246,5 +277,28 @@ namespace AdapterLib
         }
 
         return nullptr;
+    }
+
+    string ZWaveAdapterProperty::EncodePropertyName(const string &name)
+    {
+        string encodedString;
+        
+        //apply Pascal casing
+        encodedString += char(toupper(name[0]));
+        for (size_t i = 1; i < name.size(); ++i)
+        {
+            if (isalnum(name[i]) || ('.' == name[i]))
+            {
+                if (!isalpha(name[i - 1]))
+                {
+                    encodedString += char(toupper(name[i]));
+                }
+                else
+                {
+                    encodedString += char(tolower(name[i]));
+                }
+            }
+        }
+        return encodedString;
     }
 }

@@ -125,6 +125,11 @@ namespace DeviceProviders
         m_fields = CreateTypeDefintions(structSignature.substr(1, length - 2));
     }
 
+    IVector<ITypeDefinition ^>^ AllJoynTypeDefinition::CreateTypeDefintions(Platform::String^ signature)
+    {
+        return CreateTypeDefintions(AllJoynHelpers::PlatformToMultibyteStandardString(signature));
+    }
+
     Vector<ITypeDefinition ^>^ AllJoynTypeDefinition::CreateTypeDefintions(const string& signature)
     {
         auto typeDefinitions = ref new Vector<ITypeDefinition ^>();
@@ -144,26 +149,17 @@ namespace DeviceProviders
         return typeDefinitions;
     }
 
-    Vector<ParameterInfo ^>^ AllJoynTypeDefinition::CreateParameterInfo(const string& signature, const string& argNames)
+    Vector<ParameterInfo ^>^ AllJoynTypeDefinition::CreateParameterInfo(const string& signature, const vector<string>& argNames)
     {
         auto typeInfoVector = AllJoynTypeDefinition::CreateTypeDefintions(signature);
         auto parameterInfoVector = ref new Vector<ParameterInfo ^>();
 
-        size_t startIndex = 0;
+        size_t index = 0;
         for (auto typeInfo : typeInfoVector)
         {
             auto paramInfo = ref new ParameterInfo();
             paramInfo->TypeDefinition = typeInfo;
-
-            if (startIndex < argNames.size())
-            {
-                size_t commaIndex = argNames.find(',', startIndex);
-                size_t count = (commaIndex != string::npos) ? commaIndex - startIndex : argNames.size();
-                string argName = argNames.substr(startIndex, count);
-                startIndex = commaIndex + 1;
-
-                paramInfo->Name = AllJoynHelpers::MultibyteToPlatformString(argName.c_str());
-            }
+            paramInfo->Name = index < argNames.size() ? AllJoynHelpers::MultibyteToPlatformString(argNames[index++].c_str()) : nullptr;
             parameterInfoVector->Append(paramInfo);
         }
 

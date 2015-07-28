@@ -668,8 +668,8 @@ namespace AdapterLib
     //
     static BACnetTypeMapEntry bacnetAdapterSignalTypeToStringMap[] =
     {
-        { BACnetAdapterSignalTypeDeviceArrival, BridgeRT::DEVICE_ARRIVAL_SIGNAL },
-        { BACnetAdapterSignalTypeValueChanged, BridgeRT::CHANGE_OF_VALUE_SIGNAL },
+        { BACnetAdapterSignalTypeDeviceArrival, BridgeRT::Constants::DEVICE_ARRIVAL_SIGNAL },
+        { BACnetAdapterSignalTypeValueChanged, BridgeRT::Constants::CHANGE_OF_VALUE_SIGNAL },
     }; 
 
     

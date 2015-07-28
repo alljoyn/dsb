@@ -117,7 +117,7 @@ void AllJoynAbout::ShutDown()
     }
 }
 
-QStatus AllJoynAbout::Announce()
+QStatus AllJoynAbout::Announce(alljoyn_sessionport sp)
 {
     QStatus status = ER_OK;
 
@@ -128,7 +128,7 @@ QStatus AllJoynAbout::Announce()
         goto leave;
     }
 
-    status = alljoyn_aboutobj_announce(m_aboutObject, DSB_SERVICE_PORT, m_aboutData);
+    status = alljoyn_aboutobj_announce(m_aboutObject, sp, m_aboutData);
     if (ER_OK != status)
     {
         goto leave;

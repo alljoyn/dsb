@@ -17,6 +17,7 @@
 #pragma once
 
 #include "IAdapter.h"
+#include "AdapterConstants.h"
 #include "ConfigManager.h"
 #include "BridgeConfig.h"
 

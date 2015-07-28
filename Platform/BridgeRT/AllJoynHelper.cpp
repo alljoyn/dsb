@@ -42,9 +42,13 @@ void AllJoynHelper::BuildBusObjectName(_In_ Platform::String ^inString, _Inout_ 
         {
             builtName += char(origChar);
         }
-        else if (::isspace(origChar))
+        else if (::isspace(origChar) || L'_' == origChar)
         {
             builtName += '_';
+        }
+        else if (L'.' == origChar || L'/' == origChar)
+        {
+            builtName += '/';
         }
     }
 }
@@ -64,6 +68,21 @@ void AllJoynHelper::BuildPropertyOrMethodOrSignalName(_In_ Platform::String ^inS
         else if (::isspace(origChar))
         {
             builtName += '_';
+        }
+    }
+}
+
+void AllJoynHelper::EncodeStringForInterfaceName(Platform::String ^ inString, std::string & encodeString)
+{
+    encodeString.clear();
+
+    // only keep alpha numeric char and '.'
+    for (size_t index = 0; index < inString->Length(); index++)
+    {
+        wchar_t origChar = inString->Data()[index];
+        if (::isalnum(origChar) || '.' == char(origChar))
+        {
+            encodeString += char(origChar);
         }
     }
 }

@@ -39,6 +39,11 @@ namespace AdapterLib
             Platform::String^ get() { return m_name; }
         }
         
+        virtual property Platform::String^ InterfaceHint
+        {
+            Platform::String^ get() { return m_InterfaceHint; }
+        }
+        
         // Attributes
         virtual property BridgeRT::IAdapterValueVector^ Attributes
         {
@@ -57,13 +62,15 @@ namespace AdapterLib
         void UpdateValue();
         void Initialize();
         uint32 SetValue(Platform::Object^ data);
-
-    private:
-        void GetAttributes();
         ZWaveAdapterValue^ GetAttributeByName(Platform::String^ name);
 
     private:
+        void GetAttributes();
+        std::string EncodePropertyName(const std::string &name);
+
+    private:
         Platform::String^ m_name;
+        Platform::String^ m_InterfaceHint;
 
         std::vector<BridgeRT::IAdapterValue^> m_attributes;
 

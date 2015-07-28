@@ -133,6 +133,9 @@ namespace AdapterLib
         // The property name
         Platform::String^           Name;
 
+        //Interface Name hint
+        Platform::String^           InterfaceHint;
+
         // The property access
         ADAPTER_MOCK_PROPERTY_ACCESS    PropertyAccess;
 

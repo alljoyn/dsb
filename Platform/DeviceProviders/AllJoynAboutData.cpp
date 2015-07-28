@@ -16,12 +16,15 @@
 
 #include "pch.h"
 #include "AllJoynAboutData.h"
+#include "AllJoynAboutIcon.h"
 #include "AllJoynHelpers.h"
 #include "TypeConversionHelpers.h"
 
 using namespace Platform;
 using namespace Platform::Collections;
+using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
+using namespace concurrency;
 using namespace std;
 
 namespace DeviceProviders
@@ -33,7 +36,8 @@ namespace DeviceProviders
             : nullptr;
     }
 
-    AllJoynAboutData::AllJoynAboutData(alljoyn_msgarg aboutDataMsgArg)
+    AllJoynAboutData::AllJoynAboutData(AllJoynService^ service, alljoyn_msgarg aboutDataMsgArg)
+        : m_service(service)
     {
         DEBUG_LIFETIME_IMPL(AllJoynAboutData);
 
@@ -50,6 +54,15 @@ namespace DeviceProviders
         }
 
         m_aboutData = aboutData;
+
+        char* buffer = nullptr;
+        status = alljoyn_aboutdata_getdefaultlanguage(m_aboutData, &buffer);
+        if (ER_OK != status)
+        {
+            throw ref new Platform::FailureException(ref new String(L"alljoyn_aboutdata_getdefaultlanguage failed"));
+        }
+        m_defaultLanguage = AllJoynHelpers::MultibyteToPlatformString(buffer);
+        m_currentLanguage = buffer;
     }
 
     AllJoynAboutData::~AllJoynAboutData()
@@ -121,13 +134,6 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::DefaultLanguage::get()
     {
-        if (nullptr == m_defaultLanguage)
-        {
-            char* buffer = nullptr;
-            auto status = alljoyn_aboutdata_getdefaultlanguage(m_aboutData, &buffer);
-            m_defaultLanguage = GetAboutFieldValue(status, buffer);
-        }
-
         return m_defaultLanguage;
     }
 
@@ -323,5 +329,20 @@ namespace DeviceProviders
         }
 
         return m_allFields;
+    }
+
+    IAsyncOperation<IAboutIcon^>^ AllJoynAboutData::GetIconAsync()
+    {
+        return create_async([this]() -> IAboutIcon^
+        {
+            auto icon = ref new AllJoynAboutIcon();
+            auto iconBusObject = m_service->GetOrCreateBusObject(AllJoynAboutIcon::AboutIconObjectPath);
+
+            create_task(icon->InitializeAsync(iconBusObject)).then([this]()
+            {
+                m_service->LeaveSession();
+            }).wait();
+            return icon;
+        });
     }
 }

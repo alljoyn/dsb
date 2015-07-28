@@ -42,8 +42,9 @@ namespace DeviceProviders
     {
         DEBUG_LIFETIME_IMPL(AllJoynMethod);
 
-        m_inSignature  = AllJoynTypeDefinition::CreateParameterInfo(m_inSignatureString, methodDescription.argNames);
-        m_outSignature = AllJoynTypeDefinition::CreateTypeDefintions(m_outSignatureString);
+        auto argNamesVector = AllJoynHelpers::TokenizeArgNamesString(methodDescription.argNames);
+        m_inSignature  = AllJoynTypeDefinition::CreateParameterInfo(m_inSignatureString, argNamesVector);
+        m_outSignature = AllJoynTypeDefinition::CreateParameterInfo(m_outSignatureString, vector<string>(argNamesVector.begin() + m_inSignature->Size, argNamesVector.end()));
     }
 
     AllJoynMethod::~AllJoynMethod()
@@ -133,8 +134,7 @@ namespace DeviceProviders
         return m_inSignature;
     }
 
-
-    IVector<ITypeDefinition ^>^ AllJoynMethod::OutSignature::get()
+    IVector<ParameterInfo ^>^ AllJoynMethod::OutSignature::get()
     {
         return m_outSignature;
     }

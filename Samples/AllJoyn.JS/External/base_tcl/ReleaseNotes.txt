@@ -1,0 +1,48 @@
+AllJoyn Thin Core Services Library 15.04 Release Notes
+======================================================
+
+Platform Support
+----------------
+1) Linux Ubuntu (64 bit x86)
+
+
+Features added in Version 15.04
+-------------------------------
+The API function to allow the application to control return to Soft AP on failed
+retries to connect to the access point continues to be an experimental feature.
+
+
+Issues Addressed in Version 15.04
+---------------------------------
+ASABASE-503 TCL Control Panel Generator '.c' file does not include the
+            generated '.h' file
+ASABASE-498 base_tcl sample apps fail on darwin
+ASABASE-249 Can not onboard when the Wifi credentials are set to type WEP with
+            security ASCII and the client uses ANY
+ASABASE-241 AllJoyn Thin Application do not handle AJ_ERR_WRITE. This can lead
+            the application to send Announcement infinitely
+
+
+Known Issues
+------------
+TCL onboarding has not been fully verified
+
+For a complete list of known issues:
+https://jira.allseenalliance.org/issues/?jql=project%20%3D%20ASABASE%20AND%20issuetype%20%3D%20Bug%20AND%20fixVersion%20%3D%20%2215.04%22%20AND%20status%20in%20%28Open%2C%20%22In%20Progress%22%2C%20New%2C%20%22Monitor%20%2F%20On%20Hold%22%29
+
+Compatibility
+-------------
+The removal of PIN_KEYX from Standard Core Library (ASACORE-1641) has introduced
+inter-version inter-operability issue such that the samples will not connect to
+a pre-15.04 routing node that requires security. More details are available in
+the Core 15.04 release notes.  The samples using security will also not
+inter-operate with their pre-15.04 peers.
+
+
+Change history
+--------------
+15.04 - bug fixes, compatibility with Core 15.04
+14.12 - bug fixes, a minor on-boarding feature and compatibility with Core 14.12
+14.06 - bug fixes, code improvements, added events and actions, new security
+        mechanism,  and minor features
+14.02 - 1st AllSeen Alliance release

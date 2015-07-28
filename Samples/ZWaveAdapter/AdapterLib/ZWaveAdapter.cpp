@@ -20,7 +20,7 @@
 #include "ZWaveAdapterSignal.h"
 #include "ZWaveAdapterValue.h"
 #include "ZWaveAdapterMethod.h"
-
+#include "SwitchControlPanelHandler.h"
 #include "Misc.h"
 
 //openzwave
@@ -61,11 +61,11 @@ namespace AdapterLib
         Windows::ApplicationModel::PackageId^ packageId = package->Id;
         Windows::ApplicationModel::PackageVersion versionFromPkg = packageId->Version;
 
-        this->m_vendor = L"Microsoft";
-        this->m_adapterName = L"ZWaveAdapter";
+        this->m_vendor = ref new String(cVendor.c_str());
+        this->m_adapterName = ref new String(cAdapterName.c_str());
         // the adapter prefix must be something like "com.mycompany" (only alpha num and dots)
         // it is used by the Device System Bridge as root string for all services and interfaces it exposes
-        this->m_exposedAdapterPrefix = L"com." + DsbCommon::ToLower(this->m_vendor->Data());
+        this->m_exposedAdapterPrefix = ref new String(cAdapterPrefix.c_str());
         this->m_exposedApplicationGuid = Platform::Guid(DSB_ZWAVE_APPLICATION_GUID);
 
         if (nullptr != package &&
@@ -563,20 +563,20 @@ namespace AdapterLib
         try
         {
             // Device arrival signal
-            ZWaveAdapterSignal^ signal = ref new ZWaveAdapterSignal(DEVICE_ARRIVAL_SIGNAL);
+            ZWaveAdapterSignal^ signal = ref new ZWaveAdapterSignal(Constants::DEVICE_ARRIVAL_SIGNAL);
             
             signal->AddParam(ref new ZWaveAdapterValue(
-                                    DEVICE_ARRIVAL__DEVICE_HANDLE,
+                                    Constants::DEVICE_ARRIVAL__DEVICE_HANDLE,
                                     ref new ZWaveAdapterDevice(0, 0) //place holder
                                     )
                              );
             m_signals.push_back(signal);
 
             //Device removal signal
-            signal = ref new ZWaveAdapterSignal(DEVICE_REMOVAL_SIGNAL);
+            signal = ref new ZWaveAdapterSignal(Constants::DEVICE_REMOVAL_SIGNAL);
             
             signal->AddParam(ref new ZWaveAdapterValue(
-                                    DEVICE_REMOVAL__DEVICE_HANDLE,
+                                    Constants::DEVICE_REMOVAL__DEVICE_HANDLE,
                                     ref new ZWaveAdapterDevice(0, 0) //place holder
                                     )
                             );
@@ -644,15 +644,22 @@ namespace AdapterLib
             auto iter = FindDevice(m_pendingDevices, m_homeId, nodeId);
             if (iter != m_pendingDevices.end())
             {
-                dynamic_cast<ZWaveAdapterDevice^>(*iter)->Initialize();
+                ZWaveAdapterDevice^ currDevice = dynamic_cast<ZWaveAdapterDevice^>(*iter);
+                currDevice->Initialize();
 
-                m_devices.push_back(*iter);
+                m_devices.push_back(currDevice);
                 m_pendingDevices.erase(iter);
 
+                // Create a Switch Control Panel for *any* device that has a "Switch" property.
+                if (currDevice->GetPropertyByName(PROPERTY_SWITCH))
+                {
+                    SimpleSwitchControlPanelHandler^ myControlPanel = ref new SimpleSwitchControlPanelHandler(currDevice);
+                    currDevice->ControlPanelHandler = myControlPanel;
+                }
                 //notify the signal
                 AutoLock sync2(&m_signalLock, true);
 
-                IAdapterSignal^ signal = GetSignal(DEVICE_ARRIVAL_SIGNAL);
+                IAdapterSignal^ signal = GetSignal(Constants::DEVICE_ARRIVAL_SIGNAL);
                 if (signal != nullptr)
                 {
                     // Set the 'Device_Handle' signal parameter
@@ -676,7 +683,7 @@ namespace AdapterLib
             //notify the signal
             AutoLock sync2(&m_signalLock, true);
 
-            IAdapterSignal^ signal = GetSignal(DEVICE_REMOVAL_SIGNAL);
+            IAdapterSignal^ signal = GetSignal(Constants::DEVICE_REMOVAL_SIGNAL);
             if (signal != nullptr)
             {
                 // Set the 'Device_Handle' signal parameter
@@ -712,7 +719,7 @@ namespace AdapterLib
         //notify device removal for all devices
         for (auto device : m_devices)
         {
-            IAdapterSignal^ signal = GetSignal(DEVICE_REMOVAL_SIGNAL);
+            IAdapterSignal^ signal = GetSignal(Constants::DEVICE_REMOVAL_SIGNAL);
             if (signal != nullptr)
             {
                 // Set the 'Device_Handle' signal parameter
@@ -864,7 +871,7 @@ namespace AdapterLib
                     //notify the signal
                     AutoLock sync(&adapter->m_signalLock, true);
 
-                    IAdapterSignal^ signal = device->GetSignal(CHANGE_OF_VALUE_SIGNAL);
+                    IAdapterSignal^ signal = device->GetSignal(Constants::CHANGE_OF_VALUE_SIGNAL);
                     if (signal != nullptr)
                     {
                         ZWaveAdapterProperty^ adapterProperty = nullptr;

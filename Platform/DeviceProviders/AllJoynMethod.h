@@ -30,7 +30,7 @@ namespace DeviceProviders
 
     internal:
         AllJoynMethod(_In_ AllJoynInterface ^ parent, const alljoyn_interfacedescription_member& methodDescription);
-        AllJoynInterface ^ GetParent() const { return m_interface.Resolve<AllJoynInterface>(); }
+        AllJoynInterface ^ GetParent() const { return m_interface; }
 
     public:
         virtual ~AllJoynMethod();
@@ -42,21 +42,25 @@ namespace DeviceProviders
         {
             Windows::Foundation::Collections::IVector<ParameterInfo ^>^ get();
         }
-        virtual property Windows::Foundation::Collections::IVector<ITypeDefinition ^>^ OutSignature
+        virtual property Windows::Foundation::Collections::IVector<ParameterInfo ^>^ OutSignature
         {
-            Windows::Foundation::Collections::IVector<ITypeDefinition ^>^ get();
+            Windows::Foundation::Collections::IVector<ParameterInfo ^>^ get();
         }
         virtual property Platform::String ^ Name
         {
             Platform::String ^ get();
         }
+        virtual property IInterface^ Interface
+        {
+            inline IInterface^ get() { return m_interface; }
+        }
 
     private:
-        Platform::WeakReference m_interface;
+        AllJoynInterface ^ m_interface;
 
         std::string m_name;
         Platform::Collections::Vector<ParameterInfo ^>^ m_inSignature;
-        Platform::Collections::Vector<ITypeDefinition ^>^ m_outSignature;
+        Platform::Collections::Vector<ParameterInfo ^>^ m_outSignature;
         std::string m_inSignatureString;
         std::string m_outSignatureString;
     };

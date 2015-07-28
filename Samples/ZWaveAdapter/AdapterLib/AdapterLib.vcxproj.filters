@@ -15,6 +15,7 @@
     <ClCompile Include="ZWaveAdapterProperty.cpp" />
     <ClCompile Include="ZWaveAdapterSignal.cpp" />
     <ClCompile Include="ZWaveAdapterValue.cpp" />
+    <ClCompile Include="SwitchControlPanelHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AdapterConfig.h" />
@@ -26,5 +27,6 @@
     <ClInclude Include="ZWaveAdapterProperty.h" />
     <ClInclude Include="ZWaveAdapterSignal.h" />
     <ClInclude Include="ZWaveAdapterValue.h" />
+    <ClInclude Include="SwitchControlPanelHandler.h" />
   </ItemGroup>
 </Project>
