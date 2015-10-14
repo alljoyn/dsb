@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -28,7 +28,7 @@
 using namespace BridgeRT;
 using namespace DsbCommon;
 
-static const char CSP_INTERFACE_NAME[] = "com.microsoft.alljoynmanagement.config";
+static const char CSP_INTERFACE_NAME[] = "com.microsoft.alljoynmanagement.Config";
 static const ULONG CHUNK_SIZE = (4 * 1024);     // size in bytes
 static const WCHAR TEMP_FILE_EXTENSION[] = L".xml";
 
@@ -50,29 +50,29 @@ static const MethodDescriptor g_methodDescriptions[] = {
     {
         "StartChunkWrite",
         "u",
-        "(uuu)",
-        "length,OutStruct(token|chunkSize|HResult)",
+        "(uu)",
+        "length,outStruct",                     //outStruct: token, chunkSize
         AllJoynFileTransfer::StartChunkWrite
     },
     {
         "WriteNextChunk",
         "(uay)",
-        "u",
-        "InStuct(token|byteArray),HResult",
+        nullptr,                                //no output parameters
+        "inStruct",
         AllJoynFileTransfer::WriteNextChunk
     },
     {
         "StartChunkRead",
         "",
-        "(uuuu)",
-        "OutStruct(length|token|chunkSize|HResult)",
+        "(uuu)",
+        "outStruct",                            //outStruct: fileSize, token, chunkSize
         AllJoynFileTransfer::StartChunkRead
     },
     {
         "ReadNextChunk",
         "u",
-        "(uay)",
-        "token,OutStruct(result|byteArray)",
+        "ay",
+        "token,buffer",
         AllJoynFileTransfer::ReadNextChunk
     }
 };
@@ -310,8 +310,7 @@ void AllJoynFileTransfer::StartChunkWrite(_In_ alljoyn_busobject busObject, _In_
     if (1 == ::InterlockedExchange(&cspInterface->m_lockCount, 1))
     {
         // not authorize if some else already transfers the file
-        status = ER_OS_ERROR;
-        hr = E_ACCESSDENIED;
+        status = ER_PERMISSION_DENIED;
         goto leave;
     }
 
@@ -325,7 +324,7 @@ void AllJoynFileTransfer::StartChunkWrite(_In_ alljoyn_busobject busObject, _In_
     hr = cspInterface->CreateTempFile();
     if (FAILED(hr))
     {
-        status = ER_OS_ERROR;
+        status = ER_OPEN_FAILED;
         goto leave;
     }
 
@@ -335,10 +334,7 @@ void AllJoynFileTransfer::StartChunkWrite(_In_ alljoyn_busobject busObject, _In_
 leave:
     // prepare and send response
     //
-    // note that in order to get the root cause of the OS error hr needs to be returned
-    // consequently alljoyn_busobject_methodreply_status can't be used
-    if (ER_OK != status &&
-        ER_OS_ERROR != status)
+    if (ER_OK != status)
     {
         alljoyn_busobject_methodreply_status(busObject, msg, status);
     }
@@ -348,15 +344,7 @@ leave:
         outArg = alljoyn_msgarg_create();
         if (NULL != outArg)
         {
-            if (FAILED(hr))
-            {
-                // only indicate hr in case of error
-                status = alljoyn_msgarg_set(outArg, g_methodDescriptions[STARTWRITECHUNK_INDEX].signatureOut, BAD_TOKEN, 0, hr);
-            }
-            else
-            {
-                status = alljoyn_msgarg_set(outArg, g_methodDescriptions[STARTWRITECHUNK_INDEX].signatureOut, token, CHUNK_SIZE, hr);
-            }
+            status = alljoyn_msgarg_set(outArg, g_methodDescriptions[STARTWRITECHUNK_INDEX].signatureOut, token, CHUNK_SIZE);
         }
         else
         {
@@ -423,9 +411,8 @@ void AllJoynFileTransfer::WriteNextChunk(_In_ alljoyn_busobject busObject, _In_ 
     if (cspInterface->m_endOfTransfer)
     {
         // transfer is already finished
-        // => nothing to do 
-        status = ER_OS_ERROR;
-        hr = HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
+        // => nothing to do
+        status = ER_END_OF_DATA;
         goto leave;
     }
 
@@ -449,8 +436,7 @@ void AllJoynFileTransfer::WriteNextChunk(_In_ alljoyn_busobject busObject, _In_ 
     {
         // don't cancel file transfer in this error case
         cancelFileTransferOnError = false;
-        status = ER_OS_ERROR;
-        hr = E_ACCESSDENIED;
+        status = ER_PERMISSION_DENIED;
         goto leave;
     }
 
@@ -458,21 +444,19 @@ void AllJoynFileTransfer::WriteNextChunk(_In_ alljoyn_busobject busObject, _In_ 
     fileHandle = CreateFile2(cspInterface->m_tempFileName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, OPEN_EXISTING, nullptr);
     if (INVALID_HANDLE_VALUE == fileHandle)
     {
-        status = ER_OS_ERROR;
-        hr = HRESULT_FROM_WIN32(GetLastError());
+        status = ER_OPEN_FAILED;
         goto leave;
     }
     SetFilePointerEx(fileHandle, position, nullptr, FILE_END);
 
-    // write buffer in file 
+    // write buffer in file
     // Note:
-    //   - nbOfBytes is size_t type which is larger than DWORD for x64 machines however 
+    //   - nbOfBytes is size_t type which is larger than DWORD for x64 machines however
     //     by design AllJoyn guarantee that size of payload of 1 message cannot be greater than 2^17 which fits in a DWORD.
     //     In addition to this AllJoynFileTransfer payload (chunk size) is by design limited to 4K bytes
     if (!WriteFile(fileHandle, bytes, static_cast<DWORD>(nbOfBytes), nullptr, nullptr))
     {
-        status = ER_OS_ERROR;
-        hr = HRESULT_FROM_WIN32(GetLastError());
+        status = ER_WRITE_ERROR;
         goto leave;
     }
 
@@ -499,7 +483,7 @@ void AllJoynFileTransfer::WriteNextChunk(_In_ alljoyn_busobject busObject, _In_ 
         if (FAILED(hr))
         {
             // just indicates the error
-            // don't leave since transfer needs to be ended 
+            // don't leave since transfer needs to be ended
             status = ER_OS_ERROR;
         }
         // end file transfer
@@ -510,26 +494,12 @@ void AllJoynFileTransfer::WriteNextChunk(_In_ alljoyn_busobject busObject, _In_ 
 leave:
     // prepare and send response
     //
-    // note that in order to get the root cause of the OS error hr needs to be returned
-    // consequently alljoyn_busobject_methodreply_status can't be used
-    if (ER_OK != status &&
-        ER_OS_ERROR != status)
+    if (ER_OK != status)
     {
         alljoyn_busobject_methodreply_status(busObject, msg, status);
     }
     else
     {
-        // prepare out arguments
-        outArg = alljoyn_msgarg_create();
-        if (NULL != outArg)
-        {
-            status = alljoyn_msgarg_set(outArg, g_methodDescriptions[WRITENEXTCHUNK_INDEX].signatureOut, hr);
-        }
-        else
-        {
-            status = ER_OUT_OF_MEMORY;
-        }
-
         // send response (if possible)
         if (ER_OK != status)
         {
@@ -537,7 +507,7 @@ leave:
         }
         else
         {
-            alljoyn_busobject_methodreply_args(cspInterface->m_allJoynBusObject, msg, outArg, 1);
+            alljoyn_busobject_methodreply_args(cspInterface->m_allJoynBusObject, msg, nullptr, 0);
         }
     }
 
@@ -596,8 +566,7 @@ void AllJoynFileTransfer::StartChunkRead(_In_ alljoyn_busobject busObject, _In_ 
     if (1 == ::InterlockedCompareExchange(&cspInterface->m_lockCount, 1, 0))
     {
         // not authorize if some else already transfers the file
-        status = ER_OS_ERROR;
-        hr = E_ACCESSDENIED;
+        status = ER_PERMISSION_DENIED;
         goto leave;
     }
     cancelTransferOnError = true;
@@ -622,10 +591,9 @@ void AllJoynFileTransfer::StartChunkRead(_In_ alljoyn_busobject busObject, _In_ 
     if (!GetFileAttributesEx(cspInterface->m_tempFileName.c_str(), GetFileExInfoStandard, &fileAttribute))
     {
         status = ER_OS_ERROR;
-        hr = HRESULT_FROM_WIN32(GetLastError());
         goto leave;
     }
-    // for now assume a DWORD is enough to store config files size 
+    // for now assume a DWORD is enough to store config files size
     cspInterface->m_fileSize = fileAttribute.nFileSizeLow;
 
     // set transfer token
@@ -634,10 +602,7 @@ void AllJoynFileTransfer::StartChunkRead(_In_ alljoyn_busobject busObject, _In_ 
 leave:
     // prepare and send response
     //
-    // note that in order to get the root cause of the OS error hr needs to be returned
-    // consequently alljoyn_busobject_methodreply_status can't be used
-    if (ER_OK != status &&
-        ER_OS_ERROR != status)
+    if (ER_OK != status)
     {
         alljoyn_busobject_methodreply_status(busObject, msg, status);
     }
@@ -647,15 +612,7 @@ leave:
         outArg = alljoyn_msgarg_create();
         if (NULL != outArg)
         {
-            if (FAILED(hr))
-            {
-                // only indicate hr in case of error
-                status = alljoyn_msgarg_set(outArg, g_methodDescriptions[STARTREADCHUNK_INDEX].signatureOut, 0, BAD_TOKEN, 0, hr);
-            }
-            else
-            {
-                status = alljoyn_msgarg_set(outArg, g_methodDescriptions[STARTREADCHUNK_INDEX].signatureOut, cspInterface->m_fileSize, token, CHUNK_SIZE, hr);
-            }
+            status = alljoyn_msgarg_set(outArg, g_methodDescriptions[STARTREADCHUNK_INDEX].signatureOut, cspInterface->m_fileSize, token, CHUNK_SIZE);
         }
         else
         {
@@ -721,7 +678,7 @@ void AllJoynFileTransfer::ReadNextChunk(_In_ alljoyn_busobject busObject, _In_ c
     if (cspInterface->m_endOfTransfer)
     {
         // transfer is already finished
-        // => nothing to do 
+        // => nothing to do
         status = ER_END_OF_DATA;
         goto leave;
     }
@@ -751,8 +708,7 @@ void AllJoynFileTransfer::ReadNextChunk(_In_ alljoyn_busobject busObject, _In_ c
     {
         // don't cancel file transfer in this error case
         cancelFileTransferOnError = false;
-        status = ER_OS_ERROR;
-        hr = E_ACCESSDENIED;
+        status = ER_PERMISSION_DENIED;
         goto leave;
     }
 
@@ -760,8 +716,7 @@ void AllJoynFileTransfer::ReadNextChunk(_In_ alljoyn_busobject busObject, _In_ c
     fileHandle = CreateFile2(cspInterface->m_tempFileName.c_str(), GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, nullptr);
     if (INVALID_HANDLE_VALUE == fileHandle)
     {
-        status = ER_OS_ERROR;
-        hr = HRESULT_FROM_WIN32(GetLastError());
+        status = ER_OPEN_FAILED;
         goto leave;
     }
     // assume DWORD is enough to store config file size
@@ -769,16 +724,14 @@ void AllJoynFileTransfer::ReadNextChunk(_In_ alljoyn_busobject busObject, _In_ c
     if (!SetFilePointerEx(fileHandle, position, nullptr, FILE_BEGIN))
     {
         status = ER_OS_ERROR;
-        hr = HRESULT_FROM_WIN32(GetLastError());
         goto leave;
     }
 
-    // write buffer in file
+    // read buffer from file
     nbOfBytes = 0;
     if (!ReadFile(fileHandle, buffer, CHUNK_SIZE, &nbOfBytes, nullptr))
     {
-        status = ER_OS_ERROR;
-        hr = HRESULT_FROM_WIN32(GetLastError());
+        status = ER_READ_ERROR;
         goto leave;
     }
 
@@ -792,10 +745,7 @@ void AllJoynFileTransfer::ReadNextChunk(_In_ alljoyn_busobject busObject, _In_ c
 leave:
     // prepare and send response
     //
-    // note that in order to get the root cause of the OS error hr needs to be returned
-    // consequently alljoyn_busobject_methodreply_status can't be used
-    if (ER_OK != status &&
-        ER_OS_ERROR != status)
+    if (ER_OK != status)
     {
         alljoyn_busobject_methodreply_status(busObject, msg, status);
     }
@@ -805,15 +755,7 @@ leave:
         outArg = alljoyn_msgarg_create();
         if (NULL != outArg)
         {
-            if (FAILED(hr))
-            {
-                // empty byte array returned in case of OS error
-                status = alljoyn_msgarg_set(outArg, g_methodDescriptions[READNEXTCHUNK_INDEX].signatureOut, hr, 0, buffer);
-            }
-            else
-            {
-                status = alljoyn_msgarg_set(outArg, g_methodDescriptions[READNEXTCHUNK_INDEX].signatureOut, hr, nbOfBytes, buffer);
-            }
+            status = alljoyn_msgarg_set(outArg, g_methodDescriptions[READNEXTCHUNK_INDEX].signatureOut, nbOfBytes, buffer);
         }
         else
         {

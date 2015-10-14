@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -21,6 +21,9 @@
 
 namespace AdapterLib
 {
+    //Forward declaration
+    ref class MockAdapterAttribute;
+
     //
     // MockAdapterValue.
     // Description:
@@ -52,8 +55,8 @@ namespace AdapterLib
 
     internal:
         MockAdapterValue(
-            Platform::String^ ObjectName, 
-            Platform::Object^ ParentObject, 
+            Platform::String^ ObjectName,
+            Platform::Object^ ParentObject,
             Platform::Object^ DefaultData = nullptr // For signature initialization
             );
         MockAdapterValue(const MockAdapterValue^ Other);
@@ -95,11 +98,11 @@ namespace AdapterLib
         }
 
         // Attributes
-        virtual property BridgeRT::IAdapterValueVector^ Attributes
+        virtual property BridgeRT::IAdapterAttributeVector^ Attributes
         {
-            BridgeRT::IAdapterValueVector^ get()
+            BridgeRT::IAdapterAttributeVector^ get()
             {
-                return ref new BridgeRT::AdapterValueVector(this->attributes);
+                return ref new BridgeRT::AdapterAttributeVector(this->attributes);
             }
         }
 
@@ -110,9 +113,7 @@ namespace AdapterLib
 
         uint32 Set(BridgeRT::IAdapterProperty^ Other);
 
-        MockAdapterValue^ GetAttributeByName(Platform::String^ Name);
-
-        uint32 CheckAccess(uint32 DesiredAccess);
+        MockAdapterAttribute^ GetAttributeByName(Platform::String^ Name);
 
         uint32 Reset();
 
@@ -126,7 +127,73 @@ namespace AdapterLib
 
         const MOCK_PROPERTY_DESCRIPTOR* mockDescPtr;
 
-        std::vector<BridgeRT::IAdapterValue^> attributes;
+        std::vector<BridgeRT::IAdapterAttribute^> attributes;
+    };
+
+    //
+    // MockAdapterAttribute.
+    // Description:
+    //  The class that implements BridgeRT::IAdapterAttribute.
+    //
+    ref class MockAdapterAttribute : BridgeRT::IAdapterAttribute
+    {
+    public:
+
+        //Value
+        virtual property BridgeRT::IAdapterValue^ Value
+        {
+            BridgeRT::IAdapterValue^ get() { return this->value; }
+        }
+
+        // Annotations
+        virtual property BridgeRT::IAnnotationMap^ Annotations
+        {
+            BridgeRT::IAnnotationMap^ get()
+            {
+                return ref new BridgeRT::AnnotationMap(this->annotations);
+            }
+        }
+
+        // Access
+        virtual property BridgeRT::E_ACCESS_TYPE Access
+        {
+            BridgeRT::E_ACCESS_TYPE get()
+            {
+                return this->access;
+            }
+
+            void set(BridgeRT::E_ACCESS_TYPE accessType)
+            {
+                this->access = accessType;
+            }
+        }
+        
+        //Change of Value signal supported
+        virtual property BridgeRT::SignalBehavior COVBehavior
+        {
+            BridgeRT::SignalBehavior get() { return this->covBehavior; }
+
+            void set(BridgeRT::SignalBehavior behavior)
+            {
+                this->covBehavior = behavior;
+            }
+        }
+
+    internal:
+        MockAdapterAttribute(
+            Platform::String^ ObjectName,
+            Platform::Object^ ParentObject,
+            Platform::Object^ DefaultData = nullptr // For signature initialization
+            );
+        MockAdapterAttribute(const MockAdapterAttribute^ Other);
+        
+    private:
+        // Generic
+        MockAdapterValue^ value;
+
+        std::map<Platform::String^, Platform::String^> annotations;
+        BridgeRT::E_ACCESS_TYPE access = BridgeRT::E_ACCESS_TYPE::ACCESS_READ;    // By default - Read access only
+        BridgeRT::SignalBehavior covBehavior = BridgeRT::SignalBehavior::Never;
     };
 
 
@@ -194,6 +261,9 @@ namespace AdapterLib
         {
             this->outParams.push_back(OutParameter);
         }
+
+        MockAdapterValue^ GetInputParamByName(Platform::String^ InputParamName);
+        MockAdapterValue^ GetOutputParamByName(Platform::String^ OutputParamName);
 
         void setResult(HRESULT Hr);
 
@@ -265,12 +335,56 @@ namespace AdapterLib
 
 
     //
+    // MockAdapterIcon
+    // Description:
+    //  This class demonstrates how to provide an ICON for the Mock device
+    //
+    ref class MockAdapterIcon : BridgeRT::IAdapterIcon
+    {
+    public:
+
+        // Gets the image data (Optional - but must set the URL if this returns null)
+        virtual Platform::Array<BYTE>^ GetImage();
+
+        // Gets the Icon's URL.  (Optional - but must set the Image Data if this returns null)
+        virtual property Platform::String^ Url
+        {
+            Platform::String^ get()
+            {
+                return url;
+            }
+        }
+
+        // Gets the Icon's type. (Returns the Mime Type of Image Data or URL. Must always be the same)
+        virtual property Platform::String^ MimeType
+        {
+            Platform::String^ get()
+            {
+                return mimeType;
+            }
+        }
+
+
+    internal:
+        MockAdapterIcon(Windows::Storage::StorageFile^ srcFile, Platform::String^ srcUrl = nullptr);
+        MockAdapterIcon(Platform::String^ srcUrl, Platform::String^ srcMimeType);
+
+    private:
+        Windows::Storage::StorageFile^ srcImageFile;
+        Platform::String^ url;
+        Platform::String^ mimeType;
+    };
+
+
+    //
     // MockAdapterDevice.
     // Description:
     //  The class that implements BridgeRT::IAdapterDevice.
     //
     struct MOCK_DEVICE_DESCRIPTOR;
-    ref class MockAdapterDevice : BridgeRT::IAdapterDevice
+    ref class MockAdapterDevice :   BridgeRT::IAdapterDevice, 
+                                    BridgeRT::IAdapterDeviceLightingService, 
+                                    BridgeRT::IAdapterDeviceControlPanel
     {
     public:
         //
@@ -315,7 +429,7 @@ namespace AdapterLib
         virtual property Platform::String^ Description
         {
             Platform::String^ get() { return this->description; }
-        }       
+        }
 
         // Device properties
         virtual property BridgeRT::IAdapterPropertyVector^ Properties
@@ -355,9 +469,35 @@ namespace AdapterLib
             }
         }
 
+        // Lighting Service Handler
+        virtual property BridgeRT::ILSFHandler^ LightingServiceHandler
+        {
+            BridgeRT::ILSFHandler^ get()
+            {
+                return lightingServiceHandler;
+            }
+
+            void set(BridgeRT::ILSFHandler^ handler)
+            {
+                lightingServiceHandler = handler;
+            }
+        }
+
+        virtual property BridgeRT::IAdapterIcon^ Icon
+        {
+            BridgeRT::IAdapterIcon^ get()
+            {
+                return icon;
+            }
+        }
+
     internal:
         MockAdapterDevice(Platform::String^ Name, Platform::Object^ ParentObject);
         MockAdapterDevice(const MOCK_DEVICE_DESCRIPTOR* MockDeviceDescPtr, Platform::Object^ ParentObject);
+
+        void AddProperty(_In_ BridgeRT::IAdapterProperty^ NewProperty);
+        void AddMethod(_In_ BridgeRT::IAdapterMethod^ NewMethod);
+        void AddSignal(_In_ BridgeRT::IAdapterSignal^ NewSignal);
 
         void SendSignal(
             _In_ Platform::String^ SignalName,
@@ -370,10 +510,30 @@ namespace AdapterLib
                 _Out_opt_ BridgeRT::IAdapterIoRequest^* RequestPtr
                 );
 
+        MockAdapterProperty^ GetPropertyByName(_In_ Platform::String^ PropertyName);
+        MockAdapterMethod^ GetMethodByName(_In_ Platform::String^ MethodName);
+        MockAdapterSignal^ GetSignalByName(_In_ Platform::String^ SignalName);
+
+        void SetVendor(Platform::String^ deviceVendor)
+        {
+            this->vendor = deviceVendor;
+        }
+
+        void SetModel(Platform::String^ deviceModel)
+        {
+            this->model = deviceModel;
+        }
+
+        void SetSerialNumber(Platform::String^ deviceSerialNumber)
+        {
+            this->serialNumber = deviceSerialNumber;
+        }
+
+
     private:
         void createMethods();
         void createSignals();
-    
+
         void methodReset(_Inout_ BridgeRT::IAdapterMethod^ Method);
 
     private:
@@ -389,17 +549,19 @@ namespace AdapterLib
         Platform::String^ serialNumber;
         Platform::String^ description;
         BridgeRT::IControlPanelHandler^ controlPanelHandler;
+        BridgeRT::ILSFHandler^ lightingServiceHandler;
+        BridgeRT::IAdapterIcon^ icon;
 
         // Sync object
         DsbCommon::CSLock lock;
 
-        // Device properties 
+        // Device properties
         std::vector<BridgeRT::IAdapterProperty^> properties;
 
         // Device methods
         std::vector<BridgeRT::IAdapterMethod^> methods;
 
-        // Device signals 
+        // Device signals
         std::vector<BridgeRT::IAdapterSignal^> signals;
     };
 

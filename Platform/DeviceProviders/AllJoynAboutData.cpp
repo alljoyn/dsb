@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -18,10 +18,13 @@
 #include "AllJoynAboutData.h"
 #include "AllJoynAboutIcon.h"
 #include "AllJoynHelpers.h"
+#include "AllJoynMessageArgVariant.h"
+#include "AllJoynStatus.h"
 #include "TypeConversionHelpers.h"
 
 using namespace Platform;
 using namespace Platform::Collections;
+using namespace Platform::Collections::Details;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 using namespace concurrency;
@@ -67,14 +70,19 @@ namespace DeviceProviders
 
     AllJoynAboutData::~AllJoynAboutData()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr != m_aboutData)
         {
             alljoyn_aboutdata_destroy(m_aboutData);
+            m_aboutData = nullptr;
         }
     }
 
     String ^ AllJoynAboutData::CurrentLanguage::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (m_currentLanguage.empty())
             return this->DefaultLanguage;
 
@@ -91,6 +99,9 @@ namespace DeviceProviders
             throw ref new InvalidArgumentException(ref new String(L"Unsupported language specified."));
 
         auto newLanguage = AllJoynHelpers::PlatformToMultibyteStandardString(value);
+
+        AutoLock lock(&m_lock, true);
+
         if (m_currentLanguage != newLanguage)
         {
             m_currentLanguage = newLanguage;
@@ -100,12 +111,14 @@ namespace DeviceProviders
             m_deviceName = nullptr;
             m_description = nullptr;
             m_manufacturer = nullptr;
-            m_allFields = nullptr;
+            m_announcedFields = nullptr;
         }
     }
 
     String ^ AllJoynAboutData::AppId::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_appId)
         {
             // Get and format the AppId
@@ -134,11 +147,15 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::DefaultLanguage::get()
     {
+        AutoLock lock(&m_lock, true);
+
         return m_defaultLanguage;
     }
 
     String ^ AllJoynAboutData::DeviceName::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_deviceName)
         {
             char* buffer = nullptr;
@@ -151,6 +168,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::DeviceId::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_deviceId)
         {
             char* buffer = nullptr;
@@ -163,6 +182,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::AppName::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_appName)
         {
             char* buffer = nullptr;
@@ -175,6 +196,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::Manufacturer::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_manufacturer)
         {
             char* buffer = nullptr;
@@ -187,6 +210,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::ModelNumber::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_modelNumber)
         {
             char* buffer = nullptr;
@@ -199,6 +224,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::Description::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_description)
         {
             char* buffer = nullptr;
@@ -211,6 +238,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::DateOfManufacture::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_dateOfManufacture)
         {
             char* buffer = nullptr;
@@ -223,6 +252,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::SoftwareVersion::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_softwareVersion)
         {
             char* buffer = nullptr;
@@ -235,6 +266,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::AllJoynSoftwareVersion::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_allJoynSoftwareVersion)
         {
             char* buffer = nullptr;
@@ -247,6 +280,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::HardwareVersion::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_hardwareVersion)
         {
             char* buffer = nullptr;
@@ -259,6 +294,8 @@ namespace DeviceProviders
 
     String ^ AllJoynAboutData::SupportUrl::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_supportUrl)
         {
             char* buffer = nullptr;
@@ -271,6 +308,8 @@ namespace DeviceProviders
 
     IVectorView<String^> ^ AllJoynAboutData::SupportedLanguages::get()
     {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_supportedLanguages)
         {
             auto supportedLanguages = ref new Vector<String^>();
@@ -295,37 +334,47 @@ namespace DeviceProviders
         return m_supportedLanguages;
     }
 
-    IMapView<String^, Object ^> ^ AllJoynAboutData::AllFields::get()
+    IVectorView<IStringVariantPair ^> ^ AllJoynAboutData::AnnouncedFields::get()
     {
+        AutoLock lock(&m_lock, true);
+
+        if (nullptr == m_announcedFields)
+        {
+            Vector<IStringVariantPair ^> ^ allFields = ref new Vector<IStringVariantPair ^>();
+            QStatus status = GetVectorOfFields(m_aboutData, allFields);
+            m_announcedFields = allFields->GetView();
+        }
+
+        return m_announcedFields;
+    }
+
+    IVectorView<IStringVariantPair ^> ^ AllJoynAboutData::GetAllFields()
+    {
+        AutoLock lock(&m_lock, true);
+
         if (nullptr == m_allFields)
         {
-            auto allFields = ref new Map<String^, Object ^>();
+            auto allFields = ref new Vector<IStringVariantPair ^>();
 
-            auto fieldCount = alljoyn_aboutdata_getfields(m_aboutData, nullptr, 0);
-            if (fieldCount)
+            if (m_service->JoinSession()->IsSuccess)
             {
-                auto fieldNames = vector<const char*>(fieldCount);
-                alljoyn_aboutdata_getfields(m_aboutData, fieldNames.data(), fieldCount);
+                auto aboutProxy = alljoyn_aboutproxy_create(m_service->GetBusAttachment(), m_service->GetName().c_str(), m_service->GetSessionId());
 
-                for (auto& fieldName : fieldNames)
+                alljoyn_msgarg extendedAboutMsgArg = alljoyn_msgarg_create();
+                QStatus status = alljoyn_aboutproxy_getaboutdata(aboutProxy, nullptr, extendedAboutMsgArg);
+                if (ER_OK == status)
                 {
-                    auto fieldSignature = alljoyn_aboutdata_getfieldsignature(m_aboutData, fieldName);
-
-                    alljoyn_msgarg fieldValue = nullptr;
-                    auto status = alljoyn_aboutdata_getfield(m_aboutData, fieldName, &fieldValue, this->GetCurrentLanguage());
+                    alljoyn_aboutdata extendedAboutData = alljoyn_aboutdata_create_empty();
+                    status = alljoyn_aboutdata_createfrommsgarg(extendedAboutData, extendedAboutMsgArg, nullptr);
                     if (ER_OK == status)
                     {
-                        Object ^ value;
-                        status = (QStatus)TypeConversionHelpers::GetAllJoynMessageArg(fieldValue, fieldSignature, &value);
-                        if (ER_OK == status)
-                        {
-                            allFields->Insert(AllJoynHelpers::MultibyteToPlatformString(fieldName), value);
-                        }
+                        status = GetVectorOfFields(extendedAboutData, allFields);
                     }
                 }
-            }
 
-            m_allFields = allFields->GetView();
+                m_service->LeaveSession();
+                m_allFields = allFields->GetView();
+            }
         }
 
         return m_allFields;
@@ -335,14 +384,68 @@ namespace DeviceProviders
     {
         return create_async([this]() -> IAboutIcon^
         {
-            auto icon = ref new AllJoynAboutIcon();
-            auto iconBusObject = m_service->GetOrCreateBusObject(AllJoynAboutIcon::AboutIconObjectPath);
+            AllJoynAboutIcon^ icon = nullptr;
+            AllJoynBusObject^ iconBusObject;
 
-            create_task(icon->InitializeAsync(iconBusObject)).then([this]()
+            try
+            {
+                iconBusObject = m_service->GetOrCreateBusObject(AllJoynAboutIcon::AboutIconObjectPath);
+                if (!iconBusObject)
+                {
+                    return nullptr;
+                }
+
+                icon = ref new AllJoynAboutIcon();
+                create_task(icon->InitializeAsync(iconBusObject)).wait();
+            }
+            catch (...)
+            {
+            }
+
+            if (iconBusObject)
             {
                 m_service->LeaveSession();
-            }).wait();
+            }
+
             return icon;
         });
+    }
+
+    QStatus AllJoynAboutData::GetVectorOfFields(alljoyn_aboutdata aboutData, Vector<IStringVariantPair^>^ allFields)
+    {
+        QStatus status = QStatus::ER_OK;
+        allFields->Clear();
+
+        auto fieldCount = alljoyn_aboutdata_getfields(aboutData, nullptr, 0);
+        if (fieldCount)
+        {
+            auto fieldNames = vector<const char*>(fieldCount);
+            alljoyn_aboutdata_getfields(aboutData, fieldNames.data(), fieldCount);
+
+            for (auto& fieldName : fieldNames)
+            {
+                auto fieldSignature = alljoyn_aboutdata_getfieldsignature(aboutData, fieldName);
+
+                alljoyn_msgarg fieldValue = nullptr;
+                status = alljoyn_aboutdata_getfield(aboutData, fieldName, &fieldValue, this->GetCurrentLanguage());
+                if (ER_OK != status)
+                    break;
+
+                Object ^ value;
+                status = (QStatus)TypeConversionHelpers::GetAllJoynMessageArg(fieldValue, fieldSignature, &value);
+                if (ER_OK != status)
+                    break;
+
+                auto variantValue = ref new AllJoynMessageArgVariant(fieldSignature, value);
+                allFields->Append(ref new StringVariantPair(AllJoynHelpers::MultibyteToPlatformString(fieldName), variantValue));
+            }
+        }
+
+        if (ER_OK != status)
+        {
+            allFields->Clear();
+        }
+
+        return status;
     }
 }

@@ -30,7 +30,9 @@ AllJoynProperty::AllJoynProperty()
     : m_parent(nullptr),
     m_originalName(nullptr),
     m_dsbType(Platform::TypeCode::Empty),
-    m_dsbSubType(PropertyType::Empty)
+    m_dsbSubType(PropertyType::Empty),
+    m_annotations(nullptr),
+    m_access(E_ACCESS_TYPE::ACCESS_READWRITE)
 {
 }
 
@@ -38,12 +40,12 @@ AllJoynProperty::~AllJoynProperty()
 {
 }
 
-QStatus AllJoynProperty::Create(IAdapterValue ^adapterValue, PropertyInterface *parent)
+QStatus AllJoynProperty::Create(IAdapterAttribute ^adapterAttribute, PropertyInterface *parent)
 {
     QStatus status = ER_OK;
 
     // sanity check
-    if (nullptr == adapterValue)
+    if (nullptr == adapterAttribute || nullptr == adapterAttribute->Value)
     {
         status = ER_BAD_ARG_1;
         goto leave;
@@ -55,9 +57,12 @@ QStatus AllJoynProperty::Create(IAdapterValue ^adapterValue, PropertyInterface *
     }
 
     m_parent = parent;
-    m_originalName = adapterValue->Name;
-    
-    m_dsbType = Platform::Type::GetTypeCode(adapterValue->Data->GetType());
+    m_originalName = adapterAttribute->Value->Name;
+    m_annotations = adapterAttribute->Annotations;
+    m_access = adapterAttribute->Access;
+    m_covBehavior = adapterAttribute->COVBehavior;
+
+    m_dsbType = Platform::Type::GetTypeCode(adapterAttribute->Value->Data->GetType());
 
     status = SetName(m_originalName);
     if (ER_OK != status)
@@ -69,7 +74,7 @@ QStatus AllJoynProperty::Create(IAdapterValue ^adapterValue, PropertyInterface *
 
     {
         //check  if the dsbValue is of type IPropertyValue
-        auto propertyValue = dynamic_cast<IPropertyValue^>(adapterValue->Data);
+        auto propertyValue = dynamic_cast<IPropertyValue^>(adapterAttribute->Value->Data);
         if (nullptr == propertyValue)
         {
             status = ER_BAD_ARG_1;
@@ -124,17 +129,21 @@ leave:
     return status;
 }
 
-bool AllJoynProperty::IsSameType(IAdapterValue ^ adapterValue)
+bool AllJoynProperty::IsSameType(IAdapterAttribute ^adapterAttribute)
 {
     bool retval = false;
 
-    if (adapterValue->Data != nullptr &&
-        m_originalName == adapterValue->Name &&
-        m_dsbType == Platform::Type::GetTypeCode(adapterValue->Data->GetType()))
+    if (adapterAttribute != nullptr && adapterAttribute->Value != nullptr &&
+        adapterAttribute->Value->Data != nullptr &&
+        m_originalName == adapterAttribute->Value->Name &&
+        m_dsbType == Platform::Type::GetTypeCode(adapterAttribute->Value->Data->GetType()) &&
+        m_access == adapterAttribute->Access &&
+        m_covBehavior == adapterAttribute->COVBehavior &&
+        AreAnnotationsSame(adapterAttribute->Annotations))
     {
         retval = true;
         
-        auto propertyValue = dynamic_cast<IPropertyValue^>(adapterValue->Data);
+        auto propertyValue = dynamic_cast<IPropertyValue^>(adapterAttribute->Value->Data);
         if (propertyValue != nullptr && propertyValue->Type != m_dsbSubType)
         {
             retval = false;
@@ -142,4 +151,34 @@ bool AllJoynProperty::IsSameType(IAdapterValue ^ adapterValue)
     }
 
     return retval;
+}
+
+bool AllJoynProperty::AreAnnotationsSame(_In_ IAnnotationMap ^annotations)
+{
+
+    if (m_annotations && annotations)
+    {
+        if (m_annotations->Size != annotations->Size)
+        {
+            return false;
+        }
+        auto iter1 = m_annotations->First();
+        while (iter1->HasCurrent)
+        {
+            auto key = iter1->Current->Key;
+            auto value = iter1->Current->Value;
+            if (value != annotations->Lookup(key))
+            {
+                return false;
+            }
+            iter1->MoveNext();
+        }
+    }
+    else if(m_annotations || annotations)
+    {
+        //return false if only one of them have annotations and not both
+        return false;
+    }
+
+    return true;
 }

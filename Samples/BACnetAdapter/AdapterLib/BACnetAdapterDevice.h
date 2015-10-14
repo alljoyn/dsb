@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -50,8 +50,8 @@ namespace AdapterLib
 
     internal:
         BACnetAdapterValue(
-            Platform::String^ ObjectName, 
-            Platform::Object^ ParentObject, 
+            Platform::String^ ObjectName,
+            Platform::Object^ ParentObject,
             Platform::Object^ DefaultData = nullptr // For signature initialization
             );
         BACnetAdapterValue(const BACnetAdapterValue^ Other);
@@ -87,6 +87,8 @@ namespace AdapterLib
         bool isModified;
     };
 
+    //Forward declaration
+    ref class BACnetAdapterAttribute;
 
     //
     // BACnetAdapterProperty.
@@ -115,11 +117,11 @@ namespace AdapterLib
         }
 
         // Attributes
-        virtual property BridgeRT::IAdapterValueVector^ Attributes
+        virtual property BridgeRT::IAdapterAttributeVector^ Attributes
         {
-            BridgeRT::IAdapterValueVector^ get()
+            BridgeRT::IAdapterAttributeVector^ get()
             {
-                return ref new BridgeRT::AdapterValueVector(this->attributes);
+                return ref new BridgeRT::AdapterAttributeVector(this->attributes);
             }
         }
 
@@ -135,7 +137,7 @@ namespace AdapterLib
         ULONG GetBACnetObjectId();
 
         // Adding attributes
-        BACnetAdapterProperty^ operator += (BridgeRT::IAdapterValue^ Attribute)
+        BACnetAdapterProperty^ operator += (BridgeRT::IAdapterAttribute^ Attribute)
         {
             this->attributes.push_back(Attribute);
             return this;
@@ -144,8 +146,8 @@ namespace AdapterLib
         BridgeRT::IAdapterValue^ GetPresentValue();
         uint32 SetPresentValue(const BACNET_APPLICATION_DATA_VALUE& PresetValue);
 
-        BACnetAdapterValue^ GetAttributeByName(Platform::String^ AttributeName);
-        BACnetAdapterValue^ GetAttributeByPropertyId(BACNET_PROPERTY_ID PropertyId);
+        BACnetAdapterAttribute^ GetAttributeByName(Platform::String^ AttributeName);
+        BACnetAdapterAttribute^ GetAttributeByPropertyId(BACNET_PROPERTY_ID PropertyId);
         uint32 SetAttributeByPropertyId(_In_ BACNET_PROPERTY_ID PropertyId, _In_ const BACNET_APPLICATION_DATA_VALUE& Value);
 
         void NotifyCovSignal();
@@ -158,10 +160,76 @@ namespace AdapterLib
         Platform::String^ interfaceHint;
         Platform::Object^ parent;
 
-        std::vector<BridgeRT::IAdapterValue^> attributes;
+        std::vector<BridgeRT::IAdapterAttribute^> attributes;
 
         // The BACnet object ID
         ULONG objectId;
+    };
+
+    //
+    // BACnetAdapterAttribute.
+    // Description:
+    //  The class that implements BridgeRT::IAdapterAttribute.
+    //
+    ref class BACnetAdapterAttribute : BridgeRT::IAdapterAttribute
+    {
+    public:
+
+        //Value
+        virtual property BridgeRT::IAdapterValue^ Value
+        {
+            BridgeRT::IAdapterValue^ get() { return this->value; }
+        }
+
+        // Annotations
+        virtual property BridgeRT::IAnnotationMap^ Annotations
+        {
+            BridgeRT::IAnnotationMap^ get()
+            {
+                return ref new BridgeRT::AnnotationMap(this->annotations);
+            }
+        }
+
+        // Access
+        virtual property BridgeRT::E_ACCESS_TYPE Access
+        {
+            BridgeRT::E_ACCESS_TYPE get()
+            {
+                return this->access;
+            }
+
+            void set(BridgeRT::E_ACCESS_TYPE accessType)
+            {
+                this->access = accessType;
+            }
+        }
+
+        //Change of Value signal supported
+        virtual property BridgeRT::SignalBehavior COVBehavior
+        {
+            BridgeRT::SignalBehavior get() { return this->covBehavior; }
+
+            void set(BridgeRT::SignalBehavior behavior)
+            {
+                this->covBehavior = behavior;
+            }
+        }
+
+    internal:
+        BACnetAdapterAttribute(
+            Platform::String^ ObjectName,
+            Platform::Object^ ParentObject,
+            Platform::Object^ DefaultData = nullptr // For signature initialization
+            );
+        BACnetAdapterAttribute(const BACnetAdapterAttribute^ Other);
+
+    private:
+        // Generic
+        BACnetAdapterValue^ value;
+
+        std::map<Platform::String^, Platform::String^> annotations;
+        BridgeRT::E_ACCESS_TYPE access = BridgeRT::E_ACCESS_TYPE::ACCESS_READ;    // By default - Read access only
+        BridgeRT::SignalBehavior covBehavior = BridgeRT::SignalBehavior::Never;
     };
 
 
@@ -252,7 +320,9 @@ namespace AdapterLib
     //
     ref class BACnetAdapter;
     ref class BACnetInterface;
-    ref class BACnetAdapterDevice : BridgeRT::IAdapterDevice
+    ref class BACnetAdapterDevice : BridgeRT::IAdapterDevice,
+                                    BridgeRT::IAdapterDeviceLightingService,
+                                    BridgeRT::IAdapterDeviceControlPanel
     {
     public:
         //
@@ -323,6 +393,24 @@ namespace AdapterLib
         virtual property BridgeRT::IControlPanelHandler^ ControlPanelHandler
         {
             BridgeRT::IControlPanelHandler^ get()
+            {
+                return nullptr;
+            }
+        }
+
+        // Lighting Service Handler
+        virtual property BridgeRT::ILSFHandler^ LightingServiceHandler
+        {
+            BridgeRT::ILSFHandler^ get()
+            {
+                return nullptr;
+            }
+        }
+
+        // About Icon
+        virtual property BridgeRT::IAdapterIcon^ Icon
+        {
+            BridgeRT::IAdapterIcon^ get()
             {
                 return nullptr;
             }
@@ -409,10 +497,10 @@ namespace AdapterLib
         // The BACnet adapter
         BACnetAdapter^ bacnetAdapter;
 
-        // Device properties 
+        // Device properties
         std::vector<BridgeRT::IAdapterProperty^> properties;
 
-        // Device signals 
+        // Device signals
         std::vector<BridgeRT::IAdapterSignal^> signals;
 
         // The BACnet stack interface

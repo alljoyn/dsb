@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -18,7 +18,7 @@
 #include <vector>
 #include <strsafe.h>
 
-#include "DsbServiceNames.h" 
+#include "DsbServiceNames.h"
 #include "AllJoynAbout.h"
 
 #include "Shlwapi.h"
@@ -128,6 +128,12 @@ QStatus AllJoynAbout::Announce(alljoyn_sessionport sp)
         goto leave;
     }
 
+    if (!alljoyn_aboutdata_isvalid(m_aboutData, DEFAULT_LANGUAGE_FOR_ABOUT))
+    {
+        status = ER_ABOUT_ABOUTDATA_MISSING_REQUIRED_FIELD;
+        goto leave;
+    }
+
     status = alljoyn_aboutobj_announce(m_aboutObject, sp, m_aboutData);
     if (ER_OK != status)
     {
@@ -153,19 +159,25 @@ QStatus AllJoynAbout::RemoveObject(_In_ alljoyn_busobject busObject, _In_ const 
 QStatus AllJoynAbout::SetManufacturer(_In_z_ const wchar_t* value)
 {
     std::string stringValue = To_Ascii_String(value);
-    return alljoyn_aboutdata_setmanufacturer(m_aboutData, stringValue.c_str(), DEFAULT_LANGUAGE_FOR_ABOUT);
+    return alljoyn_aboutdata_setmanufacturer(m_aboutData, stringValue.c_str(), nullptr);
 }
 
 QStatus AllJoynAbout::SetDeviceName(_In_z_ const wchar_t *value)
 {
     std::string stringValue = To_Ascii_String(value);
-    return alljoyn_aboutdata_setdevicename(m_aboutData, stringValue.c_str(), DEFAULT_LANGUAGE_FOR_ABOUT);
+    return alljoyn_aboutdata_setdevicename(m_aboutData, stringValue.c_str(), nullptr);
 }
 
-QStatus AllJoynAbout::SetVersion(_In_z_ const wchar_t *value)
+QStatus AllJoynAbout::SetSWVersion(_In_z_ const wchar_t *value)
 {
     std::string stringValue = To_Ascii_String(value);
     return alljoyn_aboutdata_setsoftwareversion(m_aboutData, stringValue.c_str());
+}
+
+QStatus AllJoynAbout::SetHWVersion(_In_z_ const wchar_t *value)
+{
+    std::string stringValue = To_Ascii_String(value);
+    return alljoyn_aboutdata_sethardwareversion(m_aboutData, stringValue.c_str());
 }
 
 QStatus AllJoynAbout::SetDeviceId(_In_z_ const wchar_t * value)
@@ -183,13 +195,13 @@ QStatus AllJoynAbout::SetModel(_In_z_ const wchar_t * value)
 QStatus AllJoynAbout::SetDescription(_In_z_ const wchar_t * value)
 {
     std::string stringValue = To_Ascii_String(value);
-    return alljoyn_aboutdata_setdescription(m_aboutData, stringValue.c_str(), DEFAULT_LANGUAGE_FOR_ABOUT);
+    return alljoyn_aboutdata_setdescription(m_aboutData, stringValue.c_str(), nullptr);
 }
 
 QStatus AllJoynAbout::SetApplicationName(_In_z_ const wchar_t *value)
 {
     std::string stringValue = To_Ascii_String(value);
-    return alljoyn_aboutdata_setappname(m_aboutData, stringValue.c_str(), DEFAULT_LANGUAGE_FOR_ABOUT);
+    return alljoyn_aboutdata_setappname(m_aboutData, stringValue.c_str(), nullptr);
 }
 
 QStatus AllJoynAbout::SetApplicationGuid(_In_ const GUID &value)
@@ -230,26 +242,25 @@ QStatus AllJoynAbout::SetDefaultAboutData()
     // - SoftwareVersion
 
     // default device ID to bridge device Id
-    status = GetDeviceID(deviceId);
-    if (ER_OK == status)
-    {
-        alljoyn_aboutdata_setdeviceid(m_aboutData, deviceId.c_str());
-    }
+    CHK_AJSTATUS( GetDeviceID(deviceId) );
+    CHK_AJSTATUS( alljoyn_aboutdata_setdeviceid(m_aboutData, deviceId.c_str()));
 
     // default about data to bridge about data
-    SetDeviceName(UNKNOWN_ADAPTER);
-    SetApplicationName(DSB_DEFAULT_APP_NAME);
-    SetApplicationGuid(DSB_DEFAULT_APP_GUID);
-    SetManufacturer(UNKNOWN_MANUFACTURER);
-    SetModel(DSB_DEFAULT_MODEL);
-    SetVersion(UNKNOWN_VERSION);
-    SetDescription(DSB_DEFAULT_DESCRIPTION);
+    CHK_AJSTATUS(SetDeviceName(UNKNOWN_ADAPTER));
+    CHK_AJSTATUS(SetSWVersion(UNKNOWN_VERSION));
+    CHK_AJSTATUS(SetDescription(DSB_DEFAULT_DESCRIPTION));
+    CHK_AJSTATUS(SetApplicationGuid(DSB_DEFAULT_APP_GUID));
+    CHK_AJSTATUS(SetApplicationName(DSB_DEFAULT_APP_NAME));
+    CHK_AJSTATUS(SetManufacturer(UNKNOWN_MANUFACTURER));
+    CHK_AJSTATUS(SetModel(DSB_DEFAULT_MODEL));
+
 
     if (!alljoyn_aboutdata_isvalid(m_aboutData, DEFAULT_LANGUAGE_FOR_ABOUT))
     {
         status = ER_ABOUT_ABOUTDATA_MISSING_REQUIRED_FIELD;
     }
 
+leave:
     return status;
 }
 

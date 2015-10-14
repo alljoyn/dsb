@@ -54,6 +54,18 @@ namespace BridgeRT
             inline Platform::String^ get() { return cov__attribute_handle; }
         }
 
+
+        // Lamp State Changed Signal
+        static property Platform::String^ LAMP_STATE_CHANGED_SIGNAL_NAME
+        {
+            inline Platform::String^ get() { return lamp_state_changed_signal_name; }
+        }
+
+        static property Platform::String^ SIGNAL_PARAMETER__LAMP_ID__NAME
+        {
+            inline Platform::String^ get() { return lamp_id__parameter_name; }
+        }
+
     private:
         static Platform::String^ device_arrival_signal;
         static Platform::String^ device_arrival__device_handle;
@@ -62,6 +74,8 @@ namespace BridgeRT
         static Platform::String^ change_of_value_signal;
         static Platform::String^ cov__property_handle;
         static Platform::String^ cov__attribute_handle;
+        static Platform::String^ lamp_state_changed_signal_name;
+        static Platform::String^ lamp_id__parameter_name;
     };
 
 }

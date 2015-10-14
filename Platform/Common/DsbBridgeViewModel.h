@@ -11,14 +11,14 @@ namespace DsbCommon
         DsbBridgeViewModel();
 
         virtual event Windows::UI::Xaml::Data::PropertyChangedEventHandler^ PropertyChanged;
-        
+
         property Platform::String^ InitializationErrorMessage
         {
             Platform::String^ get();
             void set(Platform::String^ value);
         }
 
-    private:     
+    private:
         Platform::String^ m_initializationErrorMessage;
     };
 }

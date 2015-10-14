@@ -1,15 +1,15 @@
 ﻿//
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -34,17 +34,21 @@ using namespace DsbCommon;
 using namespace std;
 
 // Device Arrival Signal
-String^ Constants::device_arrival_signal = ref new Platform::String(L"Device_Arrival");
-String^ Constants::device_arrival__device_handle = ref new Platform::String(L"Device_Handle");
+String^ Constants::device_arrival_signal            = L"Device_Arrival";
+String^ Constants::device_arrival__device_handle    = L"Device_Handle";
 
 // Device removal signal
-String^ Constants::device_removal_signal = ref new Platform::String(L"Device_Removal");
-String^ Constants::device_removal__device_handle = ref new Platform::String(L"Device_Handle");
+String^ Constants::device_removal_signal            = L"Device_Removal";
+String^ Constants::device_removal__device_handle    = L"Device_Handle";
 
 // Change Of Value signal
-String^ Constants::change_of_value_signal = ref new Platform::String(L"Change_Of_Value");
-String^ Constants::cov__property_handle = ref new Platform::String(L"Property_Handle");
-String^ Constants::cov__attribute_handle = ref new Platform::String(L"Attribute_Handle");
+String^ Constants::change_of_value_signal           = L"Change_Of_Value";
+String^ Constants::cov__property_handle             = L"Property_Handle";
+String^ Constants::cov__attribute_handle            = L"Attribute_Handle";
+
+// LampStateChanged Signal
+String^ Constants::lamp_state_changed_signal_name   = L"LampStateChanged";
+String^ Constants::lamp_id__parameter_name          = L"LampID";
 
 DsbBridge ^g_TheOneOnlyInstance = nullptr;
 
@@ -67,7 +71,7 @@ DsbBridge::DsbBridge(IAdapter^ adapter)
 DsbBridge::~DsbBridge()
 {
     Shutdown();
-    m_adapter = nullptr;   
+    m_adapter = nullptr;
 }
 
 DWORD WINAPI MonitorThread(LPVOID pContext)
@@ -119,7 +123,7 @@ int32
 DsbBridge::Initialize()
 {
 
-    BridgeLog::Instance()->LogEnter(__FUNCTIONW__);    
+    BridgeLog::Instance()->LogEnter(__FUNCTIONW__);
     int32 hr = S_OK;
 
     AutoLock bridgeLocker(&this->m_bridgeLock, true);
@@ -135,8 +139,8 @@ DsbBridge::Initialize()
         }
         m_alljoynInitialized = true;
     }
-    
-    // If the background thread has been created, then we have already called Initialize.  
+
+    // If the background thread has been created, then we have already called Initialize.
     // Caller must call Shutdown first
     if (m_hThread != NULL)
     {
@@ -172,7 +176,7 @@ DsbBridge::Initialize()
 
 Leave:
     if (FAILED(hr))
-    {        
+    {
         this->Shutdown();
     }
 
@@ -401,8 +405,8 @@ QStatus DsbBridge::UpdateDevice(IAdapterDevice ^ device, bool exposedOnAllJoynBu
         !exposedOnAllJoynBus)
     {
 
-        // the device exist (hence is exposed on allJoyn) 
-        // => remove it from list THEN shut it down and delete 
+        // the device exist (hence is exposed on allJoyn)
+        // => remove it from list THEN shut it down and delete
         BridgeDevice ^tempDevice = deviceIterator->second;
         m_deviceList.erase(deviceIterator);
         tempDevice->Shutdown();
@@ -430,7 +434,8 @@ DsbBridge::AdapterSignalHandler(
         //look for the device handle
         for (auto param : Signal->Params)
         {
-            if (param->Name == Constants::DEVICE_ARRIVAL__DEVICE_HANDLE)
+            if (param->Name == Constants::DEVICE_ARRIVAL__DEVICE_HANDLE ||
+                param->Name == Constants::DEVICE_REMOVAL__DEVICE_HANDLE)
             {
                 adapterDevice = dynamic_cast<IAdapterDevice^>(param->Data);
                 break;
@@ -464,7 +469,7 @@ DsbBridge::AdapterSignalHandler(
         {
             // only create device that are exposed
             //
-            // Note: creation failure is handle inside CreateDevice and there is no more 
+            // Note: creation failure is handle inside CreateDevice and there is no more
             // that can be done to propagate error in this routine => don't check status
             CreateDevice(adapterDevice);
         }

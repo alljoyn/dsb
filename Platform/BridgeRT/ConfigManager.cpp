@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -161,8 +161,9 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     m_about.SetApplicationName(m_adapter->ExposedApplicationName->Data());
     m_about.SetApplicationGuid(m_adapter->ExposedApplicationGuid);
     m_about.SetManufacturer(m_adapter->Vendor->Data());
-    m_about.SetDeviceName(m_adapter->AdapterName->Data());
-    m_about.SetVersion(m_adapter->Version->Data());
+    m_about.SetDeviceName(Windows::Networking::Proximity::PeerFinder::DisplayName->Data());
+    m_about.SetSWVersion(m_adapter->Version->Data());
+    m_about.SetModel(m_adapter->AdapterName->Data());
 
     status = InitializeCSPBusObjects();
     if (ER_OK != status)
@@ -174,13 +175,13 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
     //
     // Due to a legacy issue with the FltMgr Driver, it is possible that the NamedPipeTrigger (NpSvcTrigger) filter driver will not
     // be attached to the Named Pipe Device Driver.  Normally when a client tries to connect to alljoyn, MSAJAPI (the alljoyn library)
-    // will open a pipe connection with the AllJoyn Router Service.  The AllJoyn Router Service is configured as demand start.  The 
-    // act of connecting to the router should trigger the AllJoyn Router Service to start through the NpSvcTrigger filter drive.  On 
+    // will open a pipe connection with the AllJoyn Router Service.  The AllJoyn Router Service is configured as demand start.  The
+    // act of connecting to the router should trigger the AllJoyn Router Service to start through the NpSvcTrigger filter drive.  On
     // boot however, the NpSvcTrigger filter driver isn't properly attached to the Named Pipe Driver for up to 15 seconds.  During this
     // time, if a client tries to connect to AllJoyn an ER_TRANSPORT_NOT_AVAILABLE error is returned from AllJoyn instead.
     //
     // To mitigate this issue, the following loop attempts to reconnect for up to 30 seconds.
-    // 
+    //
     int attempt = 0;
     for (;;)
     {
@@ -200,7 +201,7 @@ QStatus ConfigManager::ConnectToAllJoyn(_In_ IAdapter^ adapter)
         ++attempt;
         Sleep(ATTEMPT_DELAY_MS);
     }
-   
+
 
     /*
     * Advertise this service on the bus.
@@ -465,19 +466,10 @@ HRESULT ConfigManager::SetDeviceConfig(_In_ std::wstring &tempFileName, _Out_ HA
     {
         goto Leave;
     }
-
-    // Now update what is exposed on AllJoyn 
-    if (nullptr != m_parent)
-    {
-        AutoLock bridgeLocker(&DsbBridge::SingleInstance()->GetLock(), true);
-        updateStatus = m_parent->InitializeDevices(true);
-        if (updateStatus != ER_OK)
-        {
-            hr = HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED);
-        }
-    }
-
-    // If one of the authentication methods has changed, signal a reset request
+ 
+    // If one of the authentication methods has changed, signal a reset request.  
+    // This will shutdown all devices including the Bridge and then regenerate them
+    // with whatever visibility was specified in the current bridge config file
     if (keyX != m_bridgeConfig.BridgeKeyX() ||
         deviceKeyX != m_bridgeConfig.DeviceKeyX() ||
         deviceUserName != m_bridgeConfig.DeviceUsername() ||
@@ -489,6 +481,20 @@ HRESULT ConfigManager::SetDeviceConfig(_In_ std::wstring &tempFileName, _Out_ HA
         {
             // set post write file event to reset event
             *finalEvent = this->m_parent->m_ctrlEvents.hResetEvt;
+        }
+    }
+    // Otherwise, update the status of each adapter device to either expose or hide 
+    // it from AllJoyn based on the new bridge configuration settings
+    else
+    {
+        if (nullptr != m_parent)
+        {
+            AutoLock bridgeLocker(&DsbBridge::SingleInstance()->GetLock(), true);
+            updateStatus = m_parent->InitializeDevices(true);
+            if (updateStatus != ER_OK)
+            {
+                hr = HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED);
+            }
         }
     }
 
@@ -619,7 +625,7 @@ void ConfigManager::MemberRemoved(_In_  void* context, _In_ alljoyn_sessionid se
     // reset access
     configManager->m_authHandler.ResetAccess(uniqueName);
 
-    // end CSP file transfer    
+    // end CSP file transfer
     configManager->m_adapterCSP.EndTransfer();
     configManager->m_bridgeCSP.EndTransfer();
 

@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -25,7 +25,7 @@ namespace BridgeRT
     typedef struct
     {
         AllJoynProperty *ajProperty;
-        IAdapterValue ^adapterValue;
+        IAdapterAttribute ^adapterAttr;
     } AJpropertyAdapterValuePair;
 
     class DeviceProperty
@@ -60,7 +60,7 @@ namespace BridgeRT
 
         static QStatus AJ_CALL GetProperty(_In_ const void* context, _In_z_ const char* ifcName, _In_z_ const char* propName, _Out_ alljoyn_msgarg val);
         static QStatus AJ_CALL SetProperty(_In_ const void* context, _In_z_ const char* ifcName, _In_z_ const char* propName, _In_ alljoyn_msgarg val);
-        
+
         // parent class
         BridgeDevice ^m_parent;
 
@@ -72,7 +72,7 @@ namespace BridgeRT
         PropertyInterface *m_propertyInterface;
         bool m_registeredOnAllJoyn;
 
-        // store association of each bus interface property exposed on AllJoyn by this bus object 
+        // store association of each bus interface property exposed on AllJoyn by this bus object
         // with its corresponding device instance (adapter value)
         std::map<std::string, AJpropertyAdapterValuePair> m_AJpropertyAdapterValuePairs;
 

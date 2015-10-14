@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -33,12 +33,12 @@ const uint16_t CONTROL_PANEL_VERSION = 1;
 //**************************************************************************************************************************************
 //
 //  Control Panel Constructor
-// 
+//
 //  controlPanelHandler     Custom Control Panel Data Provider and Action Handler for this Control Panel Producer
 //  controlledDevice        Adapter Device controlled by this AllJoyn Control Panel Producer
 //
 //**************************************************************************************************************************************
-ControlPanel::ControlPanel(_In_ IControlPanelHandler^ controlPanelHandler, _In_ IAdapterDevice^ controlledDevice) 
+ControlPanel::ControlPanel(_In_ IControlPanelHandler^ controlPanelHandler, _In_ IAdapterDevice^ controlledDevice)
     : m_bRegistered(false)
     , m_busObject(nullptr)
     , m_bus(nullptr)
@@ -52,11 +52,11 @@ ControlPanel::ControlPanel(_In_ IControlPanelHandler^ controlPanelHandler, _In_ 
 //**************************************************************************************************************************************
 //
 //  Destructor
-// 
+//
 //**************************************************************************************************************************************
 ControlPanel::~ControlPanel()
 {
-    // The Root Control Panel Container provided by this AllJoyn Control Panel 
+    // The Root Control Panel Container provided by this AllJoyn Control Panel
     if (m_pRootContainer != nullptr)
     {
         delete m_pRootContainer;
@@ -78,14 +78,14 @@ ControlPanel::~ControlPanel()
 
 //**************************************************************************************************************************************
 //
-//  Get Property Handler for this Control Panel.  
+//  Get Property Handler for this Control Panel.
 //  Returns the Version Property for this Control Panel
 //
 //  context     Pointer to a Control Panel Instance
-//  ifcName     InterfaceName 
+//  ifcName     InterfaceName
 //  propName    Property Name to read from the specified Control Panel
 //  val         Value of queried property returned to the Alljoyn Caller.
-// 
+//
 //**************************************************************************************************************************************
 QStatus AJ_CALL ControlPanel::GetPropertyHandler(_In_ const void* context, _In_z_ const char* ifcName, _In_z_ const char* propName, _Out_ alljoyn_msgarg val)
 {
@@ -119,7 +119,7 @@ QStatus AJ_CALL ControlPanel::GetPropertyHandler(_In_ const void* context, _In_z
 //  bus         AllJoyn Bus Attachment to use for announcing this control panel on
 //  deviceName  Name of the device that this Control Panel will Control.  (e.g. "Light Switch")
 //  panelName   Name of the Control Panel's Panel (e.g. "Simple")
-// 
+//
 //**************************************************************************************************************************************
 QStatus ControlPanel::Initialize(_In_ alljoyn_busattachment bus, _In_z_ const wchar_t *deviceName, _In_z_ const wchar_t* panelName)
 {
@@ -216,19 +216,19 @@ leave:
 //  [Text Edit Box]
 //  [Run Button]
 //
-//  Data Values for each control are provided by the Control Panel Handler. 
-//  
+//  Data Values for each control are provided by the Control Panel Handler.
+//
 //  The Boolean Switch can be used to turn something on or off.  The switch both modifies a devices value and updates to
 //  reflect external changes made on the switch.  (The Switch may be disabled, see IControlPanelHandlerSimple for details)
 //
 //  The Labeled Property shows a data property with a label.  The label value updates to reflect external changes made to the data value,
 //  but is not directly settable by an AllJoyn Client. (The Label may be disabled, see IControlPanelHandlerSimple for details)
-//  
+//
 //  The Text Edit Box and Run Button are tied together.  Text changes are cached within the Bridge until the Run Button is pressed.
 //  When the Run Button is pressed the event is handled by this control panel.  The Run command is forwarded to the registered Control Panel
 //  Handler with the Text Edit Box value for custom handling. (The Text Edit Box/Button combo may be disabled, see IControlPanelHandlerSimple for details)
-//  
-// 
+//
+//
 //  controlPanelHandler     Custom Control Panel Data Provider and Action Handler for this Control Panel Producer
 //  controlledDevice        Adapter Device controlled by this AllJoyn Control Panel Producer
 //
@@ -247,7 +247,7 @@ ControlPanelSimple::ControlPanelSimple(_In_ IControlPanelHandlerSimple^ controlP
 //**************************************************************************************************************************************
 //
 //  Destructor
-// 
+//
 //**************************************************************************************************************************************
 ControlPanelSimple::~ControlPanelSimple()
 {
@@ -284,7 +284,7 @@ ControlPanelSimple::~ControlPanelSimple()
 //  bus         AllJoyn Bus Attachment to use for announcing this control panel on
 //  deviceName  Name of the device that this Control Panel will Control.  (e.g. "Light Switch")
 //  panelName   Name of the Control Panel Panel (e.g. "Simple")
-// 
+//
 //**************************************************************************************************************************************
 QStatus ControlPanelSimple::Initialize(_In_ alljoyn_busattachment bus, _In_z_ const wchar_t *deviceName, _In_z_ const wchar_t* panelName)
 {
@@ -336,7 +336,7 @@ QStatus ControlPanelSimple::Initialize(_In_ alljoyn_busattachment bus, _In_z_ co
         CHK_POINTER(m_pRunButton);
         CHK_AJSTATUS(m_pRunButton->Initialize(pRoot, "RunButton", labelName.c_str()));
     }
-    
+
     // Register a Change of Value Handler if the Change of Value Signal is non-null
     if (cntrlPanelHandler->ChangeOfValueSignal != nullptr)
     {
@@ -354,8 +354,8 @@ leave:
 //**************************************************************************************************************************************
 //
 //  The Static Run-Button Handler.  Forwards the ButtonHandler Request to the specific Control Panel Handler.  (See RunButton)
-// 
-//  pContext     Pointer to the ControlPanelSimple instance 
+//
+//  pContext     Pointer to the ControlPanelSimple instance
 //
 //**************************************************************************************************************************************
 QStatus AJ_CALL ControlPanelSimple::ButtonHandler(_In_ ControlPanel* pContext)
@@ -366,9 +366,9 @@ QStatus AJ_CALL ControlPanelSimple::ButtonHandler(_In_ ControlPanel* pContext)
 
 //**************************************************************************************************************************************
 //
-// RunButton instance handler.  Gets the textbox value (if supported) and calls the control panel handler registered with this 
+// RunButton instance handler.  Gets the textbox value (if supported) and calls the control panel handler registered with this
 // control panel instance.
-// 
+//
 //**************************************************************************************************************************************
 QStatus ControlPanelSimple::RunButton()
 {
@@ -403,13 +403,13 @@ QStatus ControlPanelSimple::RunButton()
 //**************************************************************************************************************************************
 //
 // If a value on this device changed, walk through each widget and signal that the value changed on the AllJoyn Bus.
-// 
+//
 //**************************************************************************************************************************************
 
 void ControlPanelSimple::ValueChanged()
 {
     if (m_pSwitch != nullptr)
-    {     
+    {
         m_pSwitch->RaiseValueChangedSignal();
     }
 
@@ -417,4 +417,135 @@ void ControlPanelSimple::ValueChanged()
     {
         m_pOutputLabel->RaiseValueChangedSignal();
     }
+}
+
+
+
+//***********************************************************************************************************************************************
+//
+//  Control Panel Constructor  Implementation of a universal style control panel
+//
+//***********************************************************************************************************************************************
+ControlPanelUniversal::ControlPanelUniversal(_In_ IControlPanelHandlerUniversal^ controlPanelHandler, _In_ IAdapterDevice^ controlledDevice)
+    : ControlPanel(controlPanelHandler, controlledDevice)
+{
+    m_pSignalHandler = ref new WidgetSignalHandler(this);
+}
+
+
+//***********************************************************************************************************************************************
+//
+//  Control Panel Destructor
+//
+//***********************************************************************************************************************************************
+ControlPanelUniversal::~ControlPanelUniversal()
+{
+    if (m_widgets.size() > 0)
+    {
+        for (auto widget : m_widgets)
+        {
+            delete widget;
+        }
+        m_widgets.clear();
+    }
+}
+
+//***********************************************************************************************************************************************
+//
+//  Control Panel Destructor
+//
+//***********************************************************************************************************************************************
+QStatus ControlPanelUniversal::Initialize(_In_ alljoyn_busattachment bus, _In_z_ const wchar_t *deviceName, _In_z_ const wchar_t* panelName)
+{
+    QStatus status = ER_OK;
+    std::string adapterName = DsbCommon::To_Ascii_String(deviceName);
+    IControlPanelHandlerUniversal^ cntrlPanelHandler = (IControlPanelHandlerUniversal^)GetControlPanelHandler();
+
+    // Initialize Control Panel base class
+    CHK_AJSTATUS(ControlPanel::Initialize(bus, deviceName, panelName));
+
+    WidgetContainer* pRoot = GetRootContainer();
+    int idx = 0;
+
+    // If there are user controls to render, then create widgets for them.
+    if (cntrlPanelHandler->ControlledProperties)
+    {
+        std::string allJoynWidgetName;
+
+        // fore each property of the device that we want the user to control
+        for (auto sourcePropertyForControl : cntrlPanelHandler->ControlledProperties)
+        {
+            // create a unique, control relative, name for each widget
+            allJoynWidgetName = "Widget";
+            allJoynWidgetName += std::_Integral_to_string("%d", idx);
+
+            // Ask the Control Panel Handler for the label and type of the specified property
+            std::string label = DsbCommon::To_Ascii_String(cntrlPanelHandler->GetLabel(sourcePropertyForControl));
+            auto type = cntrlPanelHandler->GetType(sourcePropertyForControl);
+
+            // Based on the Property's Control Panel Type, create the appropriate widget for it and add it to the list of widgets
+            // owned by this control panel
+            switch (type)
+            {
+            case BridgeRT::ControlType::Switch:
+            {
+                auto pSwitch = new (std::nothrow) WidgetPropertySwitch(this, sourcePropertyForControl, cntrlPanelHandler->GetValue(sourcePropertyForControl));
+                CHK_POINTER(pSwitch);
+                m_widgets.push_back(pSwitch);
+                CHK_AJSTATUS(pSwitch->Initialize(pRoot, allJoynWidgetName.c_str(), label.c_str()));
+                break;
+            }
+
+            case BridgeRT::ControlType::Sensor:
+            {
+                auto pSensor = new (std::nothrow) WidgetPropertyLabel(this, cntrlPanelHandler->GetValue(sourcePropertyForControl));
+                CHK_POINTER(pSensor);
+                m_widgets.push_back(pSensor);
+                CHK_AJSTATUS(pSensor->Initialize(pRoot, allJoynWidgetName.c_str(), label.c_str()));
+                break;
+            }
+
+            default:
+                status = ER_INIT_FAILED;
+                goto leave;
+            }
+
+            // Increment counter
+            ++idx;
+        }
+    }
+
+    // There must be at least one widgetable item to create a control panel
+    if (idx == 0)
+    {
+        status = ER_INIT_FAILED;
+        goto leave;
+    }
+
+    // Register a Change of Value Handler if the Change of Value Signal is non-null
+    if (cntrlPanelHandler->ChangeOfValueSignal != nullptr)
+    {
+        HRESULT hr = DsbBridge::SingleInstance()->GetAdapter()->RegisterSignalListener(cntrlPanelHandler->ChangeOfValueSignal, m_pSignalHandler, nullptr);
+        if (FAILED(hr))
+        {
+            status = ER_FAIL;
+        }
+    }
+
+leave:
+    return status;
+}
+
+//***********************************************************************************************************************************************
+//
+//  Value Changed handler.  Iterate through all widgets and raise their property changed signal
+//
+//***********************************************************************************************************************************************
+void ControlPanelUniversal::ValueChanged()
+{
+    for (auto widget : m_widgets)
+    {
+        widget->RaiseValueChangedSignal();
+    }
+
 }

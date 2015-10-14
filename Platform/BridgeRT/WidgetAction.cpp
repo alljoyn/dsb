@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -137,9 +137,9 @@ QStatus WidgetAction::AddCustomInterfaceHandlers(_In_ alljoyn_busobject busObjec
     }
 
     CHK_AJSTATUS(alljoyn_busobject_addmethodhandler(
-        busObject, 
-        execMember, 
-        reinterpret_cast<alljoyn_messagereceiver_methodhandler_ptr>(&WidgetAction::ExecHandler), 
+        busObject,
+        execMember,
+        reinterpret_cast<alljoyn_messagereceiver_methodhandler_ptr>(&WidgetAction::ExecHandler),
         this));
 
 
@@ -161,8 +161,8 @@ leave:
 QStatus WidgetAction::Get(_In_z_ const char* interfaceName, _In_z_ const char* propName, _Out_ alljoyn_msgarg val) const
 {
     QStatus status = ER_OK;
-
-    UNREFERENCED_PARAMETER(interfaceName);
+    alljoyn_msgarg values = nullptr;
+    alljoyn_msgarg dictEntries = nullptr;
 
     // Handle the Optional Parameters if requested
     if (strcmp(propName, PROPERTY_OPTPARAMS_STR) == 0)
@@ -172,7 +172,7 @@ QStatus WidgetAction::Get(_In_z_ const char* interfaceName, _In_z_ const char* p
         uint16_t actionHints[] = { ACTION_BUTTON };
 
         // Create an array of Variant Type-Data value pairs
-        alljoyn_msgarg values = alljoyn_msgarg_array_create(_countof(keys));
+        values = alljoyn_msgarg_array_create(_countof(keys));
         CHK_POINTER(values);
 
         // Set each Variant "Type-Data Pair"
@@ -181,7 +181,7 @@ QStatus WidgetAction::Get(_In_z_ const char* interfaceName, _In_z_ const char* p
         CHK_AJSTATUS(alljoyn_msgarg_set(alljoyn_msgarg_array_element(values, HINT_KEY), ARG_UINT16_ARRY_STR, _countof(actionHints), actionHints));
 
         // Create an array of Dictionary Entries
-        alljoyn_msgarg dictEntries = alljoyn_msgarg_array_create(_countof(keys));
+        dictEntries = alljoyn_msgarg_array_create(_countof(keys));
         CHK_POINTER(dictEntries);
 
         // Load the Dictionary Entries into the array of dictionary entries where the Keys are Number values that map to Variant Type-Data pairs
@@ -205,5 +205,15 @@ QStatus WidgetAction::Get(_In_z_ const char* interfaceName, _In_z_ const char* p
     }
 
 leave:
+    if (values != nullptr)
+    {
+        alljoyn_msgarg_destroy(values);
+        values = nullptr;
+    }
+    if (dictEntries != nullptr)
+    {
+        alljoyn_msgarg_destroy(dictEntries);
+        dictEntries = nullptr;
+    }
     return status;
 }

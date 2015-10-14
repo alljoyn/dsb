@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -39,16 +39,34 @@ namespace DeviceProviders
         , m_name(methodDescription.name)
         , m_inSignatureString(methodDescription.signature)
         , m_outSignatureString(methodDescription.returnSignature)
+        , m_active(true)
     {
         DEBUG_LIFETIME_IMPL(AllJoynMethod);
 
         auto argNamesVector = AllJoynHelpers::TokenizeArgNamesString(methodDescription.argNames);
-        m_inSignature  = AllJoynTypeDefinition::CreateParameterInfo(m_inSignatureString, argNamesVector);
-        m_outSignature = AllJoynTypeDefinition::CreateParameterInfo(m_outSignatureString, vector<string>(argNamesVector.begin() + m_inSignature->Size, argNamesVector.end()));
+        m_inSignature = AllJoynTypeDefinition::CreateParameterInfo(m_inSignatureString, argNamesVector);
+
+        auto outArgNamesVector = vector<string>();
+        if (argNamesVector.size() > m_inSignature->Size)
+        {
+            outArgNamesVector.insert(outArgNamesVector.begin(), argNamesVector.begin() + m_inSignature->Size, argNamesVector.end());
+        }
+        m_outSignature = AllJoynTypeDefinition::CreateParameterInfo(m_outSignatureString, outArgNamesVector);
+
+        //annotations
+        m_annotations = TypeConversionHelpers::GetAnnotationsView<alljoyn_interfacedescription_member>(
+            methodDescription,
+            alljoyn_interfacedescription_member_getannotationscount,
+            alljoyn_interfacedescription_member_getannotationatindex);
     }
 
     AllJoynMethod::~AllJoynMethod()
     {
+    }
+
+    void AllJoynMethod::Shutdown()
+    {
+        m_active = false;
     }
 
     IAsyncOperation<InvokeMethodResult^>^ AllJoynMethod::InvokeAsync(IVector<Object ^>^ params)
@@ -56,6 +74,13 @@ namespace DeviceProviders
         return create_async([this, params]() -> InvokeMethodResult ^
         {
             InvokeMethodResult ^ result = ref new InvokeMethodResult();
+            const char *errorName = nullptr;
+
+            if (!m_active)
+            {
+                result->Status = ref new AllJoynStatus(ER_FAIL, "Service no longer available!");
+                return result;
+            }
 
             if (params->Size != m_inSignature->Size)
             {
@@ -89,7 +114,13 @@ namespace DeviceProviders
                 c_MessageTimeoutInMilliseconds,
                 0);
 
-            if (status != ER_BUS_REPLY_IS_ERROR_MESSAGE && status != ER_OK)
+            if (status == ER_BUS_REPLY_IS_ERROR_MESSAGE )
+            {
+                char * errorMessage = nullptr;
+                size_t errorMessageSize;
+                errorName = alljoyn_message_geterrorname(response, errorMessage, &errorMessageSize);
+            }
+            else if (status != ER_OK)
             {
                 goto leave;
             }
@@ -124,7 +155,7 @@ namespace DeviceProviders
             alljoyn_message_destroy(response);
             alljoyn_msgarg_destroy(inputs);
 
-            result->Status = ref new AllJoynStatus(status);
+            result->Status = ref new AllJoynStatus(status, errorName == nullptr ? "" : errorName);
             return result;
         });
     }

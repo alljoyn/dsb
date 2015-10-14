@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -80,28 +80,28 @@ BridgeConfig::Init(String^ pFileName, bool failIfNotPresent)
     if (pFileName != nullptr)
     {
         //  Does the specified file exist?
-		if (!isFilePresent(ApplicationData::Current->LocalFolder, pFileName))
-		{
-			//Not present. see if it is present in appxpackage
-			if(isFilePresent(Package::Current->InstalledLocation, pFileName))
-			{
-				//copy the file
-				auto srcFolder = Package::Current->InstalledLocation;
-				auto destFolder = ApplicationData::Current->LocalFolder;
+        if (!isFilePresent(ApplicationData::Current->LocalFolder, pFileName))
+        {
+            //Not present. see if it is present in appxpackage
+            if(isFilePresent(Package::Current->InstalledLocation, pFileName))
+            {
+                //copy the file
+                auto srcFolder = Package::Current->InstalledLocation;
+                auto destFolder = ApplicationData::Current->LocalFolder;
 
-				try
-				{
-					create_task(srcFolder->GetFileAsync(pFileName)).then([destFolder](StorageFile^ file)
-					{
-						return file->CopyAsync(destFolder);
-					}).wait();
-				}
-				catch (Exception^)
-				{
-					//ignore
-				}
-			}
-		}
+                try
+                {
+                    create_task(srcFolder->GetFileAsync(pFileName)).then([destFolder](StorageFile^ file)
+                    {
+                        return file->CopyAsync(destFolder);
+                    }).wait();
+                }
+                catch (Exception^)
+                {
+                    //ignore
+                }
+            }
+        }
 
         if (!isFilePresent(ApplicationData::Current->LocalFolder, pFileName))
         {
@@ -152,7 +152,7 @@ BridgeConfig::FromFile(String^ pFileName)
     // Update the file name and convert to a variant
     m_fileName = pFileName;
 
-    // Load the XML file 
+    // Load the XML file
     try
     {
         getConfigFileTask = create_task(appFolder->GetFileAsync(m_fileName));
@@ -816,7 +816,7 @@ BridgeConfig::BridgeKeyX()
     return GetCredentialValue(SETTINGS_BRIDGE_KEYX_PATH);
 }
 
-String^ 
+String^
 BridgeConfig::DeviceKeyX()
 {
     return GetCredentialValue(SETTINGS_DEVICE_KEYX_PATH);
@@ -834,13 +834,13 @@ BridgeConfig::DevicePassword()
 	return GetCredentialValue(SETTINGS_DEVICE_PASSWORD_PATH);
 }
 
-String^ 
+String^
 BridgeConfig::DeviceEcdheEcdsaPrivateKey()
 {
     return GetCredentialValue(SETTINGS_DEVICE_ECDHE_ECDSA_PRIVATEKEY_PATH);
 }
 
-String^ 
+String^
 BridgeConfig::DeviceEcdheEcdsaCertChain()
 {
     return GetCredentialValue(SETTINGS_DEVICE_ECDHE_ECDSA_CERTCHAIN_PATH);

@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -17,11 +17,14 @@
 #pragma once
 
 #include "IAboutIcon.h"
+#include "AllJoynMessageArgVariant.h"
 
 namespace DeviceProviders
 {
     public interface class IAboutData
     {
+        typedef Windows::Foundation::Collections::IKeyValuePair<Platform::String^, AllJoynMessageArgVariant ^> IStringVariantPair;
+
         property Platform::String ^ CurrentLanguage
         {
             Platform::String ^ get();
@@ -85,10 +88,13 @@ namespace DeviceProviders
         {
             Windows::Foundation::Collections::IVectorView<Platform::String^> ^ get();
         }
-        property Windows::Foundation::Collections::IMapView<Platform::String^, Platform::Object ^> ^ AllFields
+
+        property Windows::Foundation::Collections::IVectorView<IStringVariantPair ^> ^ AnnouncedFields
         {
-            Windows::Foundation::Collections::IMapView<Platform::String^, Platform::Object^> ^ get();
+            Windows::Foundation::Collections::IVectorView<IStringVariantPair ^> ^ get();
         }
+
+        Windows::Foundation::Collections::IVectorView<IStringVariantPair ^> ^ GetAllFields();
 
         Windows::Foundation::IAsyncOperation<IAboutIcon^>^ GetIconAsync();
     };

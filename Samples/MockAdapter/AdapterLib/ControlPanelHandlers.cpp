@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -23,7 +23,7 @@ using namespace AdapterLib;
 
 //***********************************************************************************************************************************************
 //
-//  Control Panel Temperature Sensor Constructor.  Finds the present temperature value and exposes to the bridge for use by the 
+//  Control Panel Temperature Sensor Constructor.  Finds the present temperature value and exposes to the bridge for use by the
 //  ControlPanelSimple class.
 //
 //***********************************************************************************************************************************************
@@ -33,7 +33,7 @@ ControlPanelHandlerTempSensor::ControlPanelHandlerTempSensor(MockAdapterDevice^ 
     , m_temperatureProperty(nullptr)
 {
     m_temperatureProperty = dynamic_cast<MockAdapterProperty^>(myDevice->Properties->GetAt(0));
-    m_temperatureValue = m_temperatureProperty->GetAttributeByName(L"Present_Value");
+    m_temperatureValue = dynamic_cast<MockAdapterValue^>(m_temperatureProperty->GetAttributeByName(L"Present_Value")->Value);
 }
 
 //***********************************************************************************************************************************************
@@ -59,7 +59,7 @@ void ControlPanelHandlerTempSensor::Run(Platform::String^ runArgument)
 
 //***********************************************************************************************************************************************
 //
-//  Control Panel Dimmer Switch Constructor.  Finds the appropriate values and properties from the device and exposes them to the Bridge 
+//  Control Panel Dimmer Switch Constructor.  Finds the appropriate values and properties from the device and exposes them to the Bridge
 //  for use by the ControlPanelSimple class.
 //
 //***********************************************************************************************************************************************
@@ -69,12 +69,12 @@ ControlPanelHandlerDimmerSwitch::ControlPanelHandlerDimmerSwitch(MockAdapterDevi
     , m_dimProperty(nullptr)
 {
     m_switchProperty = dynamic_cast<MockAdapterProperty^>(myDevice->Properties->GetAt(0));
-    m_switchValue = m_switchProperty->GetAttributeByName(L"Present_Value");
+    m_switchValue = dynamic_cast<MockAdapterValue^>(m_switchProperty->GetAttributeByName(L"Present_Value")->Value);
 
     m_dimProperty = dynamic_cast<MockAdapterProperty^>(myDevice->Properties->GetAt(1));
-    m_dimValue = m_dimProperty->GetAttributeByName(L"Present_Value");
+    m_dimValue = dynamic_cast<MockAdapterValue^>(m_dimProperty->GetAttributeByName(L"Present_Value")->Value);
 
-    auto signals = myDevice->Signals;    
+    auto signals = myDevice->Signals;
     m_covSignal = dynamic_cast<MockAdapterSignal^>(signals->GetAt(0));
 
 }

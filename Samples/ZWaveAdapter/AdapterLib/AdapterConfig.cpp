@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -33,7 +33,7 @@ using namespace DsbCommon;
 
 namespace AdapterLib
 {
-    const wstring AppxConfigFolderName = L"ZWaveAdapter\\config";
+    const wstring AppxConfigFolderName = L"OpenZWave\\config";
     const wstring ConfigFolderName = L"config";
     const wstring ConfigFileName = L"options.xml";
     const wstring ConfigFilePath = L"\\" + ConfigFileName;
@@ -50,7 +50,7 @@ namespace AdapterLib
     HRESULT AdapterConfig::GetConfig(String^* XmlStringPtr)
     {
         HRESULT hr = S_OK;
-        
+
         if (XmlStringPtr == nullptr)
         {
             return E_INVALIDARG;
@@ -66,7 +66,7 @@ namespace AdapterLib
                 wPath = GetConfigPath() + ConfigFilePath;
             }
             StringReference configPath = wPath.c_str();
-            
+
             create_task(StorageFile::GetFileFromPathAsync(configPath)).then([&](StorageFile^ sFile)
             {
                 return XmlDocument::LoadFromFileAsync(sFile);
@@ -151,6 +151,6 @@ namespace AdapterLib
     wstring AdapterConfig::GetUserPath()
     {
         return ApplicationData::Current->LocalFolder->Path->Data();
-        
+
     }
 }

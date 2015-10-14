@@ -33,14 +33,6 @@ namespace DeviceProviders
         {
             Platform::String ^ get();
         }
-        property uint16 SessionPort
-        {
-            uint16 get();
-        }
-        property uint32 SessionId
-        {
-            uint32 get();
-        }
         property IAboutData^ AboutData
         {
             IAboutData^ get();
@@ -51,8 +43,20 @@ namespace DeviceProviders
         }
 
         AllJoynStatus^ Ping();
+        AllJoynStatus^ JoinSession();
+        AllJoynStatus^ JoinSession(uint16 port);
+        AllJoynStatus^ LeaveSession();
+
         bool ImplementsInterface(Platform::String^ interfaceName);
         IBusObject^ GetBusObject(Platform::String^ path);
         Windows::Foundation::Collections::IVector<IBusObject^>^ GetBusObjectsWhichImplementInterface(Platform::String^ interfaceName);
+
+#if _DEBUG
+        // Only for unit testing
+        property int32 SessionUserCount
+        {
+            int32 get();
+        }
+#endif
     };
 }

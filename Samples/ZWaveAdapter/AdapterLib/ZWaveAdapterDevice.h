@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -24,7 +24,9 @@ namespace AdapterLib
 {
     ref class ZWaveAdapterProperty;
 
-    ref class ZWaveAdapterDevice : BridgeRT::IAdapterDevice
+    ref class ZWaveAdapterDevice :  BridgeRT::IAdapterDevice,
+                                    BridgeRT::IAdapterDeviceLightingService,
+                                    BridgeRT::IAdapterDeviceControlPanel
     {
     public:
         //
@@ -75,8 +77,8 @@ namespace AdapterLib
         // Device methods
         virtual property BridgeRT::IAdapterMethodVector^ Methods
         {
-            BridgeRT::IAdapterMethodVector^ get() 
-            { 
+            BridgeRT::IAdapterMethodVector^ get()
+            {
                 return ref new BridgeRT::AdapterMethodVector(m_methods);
             }
         }
@@ -102,7 +104,30 @@ namespace AdapterLib
                 m_controlPanel = controlPanel;
             }
         }
-    
+
+        // Lighting Service Handler
+        virtual property BridgeRT::ILSFHandler^ LightingServiceHandler
+        {
+            BridgeRT::ILSFHandler^ get()
+            {
+                return m_lightingServiceHandler;
+            }
+
+            void set(BridgeRT::ILSFHandler^ handler)
+            {
+                m_lightingServiceHandler = handler;
+            }
+        }
+
+        // About Icon
+        virtual property BridgeRT::IAdapterIcon^ Icon
+        {
+            BridgeRT::IAdapterIcon^ get()
+            {
+                return nullptr;
+            }
+        }
+
     internal:
         friend ref class ZWaveAdapter;
 
@@ -117,6 +142,17 @@ namespace AdapterLib
 
         ZWaveAdapterProperty^ GetPropertyByName(Platform::String^ name);
         BridgeRT::IAdapterSignal^ GetSignal(Platform::String^ name);
+
+        void AddLampStateChangedSignal();
+
+        Platform::Object^ GetParent()
+        {
+            return m_parent;
+        }
+        void SetParent(Platform::Object^ parent)
+        {
+            m_parent = parent;
+        }
 
     private:
         std::vector<BridgeRT::IAdapterProperty^>::iterator GetProperty(const OpenZWave::ValueID& value);
@@ -134,17 +170,23 @@ namespace AdapterLib
         Platform::String^ m_serialNumber;
         Platform::String^ m_description;
 
-        // Device properties 
+        // Parent Object
+        Platform::Object^ m_parent;
+
+        // Device properties
         std::vector<BridgeRT::IAdapterProperty^> m_properties;
 
-        // Device methods 
+        // Device methods
         std::vector<BridgeRT::IAdapterMethod^> m_methods;
 
-        // Device signals 
+        // Device signals
         std::vector<BridgeRT::IAdapterSignal^> m_signals;
 
         // Control Panel for this device
         BridgeRT::IControlPanelHandler^ m_controlPanel;
+
+        // Lighting Service Handler
+        BridgeRT::ILSFHandler^ m_lightingServiceHandler;
 
         uint32 m_homeId;
         uint8 m_nodeId;

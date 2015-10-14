@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -20,6 +20,9 @@
 #include "MockDevices.h"
 #include "BfiDefinitions.h"
 #include "ControlPanelHandlers.h"
+#include "LSFHandler.h"
+#include "MockLampDevice.h"
+#include "MockLampConsts.h"
 
 using namespace Platform;
 using namespace Platform::Collections;
@@ -130,6 +133,8 @@ namespace AdapterLib
     uint32
     MockAdapter::Shutdown()
     {
+        signals.clear();
+        devices.clear();
         return ERROR_SUCCESS;
     }
 
@@ -173,7 +178,7 @@ namespace AdapterLib
         }
 
         //
-        // Mock adapter GetProperty() does not do much, it only 
+        // Mock adapter GetProperty() does not do much, it only
         // validates the given property.
         // In a real adapter, all property's attributes are re-read
         // from the device.
@@ -203,7 +208,7 @@ namespace AdapterLib
         }
 
         //
-        // At this point a real adapter will re-read all property's attributes 
+        // At this point a real adapter will re-read all property's attributes
         // from the device.
         //
 
@@ -224,7 +229,7 @@ namespace AdapterLib
         }
 
         //
-        // Mock adapter SetProperty() does not do much, it only 
+        // Mock adapter SetProperty() does not do much, it only
         // validates the given property.
         // In a real adapter, all property's attributes are written
         // to the device.
@@ -236,12 +241,6 @@ namespace AdapterLib
             return ERROR_INVALID_HANDLE;
         }
 
-        uint32 status = mockAdapterProperty->CheckAccess(AdapterPropertyAccessRW);
-        if (status != ERROR_SUCCESS)
-        {
-            return status;
-        }
-
         MockAdapterDevice^ mockDevice = dynamic_cast<MockAdapterDevice^>(mockAdapterProperty->Parent);
         if (mockDevice == nullptr)
         {
@@ -249,7 +248,7 @@ namespace AdapterLib
         }
 
         MockAdapter^ mockAdapter = dynamic_cast<MockAdapter^>(mockDevice->Parent);
-        if (mockDevice == nullptr)
+        if (mockAdapter == nullptr)
         {
             return ERROR_INVALID_HANDLE;
         }
@@ -260,7 +259,7 @@ namespace AdapterLib
         }
 
         //
-        // At this point a real adapter will write all property's attributes 
+        // At this point a real adapter will write all property's attributes
         // to the device.
         //
 
@@ -288,7 +287,7 @@ namespace AdapterLib
             return ERROR_INVALID_HANDLE;
         }
 
-        MockAdapterValue^ attribute = mockAdapterProperty->GetAttributeByName(AttributeName);
+        auto attribute = mockAdapterProperty->GetAttributeByName(AttributeName);
         if (attribute == nullptr)
         {
             return ERROR_NOT_FOUND;
@@ -296,7 +295,7 @@ namespace AdapterLib
 
         try
         {
-            *ValuePtr = ref new MockAdapterValue(attribute);
+            *ValuePtr = ref new MockAdapterValue(dynamic_cast<MockAdapterValue^>(attribute->Value));
         }
         catch (OutOfMemoryException^)
         {
@@ -326,19 +325,13 @@ namespace AdapterLib
             return ERROR_INVALID_HANDLE;
         }
 
-        uint32 status = mockAdapterProperty->CheckAccess(AdapterPropertyAccessRW);
-        if (status != ERROR_SUCCESS)
-        {
-            return status;
-        }
-
-        MockAdapterValue^ attribute = mockAdapterProperty->GetAttributeByName(Value->Name);
+        auto attribute = mockAdapterProperty->GetAttributeByName(Value->Name);
         if (attribute == nullptr)
         {
             return ERROR_NOT_FOUND;
         }
 
-        return attribute->Set(Value);
+        return dynamic_cast<MockAdapterValue^>(attribute->Value)->Set(Value);
     }
 
 
@@ -400,7 +393,7 @@ namespace AdapterLib
                 }
             }
 
-            // add it to the map. 
+            // add it to the map.
             this->signalListeners.insert(
             { mmapkey, SIGNAL_LISTENER_ENTRY(Signal, Listener, ListenerContext) }
             );
@@ -487,6 +480,11 @@ namespace AdapterLib
     {
         uint32  status = ERROR_SUCCESS;
 
+        if (devices.size() > 0)
+        {
+            return ERROR_ALREADY_INITIALIZED;
+        }
+
         for (ULONG devDescInx = 0; devDescInx < MockDevicesCount; ++devDescInx)
         {
             const MOCK_DEVICE_DESCRIPTOR* mockDeviceDescPtr = &MockDevices[devDescInx];
@@ -510,9 +508,27 @@ namespace AdapterLib
             catch (OutOfMemoryException^)
             {
                 status = ERROR_NOT_ENOUGH_MEMORY;
+                goto leave;
             }
         }
 
+        try
+        {
+            MockLampDevice^ mockLamp = ref new MockLampDevice(DEVICE_NAME, this);
+            mockLamp->Initialize();
+            
+            // LSF Handler for the Mock Lamp Device
+            mockLamp->LightingServiceHandler = ref new LSFHandler(mockLamp);
+
+            this->devices.push_back(std::move(mockLamp));
+        }
+        catch (OutOfMemoryException^)
+        {
+            status = ERROR_NOT_ENOUGH_MEMORY;
+            goto leave;
+        }
+    
+    leave:
         return status;
     }
 
@@ -522,6 +538,11 @@ namespace AdapterLib
     {
         uint32  status = ERROR_SUCCESS;
 
+        if (signals.size() > 0)
+        {
+            return ERROR_ALREADY_INITIALIZED;
+        }
+
         try
         {
             // Device arrival signal
@@ -530,10 +551,10 @@ namespace AdapterLib
 
                 //
                 // Signal parameters
-                // 
+                //
                 signal += ref new MockAdapterValue(
                                     Constants::DEVICE_ARRIVAL__DEVICE_HANDLE,
-                                    signal, 
+                                    signal,
                                     ref new MockAdapterDevice(L"DsbDevice", this) // For signature spec
                                     );
 

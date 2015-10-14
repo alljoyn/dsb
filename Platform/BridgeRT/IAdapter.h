@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -18,9 +18,28 @@
 
 #include "AdapterDefinitions.h"
 #include "IControlPanelHandler.h"
+#include "ILSFHandler.h"
 
 namespace BridgeRT
 {
+    //Access type enum
+    public enum class E_ACCESS_TYPE
+    {
+        ACCESS_READ,
+        ACCESS_WRITE,
+        ACCESS_READWRITE
+    };
+
+    //Type of Change of Value Signal emitted
+    public enum class SignalBehavior
+    {
+        Unspecified,         //COV signal emit unreliable
+        Never,               //Never emits COV
+        Always,              //Emits COV on value change
+        AlwaysWithNoValue    //emits COV without the value
+    };
+
+
     //
     // IAdapterValue interface.
     // Description:
@@ -38,15 +57,15 @@ namespace BridgeRT
         //  Property Description:
         //      The DSB values comes in the shape of Platform::Object.
         //
-        //      - Setting a value: 
+        //      - Setting a value:
         //        Caller sets an IAdapterValue.Data with a Platform::Object^
         //        that was created with Windows.Foundation::PropertyValue::Create???().
         //        Example:
         //          Object^ boolObj = PropertyValue::CreateBoolean(true);
-        //          // dsbValue is IAdapterValue^ 
+        //          // dsbValue is IAdapterValue^
         //          dsbValue->Data = boolObj;
         //
-        //      - Getting a value: 
+        //      - Getting a value:
         //          IPropertyValue^ ipv = dynamic_cast<IPropertyValue^>(adapterValue->Data);
         //          if (ipv != nullptr)
         //          {
@@ -60,7 +79,7 @@ namespace BridgeRT
         //                  }
         //              ...
         //              }
-        //          } 
+        //          }
         //          else
         //          {
         //              // adapterValue->Data is an object, use dynamic_cast<> to get access.
@@ -71,6 +90,63 @@ namespace BridgeRT
             Platform::Object^ get();
 
             void set(Platform::Object^ NewData);
+        }
+    };
+
+    //
+    // IAdapterAttribute interface.
+    // Description:
+    //  Interface of an Adapter Attribute information.
+    //
+    public interface class IAdapterAttribute
+    {
+        // Adapter Value Object
+        property IAdapterValue^ Value
+        {
+            IAdapterValue^ get();
+        }
+
+        // Annotations for the property
+        //
+        // Annotations are the list of name-value pairs that represent
+        // the metadata or additional information for the attribute
+        // Example: min value, max value, range, units, etc.
+        //
+        // These values do not change for different instances of the same 
+        // property interface.
+        //
+        // If the value remains unchanged for the lifetime of an object, however, 
+        // can be different for different objects, then the value cannot be
+        // represented as an annotation. In such case, it must be a separate attribute 
+        // for the same property interface with the COVBehavior as SignalBehavior::Never
+        //
+        property IAnnotationMap^ Annotations
+        {
+            IAnnotationMap^ get();
+        }
+
+        // Access
+        property E_ACCESS_TYPE Access
+        {
+            E_ACCESS_TYPE get();
+        }
+
+        // Change of Value (COV) signal supported
+        //
+        // The following values are supported:
+        //
+        // Unspecified      : The COV signal behavior is not consistent.
+        //                    Used when the signal is raised sometimes but not always.
+        // Never            : The COV signal is never raised.
+        //                    Used for constant/read only attributes.
+        // Always           : The COV signal is raised whenever the attribute changes.
+        //                    The new value is included in the payload for the signal.
+        // AlwaysWithNoValue : The COV signal is raised whenever the attribute changes.
+        //                    However, the new value is not included as part of the signal payload.
+        //
+        property SignalBehavior COVBehavior
+        {
+            SignalBehavior get();
         }
     };
 
@@ -95,9 +171,9 @@ namespace BridgeRT
         }
 
         // The bag of attributes
-        property IAdapterValueVector^ Attributes
+        property IAdapterAttributeVector^ Attributes
         {
-            IAdapterValueVector^ get();
+            IAdapterAttributeVector^ get();
         }
     };
 
@@ -177,6 +253,37 @@ namespace BridgeRT
             );
     };
 
+    //
+    // IAdapterIcon interface.
+    // Description:
+    //      Supporting interface for the AllJoyn About Icon.  An ICON is associated with AdapterDevice.
+    //      An ICON may consist of a small image not exceeding 128K bytes, or and URL or both.
+    //      The MIME Type *MUST* be present.  If both an image and and URL are present, then the
+    //      MIME type MUST be the same for both.
+    //      
+    //      
+    public interface class IAdapterIcon
+    {
+        // An Array of Image Data
+        virtual Platform::Array<BYTE>^ GetImage() = 0;
+
+        // The Mime Type of the Image data e.g. image/png, etc
+        // Return empty-string/null if not used.  
+        property Platform::String^ MimeType
+        {
+            Platform::String^ get();
+        }
+
+        // An Optional URL to that points to an About Icon.
+        // Return empty-string/null if not used
+        property Platform::String^ Url
+        {
+            Platform::String^ get();
+        }
+
+    };
+
+
 
     //
     // IAdapterDevice interface.
@@ -237,11 +344,44 @@ namespace BridgeRT
             IAdapterSignalVector^ get();
         }
 
-        property IControlPanelHandler^ ControlPanelHandler
+        property IAdapterIcon^ Icon
         {
-            BridgeRT::IControlPanelHandler^ get();
+            IAdapterIcon^ get();
         }
     };
+
+
+
+    //
+    // IAdapterDeviceControlPanel interface.
+    // Description:
+    //  IAdapterDevice extension for supporting 
+    //  a Control Panel
+    //
+    public interface class IAdapterDeviceControlPanel
+    {
+        property IControlPanelHandler^ ControlPanelHandler
+        {
+            IControlPanelHandler^ get();
+        }
+    };
+
+
+
+    //
+    // IAdapterDeviceLightingService interface.
+    // Description:
+    //  IAdapterDevice extension for supporting 
+    //  the Lighting Service
+    //
+    public interface class IAdapterDeviceLightingService
+    {
+        property ILSFHandler^ LightingServiceHandler
+        {
+            ILSFHandler^ get();
+        }
+    };
+
 
 
     //
@@ -272,7 +412,7 @@ namespace BridgeRT
         //      request.
         //
         //  Arguments:
-        //  
+        //
         //      TimeoutMsec - Timeout period to wait for request completion in mSec.
         //
         //  Return Value:
@@ -328,7 +468,7 @@ namespace BridgeRT
     // IAdapter interface class.
     // Description:
     //  A pure virtual calls that defines the DSB Adapter interface.
-    //  All current and future DSB Adapters implement this interface 
+    //  All current and future DSB Adapters implement this interface
     //
     public interface class IAdapter
     {
@@ -392,7 +532,7 @@ namespace BridgeRT
         //
         //  Arguments:
         //
-        //      ConfigurationDataPtr - Address of an Array var to receive the current 
+        //      ConfigurationDataPtr - Address of an Array var to receive the current
         //          adapter configuration.
         //
         //  Return Value:
@@ -409,7 +549,7 @@ namespace BridgeRT
         //
         //
         //  Return Value:
-        //      ERROR_SUCCESS, or error code specific to the cause the failed the 
+        //      ERROR_SUCCESS, or error code specific to the cause the failed the
         //          initialization process.
         //
         uint32 Initialize();
@@ -423,7 +563,7 @@ namespace BridgeRT
         //
         //
         //  Return Value:
-        //      ERROR_SUCCESS, or error code specific to the cause the failed the 
+        //      ERROR_SUCCESS, or error code specific to the cause the failed the
         //          shutdown process.
         //
         uint32 Shutdown();
@@ -441,7 +581,7 @@ namespace BridgeRT
         //      DeviceListPtr - Reference to a caller IAdapterDeviceVector^ car to
         //          receive the list of devices references.
         //
-        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the 
+        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the
         //          request object, or nullptr for synchronous IO.
         //          If the request cannot be completed immediately, the caller can wait for
         //          its completion using WaitRequest() method, or cancel it using CancelRequest().
@@ -469,7 +609,7 @@ namespace BridgeRT
         //          The entire property (information and attributes) is re-read from the
         //          from the device.
         //
-        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the 
+        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the
         //          request object, or nullptr for synchronous IO.
         //          If the request cannot be completed immediately, the caller can wait for
         //          its completion using WaitRequest() method, or cancel it using CancelRequest().
@@ -497,7 +637,7 @@ namespace BridgeRT
         //
         //      ValueString - Property value in string format
         //
-        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the 
+        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the
         //          request object, or nullptr for synchronous IO.
         //          If the request cannot be completed immediately, the caller can wait for
         //          its completion using WaitRequest() method, or cancel it using CancelRequest().
@@ -526,10 +666,10 @@ namespace BridgeRT
         //
         //      AttributeName - The name for the desired attribute (IAdapterValue) of the Property.
         //
-        //      ValuePtr - Reference to a caller IAdapterValue to receive the 
+        //      ValuePtr - Reference to a caller IAdapterValue to receive the
         //          current value from the device.
         //
-        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the 
+        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the
         //          request object, or nullptr for synchronous IO.
         //          If the request cannot be completed immediately, the caller can wait for
         //          its completion using WaitRequest() method, or cancel it using CancelRequest().
@@ -560,7 +700,7 @@ namespace BridgeRT
         //
         //      Value - The value to be set.
         //
-        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the 
+        //      RequestPtr - Reference to a caller IAdapterIoRequest^ variable to receive the
         //          request object, or nullptr for synchronous IO.
         //          If the request cannot be completed immediately, the caller can wait for
         //          its completion using WaitRequest() method, or cancel it using CancelRequest().
@@ -588,7 +728,7 @@ namespace BridgeRT
         //      Method - The method to call.
         //          Caller needs to set the input parameters before calling CallMethod().
         //
-        //      RequestPtr - Address of a caller allocated IAdapterIoRequest variable to receive the 
+        //      RequestPtr - Address of a caller allocated IAdapterIoRequest variable to receive the
         //          request handle, or nullptr for synchronous IO.
         //          If the request cannot be completed immediately, the caller can wait for
         //          its completion using WaitRequest() method, or cancel it using CancelRequest().

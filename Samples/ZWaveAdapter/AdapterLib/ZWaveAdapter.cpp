@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -21,6 +21,8 @@
 #include "ZWaveAdapterValue.h"
 #include "ZWaveAdapterMethod.h"
 #include "SwitchControlPanelHandler.h"
+#include "UniversalControlPanelHandler.h"
+#include "LSFHandler.h"
 #include "Misc.h"
 
 //openzwave
@@ -46,6 +48,11 @@ namespace AdapterLib
 {
     // {7C78ED73-E66D-4DE0-AE67-085443E1941D}
     static const GUID DSB_ZWAVE_APPLICATION_GUID = { 0x7c78ed73, 0xe66d, 0x4de0,{ 0xae, 0x67, 0x8, 0x54, 0x43, 0xe1, 0x94, 0x1d } };
+
+    // Light Bulb
+    // Manufacturer: Linear
+    static const std::string LINEAR__LIGHT_BULB__PRODUCT_TYPE = "4754";
+    static const std::string LINEAR__LIGHT_BULB__PRODUCT_ID = "3038";
 
     //
     // ZWaveAdapter class.
@@ -126,7 +133,7 @@ namespace AdapterLib
             status = WIN32_FROM_HRESULT(ex->HResult);
             goto done;
         }
-        
+
     done:
         return status;
     }
@@ -134,7 +141,7 @@ namespace AdapterLib
     uint32 ZWaveAdapter::Initialize()
     {
         uint32 status = ERROR_SUCCESS;
-                
+
         status = WIN32_FROM_HRESULT(m_adapterConfig.Init());
         if (status != ERROR_SUCCESS)
         {
@@ -145,13 +152,13 @@ namespace AdapterLib
 
         //configurations
         Options::Create(ConvertTo<string>(AdapterConfig::GetConfigPath()), ConvertTo<string>(AdapterConfig::GetUserPath()), "");
-        
+
         Options::Get()->AddOptionBool("Logging", false);    //Disable logging
         Options::Get()->AddOptionInt("PollInterval", 500);
         Options::Get()->AddOptionBool("IntervalBetweenPolls", true);
         Options::Get()->AddOptionBool("ConsoleOutput", false);
         Options::Get()->AddOptionBool("SaveConfiguration", false);
-        
+
         Options::Get()->AddOptionString("ControllerPath", "", false);
         Options::Get()->AddOptionInt("ControllerInterface", (int)(Driver::ControllerInterface_Serial));
         Options::Get()->AddOptionInt("NetworkMonitorInterval", 30000);  //30 seconds
@@ -176,9 +183,9 @@ namespace AdapterLib
         int32 nInterval;
         Options::Get()->GetOptionAsInt("NetworkMonitorInterval", &nInterval);
         m_networkMonitorTimeout = nInterval * 10000; //in 100 nano second interval
-        
+
         StartDeviceDiscovery();
-                
+
     done:
         return status;
     }
@@ -204,9 +211,9 @@ namespace AdapterLib
 
         Manager::Destroy();
         m_pMgr = nullptr;
-        
+
         Options::Destroy();
-        
+
         return status;
     }
 
@@ -271,7 +278,7 @@ namespace AdapterLib
 
             device = dynamic_cast<ZWaveAdapterDevice^>(*iter);
         }
-         
+
         //get the property object from the internal device list
         {
             auto iter = device->GetProperty(adapterProperty->m_valueId);
@@ -280,14 +287,14 @@ namespace AdapterLib
                 status = ERROR_INVALID_HANDLE;
                 goto done;
             }
-            
+
             //refresh value
             dynamic_cast<ZWaveAdapterProperty^>(*iter)->UpdateValue();
-            
+
             auto attributes = dynamic_cast<ZWaveAdapterProperty^>(*iter)->m_attributes;
             adapterProperty->m_attributes = attributes;
         }
-        
+
     done:
         return status;
     }
@@ -336,7 +343,7 @@ namespace AdapterLib
                                              )
     {
         uint32 status = ERROR_SUCCESS;
-        
+
         if (RequestPtr != nullptr)
         {
             *RequestPtr = nullptr;
@@ -375,7 +382,7 @@ namespace AdapterLib
 
             //refresh value
             dynamic_cast<ZWaveAdapterProperty^>(*iter)->UpdateValue();
-                        
+
             attribute = dynamic_cast<ZWaveAdapterProperty^>(*iter)->GetAttributeByName(AttributeName);;
             if (attribute == nullptr)
             {
@@ -414,7 +421,7 @@ namespace AdapterLib
         }
 
         ZWaveAdapterProperty^ adapterProperty = dynamic_cast<ZWaveAdapterProperty^>(Property);
-     
+
         if (adapterProperty == nullptr)
         {
             status = ERROR_INVALID_HANDLE;
@@ -463,7 +470,7 @@ namespace AdapterLib
                                                     )
     {
         uint32 status = ERROR_SUCCESS;
-    
+
         try
         {
             // Sync access to listeners list
@@ -483,7 +490,7 @@ namespace AdapterLib
                 }
             }
 
-            // add it to the map. 
+            // add it to the map.
             m_signalListeners.insert({ mmapkey, SIGNAL_LISTENER_ENTRY(Signal, Listener, ListenerContext) });
         }
         catch (OutOfMemoryException^)
@@ -549,7 +556,7 @@ namespace AdapterLib
             Object^ listenerContext = iter->second.Context;
 
             listener->AdapterSignalHandler(Signal, listenerContext);
-            
+
             status = ERROR_SUCCESS;
         }
 
@@ -564,7 +571,7 @@ namespace AdapterLib
         {
             // Device arrival signal
             ZWaveAdapterSignal^ signal = ref new ZWaveAdapterSignal(Constants::DEVICE_ARRIVAL_SIGNAL);
-            
+
             signal->AddParam(ref new ZWaveAdapterValue(
                                     Constants::DEVICE_ARRIVAL__DEVICE_HANDLE,
                                     ref new ZWaveAdapterDevice(0, 0) //place holder
@@ -574,14 +581,14 @@ namespace AdapterLib
 
             //Device removal signal
             signal = ref new ZWaveAdapterSignal(Constants::DEVICE_REMOVAL_SIGNAL);
-            
+
             signal->AddParam(ref new ZWaveAdapterValue(
                                     Constants::DEVICE_REMOVAL__DEVICE_HANDLE,
                                     ref new ZWaveAdapterDevice(0, 0) //place holder
                                     )
                             );
             m_signals.push_back(signal);
-            
+
         }
         catch (OutOfMemoryException^)
         {
@@ -610,7 +617,7 @@ namespace AdapterLib
         }
         return nullptr;
     }
-    
+
     void ZWaveAdapter::StartDeviceDiscovery()
     {
         string path;
@@ -633,7 +640,7 @@ namespace AdapterLib
     void ZWaveAdapter::AddDevice(const uint8 nodeId, bool bPending)
     {
         AutoLock sync(&m_deviceListLock, true);
-        
+
         if(bPending)
         {
             ZWaveAdapterDevice^ device = ref new ZWaveAdapterDevice(m_homeId, nodeId);
@@ -650,12 +657,22 @@ namespace AdapterLib
                 m_devices.push_back(currDevice);
                 m_pendingDevices.erase(iter);
 
-                // Create a Switch Control Panel for *any* device that has a "Switch" property.
-                if (currDevice->GetPropertyByName(PROPERTY_SWITCH))
+                // Create a Control Panel for *any* device
+                UniversalControlPanelHandler^ myControlPanel = ref new UniversalControlPanelHandler(currDevice);
+                currDevice->ControlPanelHandler = myControlPanel;
+
+                // Create a Lighting Service Handler if the device is a lighting device
+                std::string deviceProductType = m_pMgr->GetNodeProductType(m_homeId, nodeId);
+                std::string deviceProductId = m_pMgr->GetNodeProductId(m_homeId, nodeId);
+
+                if (LINEAR__LIGHT_BULB__PRODUCT_TYPE == deviceProductType &&
+                    LINEAR__LIGHT_BULB__PRODUCT_ID == deviceProductId)
                 {
-                    SimpleSwitchControlPanelHandler^ myControlPanel = ref new SimpleSwitchControlPanelHandler(currDevice);
-                    currDevice->ControlPanelHandler = myControlPanel;
+                    currDevice->SetParent(this);
+                    currDevice->AddLampStateChangedSignal();
+                    currDevice->LightingServiceHandler = ref new LSFHandler(currDevice);
                 }
+
                 //notify the signal
                 AutoLock sync2(&m_signalLock, true);
 
@@ -762,8 +779,8 @@ namespace AdapterLib
                     if (Manager::Get()->IsNodeInfoReceived(homeId, nodeId))
                     {
                         adapter->AddDevice(nodeId, false);
-                    }                    
-                    
+                    }
+
                     break;
                 }
                 }   //switch
@@ -801,7 +818,7 @@ namespace AdapterLib
                     adapter->m_MonitorTimer->Cancel();
                     adapter->m_MonitorTimer = nullptr;
                 }
-                adapter->RemoveAllDevices();               
+                adapter->RemoveAllDevices();
 
                 if ((_notification->GetType() == Notification::Type_DriverFailed) && !(adapter->m_bShutdown))
                 {
@@ -864,7 +881,7 @@ namespace AdapterLib
                 if (iter != adapter->m_devices.end())
                 {
                     ZWaveAdapterDevice^ device = dynamic_cast<ZWaveAdapterDevice^>(*iter);
-                        
+
                     //add the value
                     device->UpdatePropertyValue(_notification->GetValueID());
 

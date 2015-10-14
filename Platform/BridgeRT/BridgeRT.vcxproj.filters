@@ -34,6 +34,13 @@
     <ClCompile Include="WidgetPropertyTextBox.cpp" />
     <ClCompile Include="WidgetPropertyLabel.cpp" />
     <ClCompile Include="WidgetSignalHandler.cpp" />
+    <ClCompile Include="AllJoynAboutIcon.cpp" />
+    <ClCompile Include="LampDetails.cpp" />
+    <ClCompile Include="LampParameters.cpp" />
+    <ClCompile Include="LampService.cpp" />
+    <ClCompile Include="LampState.cpp" />
+    <ClCompile Include="LSF.cpp" />
+    <ClCompile Include="LSFSignalHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -69,5 +76,14 @@
     <ClInclude Include="IControlPanelHandler.h" />
     <ClInclude Include="WidgetSignalHandler.h" />
     <ClInclude Include="AdapterConstants.h" />
+    <ClInclude Include="AllJoynAboutIcon.h" />
+    <ClInclude Include="ILSFHandler.h" />
+    <ClInclude Include="LampDetails.h" />
+    <ClInclude Include="LampParameters.h" />
+    <ClInclude Include="LampService.h" />
+    <ClInclude Include="LampState.h" />
+    <ClInclude Include="LSF.h" />
+    <ClInclude Include="LSFConsts.h" />
+    <ClInclude Include="LSFSignalHandler.h" />
   </ItemGroup>
 </Project>

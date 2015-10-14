@@ -105,13 +105,9 @@
   <PropertyGroup />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <GenerateManifest>false</GenerateManifest>
-    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
-    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <GenerateManifest>false</GenerateManifest>
-    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
-    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <GenerateManifest>false</GenerateManifest>
@@ -140,6 +136,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Async</ExceptionHandling>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -147,6 +144,9 @@
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ImageHasSafeExceptionHandlers>true</ImageHasSafeExceptionHandlers>
     </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -254,6 +254,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AdapterConstants.h" />
+    <ClInclude Include="AllJoynAboutIcon.h" />
+    <ClInclude Include="ILSFHandler.h" />
+    <ClInclude Include="LampDetails.h" />
+    <ClInclude Include="LampParameters.h" />
+    <ClInclude Include="LampService.h" />
+    <ClInclude Include="LampState.h" />
+    <ClInclude Include="LSF.h" />
+    <ClInclude Include="LSFConsts.h" />
+    <ClInclude Include="LSFSignalHandler.h" />
     <ClInclude Include="WidgetAction.h" />
     <ClInclude Include="AllJoynAbout.h" />
     <ClInclude Include="AllJoynFileTransfer.h" />
@@ -288,6 +297,13 @@
     <ClInclude Include="WidgetSignalHandler.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AllJoynAboutIcon.cpp" />
+    <ClCompile Include="LampDetails.cpp" />
+    <ClCompile Include="LampParameters.cpp" />
+    <ClCompile Include="LampService.cpp" />
+    <ClCompile Include="LampState.cpp" />
+    <ClCompile Include="LSF.cpp" />
+    <ClCompile Include="LSFSignalHandler.cpp" />
     <ClCompile Include="WidgetAction.cpp" />
     <ClCompile Include="AllJoynAbout.cpp" />
     <ClCompile Include="AllJoynFileTransfer.cpp" />

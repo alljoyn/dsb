@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -42,6 +42,7 @@ namespace DeviceProviders
         , m_signatureString(signalDescription.signature)
         , m_member(signalDescription)
         , m_subscriberCount(0)
+        , m_active(true)
     {
         DEBUG_LIFETIME_IMPL(AllJoynSignal);
         m_signature = AllJoynTypeDefinition::CreateParameterInfo(m_signatureString, AllJoynHelpers::TokenizeArgNamesString(signalDescription.argNames));
@@ -51,11 +52,27 @@ namespace DeviceProviders
             string key = BuildSignalMapKey(parent->GetBusObject()->GetPath().c_str(), parent->GetName().c_str(), m_name.c_str());
             s_signalMap[key] = WeakReference(this);
         }
+
+        //annotations
+        m_annotations = TypeConversionHelpers::GetAnnotationsView<alljoyn_interfacedescription_member>(
+            signalDescription,
+            alljoyn_interfacedescription_member_getannotationscount,
+            alljoyn_interfacedescription_member_getannotationatindex);
     }
 
     AllJoynSignal::~AllJoynSignal()
     {
-        (void) alljoyn_busattachment_unregistersignalhandler(m_interface->GetBusAttachment(),
+        if (m_active)
+        {
+            Shutdown();
+        }
+    }
+
+    void AllJoynSignal::Shutdown()
+    {
+        m_active = false;
+
+        alljoyn_busattachment_unregistersignalhandler(m_interface->GetBusAttachment(),
             AllJoynSignal::OnSignal,
             m_member,
             m_interface->GetBusObject()->GetPath().c_str());
@@ -134,24 +151,9 @@ namespace DeviceProviders
         return AllJoynHelpers::MultibyteToPlatformString(m_name.c_str());
     }
 
-    String ^ AllJoynSignal::InterfaceName::get()
-    {
-        return AllJoynHelpers::MultibyteToPlatformString(m_interfaceName.c_str());
-    }
-
-    String ^ AllJoynSignal::ObjectPath::get()
-    {
-        return AllJoynHelpers::MultibyteToPlatformString(m_objectPath.c_str());
-    }
-
-    IAboutData ^ AllJoynSignal::AboutData::get()
-    {
-        return m_aboutData;
-    }
-    
     Windows::Foundation::EventRegistrationToken AllJoynSignal::SignalRaised::add(Windows::Foundation::TypedEventHandler<ISignal^, Windows::Foundation::Collections::IVector<Object^>^>^ handler)
     {
-        if (m_subscriberCount++ == 0)
+        if (m_active && m_subscriberCount++ == 0)
         {
             alljoyn_busattachment_registersignalhandler(m_interface->GetBusAttachment(),
                 AllJoynSignal::OnSignal,
@@ -160,10 +162,10 @@ namespace DeviceProviders
         }
         return m_signalRaised += handler;
     }
-    
+
     void AllJoynSignal::SignalRaised::remove(Windows::Foundation::EventRegistrationToken token)
     {
-        if (--m_subscriberCount == 0)
+        if (m_active && --m_subscriberCount == 0)
         {
             alljoyn_busattachment_unregistersignalhandler(m_interface->GetBusAttachment(),
                 AllJoynSignal::OnSignal,

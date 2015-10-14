@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -20,6 +20,7 @@
 #include "AdapterConstants.h"
 #include "BridgeAuthHandler.h"
 #include "AllJoynAbout.h"
+#include "AllJoynAboutIcon.h"
 
 namespace BridgeRT
 {
@@ -27,6 +28,7 @@ namespace BridgeRT
     class DeviceProperty;
     class PropertyInterface;
     class ControlPanel;
+    class LSF;
 
     ref class BridgeDevice sealed : IAdapterSignalListener
     {
@@ -72,6 +74,10 @@ namespace BridgeRT
         {
             return m_supportCOVSignal;
         }
+        inline LSF* GetLightingService()
+        {
+            return m_pLightingService;
+        }
 
     private:
         void VerifyCOVSupport();
@@ -88,6 +94,9 @@ namespace BridgeRT
         QStatus CreateInterfaceProperty(_In_ IAdapterProperty ^adapterProperty, _In_ std::string & interfaceName, _Out_ PropertyInterface **propertyInterface);
 
         QStatus BuildServiceName();
+
+        QStatus InitControlPanel();
+        QStatus InitLightingService();
 
         // callback for session listener
         static QCC_BOOL AJ_CALL AcceptSessionJoinerCallback(_In_ const void* context, _In_ alljoyn_sessionport sessionPort, _In_z_ const char* joiner, _In_ const alljoyn_sessionopts opts);
@@ -128,7 +137,13 @@ namespace BridgeRT
         // about service
         AllJoynAbout m_about;
 
+        // About Icon
+        AllJoynAboutIcon m_icon;
+
         // An optional Alljoyn Control Panel
         ControlPanel* m_pControlPanel;
+
+        // Lighting Service
+        LSF* m_pLightingService;
     };
 }

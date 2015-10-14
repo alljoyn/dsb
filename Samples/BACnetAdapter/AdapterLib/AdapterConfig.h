@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -64,15 +64,15 @@ public:
     // -----------------------
     //
 
-    // 
-    // BACnet network number for directed requests. 
-    // Valid range is from 0 to 65535 where 0 is the local 
+    //
+    // BACnet network number for directed requests.
+    // Valid range is from 0 to 65535 where 0 is the local
     // connection and 65535 is network broadcast.
     //
     uint16              NetworkNumber;
 
-    // 
-    // BACnet mac address number. 
+    //
+    // BACnet mac address number.
     // Valid ranges are from 0 to 255 or a IP connection
     // string including port number like 10.1.2.3:47808.
     //
@@ -80,8 +80,8 @@ public:
 
     //
     // BACnet Device Object Instance number that you are trying to access.
-    // The value should be in  the range of 0 to 4194303. 
-    // A range of values can also be specified by 
+    // The value should be in  the range of 0 to 4194303.
+    // A range of values can also be specified by
     // using a minimum value and a maximum value.
     //
     int32               DeviceInstanceMin;
@@ -113,7 +113,7 @@ public:
     //
     uint32              BbmdTimetoliveSeconds;
 
-    // 
+    //
     // The network interface (IP V4 address) to use
     // for BACnet server communication.
     //
@@ -142,7 +142,7 @@ public:
     //
     // The list of device (partial) model names, that are allowed to be exposed.
     // - If AllowedDeviceList is empty all devices will be exposed.
-    // - If AllowedDeviceList is not empty, for each discovered device, the adapter checks if the device model name 
+    // - If AllowedDeviceList is not empty, for each discovered device, the adapter checks if the device model name
     //    contains one of the tokens, listed in AllowedDeviceList. If it does not the device is ignored.
     //
     std::vector<Platform::String^> AllowedDeviceList;
@@ -153,10 +153,10 @@ public:
     //  If the configuration file exists, then load it to the memory. Otherwise, create a configuration file
     //	with the default settings.
     //
-    //  returns: S_OK on success, 
+    //  returns: S_OK on success,
     //           HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) if the file is missing.
     //           Other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT Init();
 
@@ -165,7 +165,7 @@ public:
     //  Get the validity status of the current configuration parameters.
     //
     //  returns: true if configuration parameters are valid, otherwise false.
-    //      
+    //
     //******************************************************************************************************
     bool IsValid() const
     {
@@ -174,7 +174,7 @@ public:
 
     //*****************************************************************************************************
     //
-    //	Loads new configuration parameters from an XML string, and saves them 
+    //	Loads new configuration parameters from an XML string, and saves them
     //  to the adapter configuration file.
     //
     //	XmlString: A complete XML configuration
@@ -186,7 +186,7 @@ public:
 
     //*****************************************************************************************************
     //
-    //	Reads the adapter configurations into an XML string. 
+    //	Reads the adapter configurations into an XML string.
     //
     //	XmlStringPtr: Returned adapter configuration in string format.
     //
@@ -206,7 +206,7 @@ private:
     //  Loads BACnet adapter configurations from the XML disk file, with a pre-defined name.
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT fromFile();
 
@@ -215,7 +215,7 @@ private:
     //  Saves the current configuration parameters to XML file on disk, with a pre-defined name.
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT toFile();
 
@@ -229,22 +229,22 @@ private:
     //******************************************************************************************************
     //
     //  Loads BACnet adapter configuration from an XmlDocument object
-    //  
+    //
     //  XmlDoc:  The XML document.
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT fromXml(_In_ Windows::Data::Xml::Dom::XmlDocument^ XmlDoc);
 
     //******************************************************************************************************
     //
     //  Saves BACnet adapter configuration to an XmlDocument object
-    //  
+    //
     //  XmlDoc:  The XML document.
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT toXml(_Inout_ Windows::Data::Xml::Dom::XmlDocument^& XmlDoc);
 

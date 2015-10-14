@@ -8,7 +8,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdapterConfig.cpp" />
-    <ClCompile Include="pch.cpp" />
     <ClCompile Include="ZWaveAdapter.cpp" />
     <ClCompile Include="ZWaveAdapterDevice.cpp" />
     <ClCompile Include="ZWaveAdapterMethod.cpp" />
@@ -16,6 +15,9 @@
     <ClCompile Include="ZWaveAdapterSignal.cpp" />
     <ClCompile Include="ZWaveAdapterValue.cpp" />
     <ClCompile Include="SwitchControlPanelHandler.cpp" />
+    <ClCompile Include="UniversalControlPanelHandler.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="LSFHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AdapterConfig.h" />
@@ -28,5 +30,7 @@
     <ClInclude Include="ZWaveAdapterSignal.h" />
     <ClInclude Include="ZWaveAdapterValue.h" />
     <ClInclude Include="SwitchControlPanelHandler.h" />
+    <ClInclude Include="UniversalControlPanelHandler.h" />
+    <ClInclude Include="LSFHandler.h" />
   </ItemGroup>
 </Project>

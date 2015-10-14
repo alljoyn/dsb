@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -34,7 +34,7 @@ using namespace DsbCommon;
 
 namespace AdapterLib
 {
-    // 
+    //
     // IO request codes
     //
     enum IO_TYPE
@@ -71,11 +71,11 @@ namespace AdapterLib
     //
     // BACnetServiceHandlers class.
     // Description:
-    //      BACnetServiceHandlers is used for hosting 
+    //      BACnetServiceHandlers is used for hosting
     //      the BACnet service handlers, with reference to the
     //      BACnetInterface object.
     //      We are using a separate callback functions due to:
-    //      1. The BACnet stack implementation does not 
+    //      1. The BACnet stack implementation does not
     //          have a context passed to the handler.
     //      2. We do not want to expose the BACnet stack details
     //          outside the BACnetInterface implementation, to avoid
@@ -157,7 +157,7 @@ namespace AdapterLib
     BACnetServiceHandlers* BACnetServiceHandlers::instancePtr = nullptr;
 
 
-    BACnetServiceHandlers* 
+    BACnetServiceHandlers*
     BACnetServiceHandlers::Instance()
     {
         AutoLock sync(&BACnetServiceHandlers::lock, true);
@@ -171,7 +171,7 @@ namespace AdapterLib
     }
 
 
-    void 
+    void
     BACnetServiceHandlers::Dispose()
     {
         AutoLock sync(&BACnetServiceHandlers::lock, true);
@@ -194,7 +194,7 @@ namespace AdapterLib
     }
 
 
-    void 
+    void
     BACnetServiceHandlers::Register(BACnetInterface^ BacnetInterface)
     {
         this->stackInterface = BacnetInterface;
@@ -203,7 +203,7 @@ namespace AdapterLib
 
         //
         // Set the handler for all the services we don't implement
-        // it is required to send the proper reject message... 
+        // it is required to send the proper reject message...
         //
         apdu_set_unrecognized_service_handler_handler(
             handler_unrecognized_service
@@ -217,7 +217,7 @@ namespace AdapterLib
 
         // I AM handler
         apdu_set_unconfirmed_handler(
-            SERVICE_UNCONFIRMED_I_AM, 
+            SERVICE_UNCONFIRMED_I_AM,
             &BACnetServiceHandlers::Iam_Handler
             );
 
@@ -232,7 +232,7 @@ namespace AdapterLib
             SERVICE_CONFIRMED_WRITE_PROPERTY,
             &BACnetServiceHandlers::WritePropertyAck_Handler
             );
-    
+
         // COV subscription ACK handler */
         apdu_set_confirmed_simple_ack_handler(
             SERVICE_CONFIRMED_SUBSCRIBE_COV,
@@ -251,7 +251,7 @@ namespace AdapterLib
             );
 
         apdu_set_error_handler(
-            SERVICE_CONFIRMED_SUBSCRIBE_COV, 
+            SERVICE_CONFIRMED_SUBSCRIBE_COV,
             &BACnetServiceHandlers::Error_Handler
             );
         apdu_set_error_handler(
@@ -261,15 +261,15 @@ namespace AdapterLib
 
         // Error handling
         apdu_set_error_handler(
-            SERVICE_CONFIRMED_READ_PROPERTY, 
+            SERVICE_CONFIRMED_READ_PROPERTY,
             &BACnetServiceHandlers::Error_Handler
             );
         apdu_set_error_handler(
-            SERVICE_CONFIRMED_WRITE_PROPERTY, 
+            SERVICE_CONFIRMED_WRITE_PROPERTY,
             &BACnetServiceHandlers::Error_Handler
             );
         apdu_set_error_handler(
-            SERVICE_CONFIRMED_SUBSCRIBE_COV, 
+            SERVICE_CONFIRMED_SUBSCRIBE_COV,
             &BACnetServiceHandlers::Error_Handler
             );
         apdu_set_abort_handler(
@@ -281,7 +281,7 @@ namespace AdapterLib
     }
 
 
-    void 
+    void
     BACnetServiceHandlers::UnRegister()
     {
         apdu_set_unrecognized_service_handler_handler(
@@ -294,7 +294,7 @@ namespace AdapterLib
             );
 
         apdu_set_unconfirmed_handler(
-            SERVICE_UNCONFIRMED_I_AM, 
+            SERVICE_UNCONFIRMED_I_AM,
             nullptr
             );
 
@@ -323,7 +323,7 @@ namespace AdapterLib
             );
 
         apdu_set_error_handler(
-            SERVICE_CONFIRMED_SUBSCRIBE_COV, 
+            SERVICE_CONFIRMED_SUBSCRIBE_COV,
             nullptr
             );
         apdu_set_error_handler(
@@ -332,7 +332,7 @@ namespace AdapterLib
             );
 
         apdu_set_error_handler(
-            SERVICE_CONFIRMED_READ_PROPERTY, 
+            SERVICE_CONFIRMED_READ_PROPERTY,
             nullptr
             );
         apdu_set_abort_handler(
@@ -345,7 +345,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    void 
+    void
     BACnetServiceHandlers::Error_Handler(
         BACNET_ADDRESS* SrcAddressPtr,
         UINT8 InvokeId,
@@ -414,7 +414,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    void 
+    void
     BACnetServiceHandlers::Reject_Handler(
         BACNET_ADDRESS* SrcAddressPtr,
         UINT8 InvokeId,
@@ -476,10 +476,10 @@ namespace AdapterLib
         deviceIdDescPtr->SourceAddress = *SrcAddressPtr;
 
         int length = iam_decode_service_request(
-                        ServiceRequestPtr, 
-                        &deviceIdDescPtr->DeviceId, 
+                        ServiceRequestPtr,
+                        &deviceIdDescPtr->DeviceId,
                         &maxApdu,
-                        &segmentation, 
+                        &segmentation,
                         &deviceIdDescPtr->VendorId
                         );
         if (length != -1)
@@ -496,7 +496,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    void 
+    void
     BACnetServiceHandlers::ReadPropertyAck_Handler(
         UINT8* ServiceRequestPtr,
         UINT16 ServiceLen,
@@ -553,10 +553,10 @@ namespace AdapterLib
             status = ERROR_BAD_FORMAT;
             goto done;
         }
-    
+
         //
         // Decode the received value(s).
-        // If the read property is an array, we get multiple 
+        // If the read property is an array, we get multiple
         // values.
         //
 
@@ -569,7 +569,7 @@ namespace AdapterLib
 
             length = bacapp_decode_application_data(
                         appDataPtr,
-                        appDataLength, 
+                        appDataLength,
                         &value
                         );
             if (length > 0)
@@ -611,7 +611,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    void 
+    void
     BACnetServiceHandlers::WritePropertyAck_Handler(
         BACNET_ADDRESS* SrcAddressPtr,
         UINT8 InvokeId
@@ -651,7 +651,7 @@ namespace AdapterLib
 
         propertyObjectId.Bits.Type = objPropDescPtr->ObjectType;
         propertyObjectId.Bits.Instance = objPropDescPtr->ObjectInstance;
-        
+
         // If this is not a relinquish write, update the cached value
         if (objPropDescPtr->Params.AssociatedBACnetValue.tag != BACNET_APPLICATION_TAG_NULL)
         {
@@ -675,7 +675,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    void 
+    void
     BACnetServiceHandlers::SubscribeCovAckHandler(
         BACNET_ADDRESS* SrcAddressPtr,
         UINT8 InvokeId
@@ -714,7 +714,7 @@ namespace AdapterLib
     }
 
 
-    void 
+    void
     BACnetServiceHandlers::UnconfirmedCovNotification_Handler(
         UINT8* ServiceRequestPtr,
         UINT16 ServiceLen,
@@ -745,7 +745,7 @@ namespace AdapterLib
         covData.listOfValues = &propertyValues[0];
 
         int length = cov_notify_decode_service_request(
-                        ServiceRequestPtr, 
+                        ServiceRequestPtr,
                         ServiceLen,
                         &covData
                         );
@@ -808,7 +808,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    DWORD 
+    DWORD
     BACnetInterface::Initialize(
         const AdapterConfig& ConfigInfo,
 		IBACnetNotificationListener^ NotificationListener
@@ -932,7 +932,7 @@ namespace AdapterLib
         }
         this->serviceHandlersPtr = nullptr;
 
-        // Release all device ID descriptors 
+        // Release all device ID descriptors
         while (this->deviceDb.size() != 0)
         {
             auto iter = this->deviceDb.begin();
@@ -960,7 +960,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    DWORD   
+    DWORD
     BACnetInterface::EnumDevices(
         BACnetAdapterIoRequest::COMPLETE_REQUEST_HANDLER CompletionRoutinePtr,
         PVOID ContextPtr,
@@ -973,7 +973,7 @@ namespace AdapterLib
         {
             *adapterIoRequestPtr = nullptr;
         }
-    
+
         //
         // Set IO parameters and submit the request
         //
@@ -987,14 +987,14 @@ namespace AdapterLib
         {
             //
             // Something probably failed, otherwise
-            // we should get ERROR_IO_PENDING since 
+            // we should get ERROR_IO_PENDING since
             // we only queue the request for device enumeration.
             //
             DSB_ASSERT(status != ERROR_SUCCESS);
 
             return status;
         }
-        
+
         BACnetIoRequest^ bacnetIoRequest = dynamic_cast<BACnetIoRequest^>(ioRequest);
         DSB_ASSERT(bacnetIoRequest);
 
@@ -1027,7 +1027,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    DWORD   
+    DWORD
     BACnetInterface::ReadObjectProperty(
         const BACNET_OBJECT_PROPERTY_DESCRIPTOR* ObjectPropDescPtr,
         BACnetAdapterIoRequest::COMPLETE_REQUEST_HANDLER CompletionRoutinePtr,
@@ -1049,7 +1049,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    DWORD   
+    DWORD
     BACnetInterface::WriteObjectProperty(
         const BACNET_OBJECT_PROPERTY_DESCRIPTOR* ObjectPropDescPtr,
         BACnetAdapterIoRequest::COMPLETE_REQUEST_HANDLER CompletionRoutinePtr,
@@ -1090,7 +1090,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    DWORD   
+    DWORD
     BACnetInterface::UnsubscribeCOVProperty(
         const BACNET_OBJECT_PROPERTY_DESCRIPTOR* ObjectPropDescPtr,
         BACnetAdapterIoRequest::COMPLETE_REQUEST_HANDLER CompletionRoutinePtr,
@@ -1145,7 +1145,7 @@ namespace AdapterLib
 
             // Update the time
             ::GetLocalTime(&deviceIdPtr->Updated);
-        } 
+        }
         catch (std::bad_alloc)
         {
             DSB_ASSERT(FALSE);
@@ -1180,7 +1180,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    void    
+    void
     BACnetInterface::updatePropertyByValue(
         UINT32 DeviceId,
         const BACNET_ADAPTER_OBJECT_ID& PropertyObjectId,
@@ -1225,7 +1225,7 @@ namespace AdapterLib
     _Use_decl_annotations_
     DWORD
     BACnetInterface::doIo(
-        const BACnetAdapterIoRequest::IO_PARAMETERS* IoParamsPtr, 
+        const BACnetAdapterIoRequest::IO_PARAMETERS* IoParamsPtr,
         BACnetAdapterIoRequest::COMPLETE_REQUEST_HANDLER CompletionRoutinePtr,
         PVOID ContextPtr,
         IAdapterIoRequest^* adapterIoRequestPtr
@@ -1247,7 +1247,7 @@ namespace AdapterLib
 
         //
         // Either us or the caller need access to the request, boost the
-        // reference count, so it does not go away, before we, or the caller can 
+        // reference count, so it does not go away, before we, or the caller can
         // inspect it.
         //
         request->Reference();
@@ -1257,7 +1257,7 @@ namespace AdapterLib
         status = ERROR_IO_PENDING;
 
         //
-        // Queue the request. 
+        // Queue the request.
         // Processing of the IO request is picked up by the TX thread.
         //
         if (this->txThreadWorkQueue.Add(request) != ERROR_SUCCESS)
@@ -1311,14 +1311,14 @@ namespace AdapterLib
         }
 
         BACnetIoRequest^ ioReq = iter->second;
-    
+
         this->pendingStackRequests.erase(iter);
 
         return ioReq;
     }
 
 
-    uint32 
+    uint32
     BACnetInterface::putStackPendingRequest(UINT32 RequestId, BACnetIoRequest^ Request)
     {
         DWORD status = ERROR_SUCCESS;
@@ -1358,7 +1358,7 @@ namespace AdapterLib
              iter++)
         {
             BACnetIoRequest^ ioReq = iter->second;
-        
+
             if (ioReq == Request)
             {
                 this->pendingStackRequests.erase(iter);
@@ -1371,7 +1371,7 @@ namespace AdapterLib
 
 
     //
-    // The network listener thread uses the stack to read/decode incoming 
+    // The network listener thread uses the stack to read/decode incoming
     // BACnet network messages and dispatch execution to registered handler.
     // RX thread runs until BACnetInterface is shut down.
     //
@@ -1390,12 +1390,12 @@ namespace AdapterLib
             uint8_t rxBuffer[MAX_MPDU] = { 0 };
 
             uint16_t pduLength = datalink_receive(
-                                    &srcAddress, 
-                                    &rxBuffer[0], 
-                                    sizeof(rxBuffer), 
+                                    &srcAddress,
+                                    &rxBuffer[0],
+                                    sizeof(rxBuffer),
                                     this->configInfo.RxPacketTimeoutMsec
                                     );
-            if (pduLength != 0) 
+            if (pduLength != 0)
             {
                 npdu_handler(&srcAddress, &rxBuffer[0], pduLength);
             }
@@ -1453,7 +1453,7 @@ namespace AdapterLib
     }
 
 
-    void 
+    void
     BACnetInterface::onTxWorkItem(BACnetIoRequest^ BACnetAdapterIoRequest)
     {
         switch (BACnetAdapterIoRequest->GetType())
@@ -1481,12 +1481,12 @@ namespace AdapterLib
     }
 
 
-    void 
+    void
     BACnetInterface::txEnumDevices(BACnetIoRequest^ BACnetAdapterIoRequest)
     {
         // See who is out there...
         Send_WhoIs_To_Network(
-            this->bcastAddrPtr, 
+            this->bcastAddrPtr,
             this->configInfo.DeviceInstanceMin,
             this->configInfo.DeviceInstanceMax
             );
@@ -1495,7 +1495,7 @@ namespace AdapterLib
     }
 
 
-    void 
+    void
     BACnetInterface::txReadProperty(BACnetIoRequest^ BACnetAdapterIoRequest)
     {
         DWORD status = ERROR_SUCCESS;
@@ -1505,21 +1505,21 @@ namespace AdapterLib
         DSB_ASSERT(ioParams.InputBufferSize == sizeof(BACNET_OBJECT_PROPERTY_DESCRIPTOR));
 
         // Get access to the read property parameters
-        const BACNET_OBJECT_PROPERTY_DESCRIPTOR* objPropDescPtr = 
+        const BACNET_OBJECT_PROPERTY_DESCRIPTOR* objPropDescPtr =
             reinterpret_cast<const BACNET_OBJECT_PROPERTY_DESCRIPTOR*>(ioParams.InputBufferPtr);
 
         // Make sure we 'know' this device
         BACNET_ADDRESS deviceAddress;
         unsigned maxApdu;
         bool isDeviceBound = address_bind_request(
-                                objPropDescPtr->DeviceId, 
+                                objPropDescPtr->DeviceId,
                                 &maxApdu,
                                 &deviceAddress
                                 );
         if (isDeviceBound)
         {
             //
-            // We need to lock the 'pending requests' list in order 
+            // We need to lock the 'pending requests' list in order
             // to avoid a race condition where the handler is called before
             // the request is added to the 'pending requests' list.
             //
@@ -1527,9 +1527,9 @@ namespace AdapterLib
 
             BACnetAdapterIoRequest->InvokeId = Send_Read_Property_Request(
                                         objPropDescPtr->DeviceId,
-                                        objPropDescPtr->ObjectType, 
+                                        objPropDescPtr->ObjectType,
                                         objPropDescPtr->ObjectInstance,
-                                        objPropDescPtr->PropertyId, 
+                                        objPropDescPtr->PropertyId,
                                         objPropDescPtr->ValueIndex
                                         );
             if (BACnetAdapterIoRequest->InvokeId == 0)
@@ -1558,7 +1558,7 @@ namespace AdapterLib
     }
 
 
-    void 
+    void
     BACnetInterface::txWriteProperty(BACnetIoRequest^ BACnetAdapterIoRequest)
     {
         DWORD status = ERROR_SUCCESS;
@@ -1568,21 +1568,21 @@ namespace AdapterLib
         DSB_ASSERT(ioParams.InputBufferSize == sizeof(BACNET_OBJECT_PROPERTY_DESCRIPTOR));
 
         // Get access to the read property parameters
-        const BACNET_OBJECT_PROPERTY_DESCRIPTOR* objPropDescPtr = 
+        const BACNET_OBJECT_PROPERTY_DESCRIPTOR* objPropDescPtr =
             reinterpret_cast<const BACNET_OBJECT_PROPERTY_DESCRIPTOR*>(ioParams.InputBufferPtr);
 
         // Make sure we 'know' this device
         BACNET_ADDRESS deviceAddress;
         unsigned maxApdu;
         bool isDeviceBound = address_bind_request(
-                                objPropDescPtr->DeviceId, 
+                                objPropDescPtr->DeviceId,
                                 &maxApdu,
                                 &deviceAddress
                                 );
         if (isDeviceBound)
         {
             //
-            // We need to lock the 'pending requests' list in order 
+            // We need to lock the 'pending requests' list in order
             // to avoid a race condition where the handler is called before
             // the request is added to the 'pending requests' list.
             //
@@ -1590,9 +1590,9 @@ namespace AdapterLib
 
             BACnetAdapterIoRequest->InvokeId = Send_Write_Property_Request(
                                         objPropDescPtr->DeviceId,
-                                        objPropDescPtr->ObjectType, 
+                                        objPropDescPtr->ObjectType,
                                         objPropDescPtr->ObjectInstance,
-                                        objPropDescPtr->PropertyId, 
+                                        objPropDescPtr->PropertyId,
                                         (BACNET_APPLICATION_DATA_VALUE*)&objPropDescPtr->Params.AssociatedBACnetValue,
                                         this->configInfo.RequestPriority,
                                         BACNET_ARRAY_ALL // All array
@@ -1633,21 +1633,21 @@ namespace AdapterLib
         DSB_ASSERT(ioParams.InputBufferSize == sizeof(BACNET_OBJECT_PROPERTY_DESCRIPTOR));
 
         // Get access to the read property parameters
-        const BACNET_OBJECT_PROPERTY_DESCRIPTOR* objPropDescPtr = 
+        const BACNET_OBJECT_PROPERTY_DESCRIPTOR* objPropDescPtr =
             reinterpret_cast<const BACNET_OBJECT_PROPERTY_DESCRIPTOR*>(ioParams.InputBufferPtr);
 
         // Make sure we 'know' this device
         BACNET_ADDRESS deviceAddress;
         unsigned maxApdu;
         bool isDeviceBound = address_bind_request(
-                                objPropDescPtr->DeviceId, 
+                                objPropDescPtr->DeviceId,
                                 &maxApdu,
                                 &deviceAddress
                                 );
         if (isDeviceBound)
         {
             //
-            // We need to lock the 'pending requests' list in order 
+            // We need to lock the 'pending requests' list in order
             // to avoid a race condition where the handler is called before
             // the request is added to the 'pending requests' list.
             //
@@ -1717,8 +1717,8 @@ namespace AdapterLib
                 break;
 
             case WAIT_OBJECT_0 + 1:
-            { 
-                // 
+            {
+                //
                 // Notify listener, if any...
                 //
                 BACNET_EVENT_PARAMETERS^ eventParams = this->pendingNotifications.GetNext();
@@ -1765,7 +1765,7 @@ namespace AdapterLib
     }
 
 
-    void   
+    void
     BACnetInterface::completeIoRequest(
         BACnetIoRequest^ Request,
         DWORD status
@@ -1783,7 +1783,7 @@ namespace AdapterLib
         if (this->delStackPendingRequest(Request) == ERROR_SUCCESS)
         {
             Request->Complete(status, 0);
-        } 
+        }
         else if (this->txThreadWorkQueue.Remove(Request, nullptr))
         {
             Request->Complete(status, 0);

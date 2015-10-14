@@ -404,14 +404,14 @@ namespace AdapterLib
     }
 
 
-    BACnetAdapterValue^ 
+    BACnetAdapterAttribute^
     BACnetAdapterProperty::GetAttributeByName(String^ AttributeName)
     {
         for (auto attr : this->attributes)
         {
-            if (_wcsicmp(attr->Name->Data(), AttributeName->Data()) == 0)
+            if (_wcsicmp(attr->Value->Name->Data(), AttributeName->Data()) == 0)
             {
-                return dynamic_cast<BACnetAdapterValue^>(attr);
+                return dynamic_cast<BACnetAdapterAttribute^>(attr);
             }
         }
 
@@ -419,7 +419,7 @@ namespace AdapterLib
     }
 
 
-    BACnetAdapterValue^ 
+    BACnetAdapterAttribute^ 
     BACnetAdapterProperty::GetAttributeByPropertyId(BACNET_PROPERTY_ID PropertyId)
     {
         const wchar_t* propertyNameWsz = AdapterLib::ToString(PropertyId);
@@ -436,7 +436,7 @@ namespace AdapterLib
     uint32 
     BACnetAdapterProperty::SetAttributeByPropertyId(BACNET_PROPERTY_ID PropertyId, const BACNET_APPLICATION_DATA_VALUE& Value)
     {
-        BACnetAdapterValue^ attribute;
+        BACnetAdapterAttribute^ attribute;
 
         try
         {
@@ -451,10 +451,10 @@ namespace AdapterLib
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
-        uint32 status = attribute->Set(Value);
+        uint32 status = dynamic_cast<BACnetAdapterValue^>(attribute->Value)->Set(Value);
         if (status == ERROR_SUCCESS)
         {
-            attribute->SetModified(true);
+            dynamic_cast<BACnetAdapterValue^>(attribute->Value)->SetModified(true);
         }
 
         return status;
@@ -466,7 +466,7 @@ namespace AdapterLib
     {
         this->name = Other->Name;
 
-        IAdapterValueVector^ otherAttributes = Other->Attributes;
+        IAdapterAttributeVector^ otherAttributes = Other->Attributes;
 
         if (this->attributes.size() != otherAttributes->Size)
         {
@@ -475,9 +475,9 @@ namespace AdapterLib
 
         for (uint32 attrInx = 0; attrInx < otherAttributes->Size; ++attrInx)
         {
-            BACnetAdapterValue^ attr = static_cast<BACnetAdapterValue^>(this->attributes[attrInx]);
+            BACnetAdapterValue^ attr = static_cast<BACnetAdapterValue^>(this->attributes[attrInx]->Value);
 
-            attr->Set(otherAttributes->GetAt(attrInx));
+            attr->Set(otherAttributes->GetAt(attrInx)->Value);
         }
 
         return ERROR_SUCCESS;
@@ -494,7 +494,7 @@ namespace AdapterLib
     IAdapterValue^ 
     BACnetAdapterProperty::GetPresentValue()
     {
-        return this->GetAttributeByPropertyId(PROP_PRESENT_VALUE);
+        return this->GetAttributeByPropertyId(PROP_PRESENT_VALUE)->Value;
     }
 
 
@@ -541,9 +541,9 @@ namespace AdapterLib
         if (IsOnlyModified)
         {
             // Relinquish all modified attributes...
-            for (IAdapterValue^ adapterValue : this->attributes)
+            for (auto adapterAttr : this->attributes)
             {
-                BACnetAdapterValue^ attribute = dynamic_cast<BACnetAdapterValue^>(adapterValue);
+                BACnetAdapterValue^ attribute = dynamic_cast<BACnetAdapterValue^>(adapterAttr->Value);
                 DSB_ASSERT(attribute != nullptr);
 
                 if (attribute->IsModified())
@@ -564,6 +564,25 @@ namespace AdapterLib
                 (void)device->WritePropertyAttribute(this, presentValue, true, nullptr);
             }
         }
+    }
+
+    //
+    // BACnetAdapterAttribute.
+    // Description:
+    //  The class that implements BridgeRT::IAdapterAttribute.
+    //
+    BACnetAdapterAttribute::BACnetAdapterAttribute(String^ ObjectName, Object^ ParentObject, Object^ DefaultData)
+        : value(ref new BACnetAdapterValue(ObjectName, ParentObject, DefaultData))
+    {
+    }
+
+    BACnetAdapterAttribute::BACnetAdapterAttribute(const BACnetAdapterAttribute^ other)
+        : value(other->value)
+        , annotations(other->annotations)
+        , covBehavior(other->covBehavior)
+        , access(other->access)
+    {
+
     }
 
 
@@ -726,7 +745,7 @@ namespace AdapterLib
             // PROP_OBJECT_TYPE string
             if (isNewProperty)
             {
-                BACnetAdapterValue^ attribute = ref new BACnetAdapterValue(
+                auto attribute = ref new BACnetAdapterAttribute(
                                                         ref new String(AdapterLib::ToString(PROP_OBJECT_TYPE)),
                                                         bacnetAdapterProperty,
                                                         ref new String(AdapterLib::ToString(BACNET_OBJECT_TYPE(bacnetObjectId.Bits.Type)))
@@ -742,7 +761,7 @@ namespace AdapterLib
             //
             if (isNewProperty)
             {
-                BACnetAdapterValue^ attribute = ref new BACnetAdapterValue(
+                auto attribute = ref new BACnetAdapterAttribute(
                                                         ref new String(AdapterLib::ToString(PROP_OBJECT_IDENTIFIER)),
                                                         bacnetAdapterProperty,
                                                         PropertyValue::CreateUInt32(PropertyObjectId)
@@ -774,22 +793,24 @@ namespace AdapterLib
                 // Check if we are creating a new property or updating 
                 // an existing one.
                 //
-                BACnetAdapterValue^ attribute;
+                BACnetAdapterAttribute^ attribute;
 
                 if (isNewProperty)
                 {
                     // Creating a new property...
-                    attribute = ref new BACnetAdapterValue(
+                    attribute = ref new BACnetAdapterAttribute(
                                             ref new String(AdapterLib::ToString(BACNET_PROPERTY_ID(bacnetAttrDescDsec->Id))),
                                             bacnetAdapterProperty
                                             );
+                    attribute->Access = bacnetAttrDescDsec->Access;
+                    attribute->COVBehavior = bacnetAttrDescDsec->COVBehavior;
 
-                    DSB_ASSERT(!attribute->Name->IsEmpty());
+                    DSB_ASSERT(!attribute->Value->Name->IsEmpty());
                 }
                 else
                 {
                     // We are updating an existing property...
-                    attribute = dynamic_cast<BACnetAdapterValue^>(bacnetAdapterProperty->Attributes->GetAt(attrInx));
+                    attribute = dynamic_cast<BACnetAdapterAttribute^>(bacnetAdapterProperty->Attributes->GetAt(attrInx));
                 }
 
                 BACNET_OBJECT_PROPERTY_DESCRIPTOR propAttrDesc;
@@ -797,7 +818,7 @@ namespace AdapterLib
                 propAttrDesc.ObjectInstance = bacnetObjectId.Bits.Instance;
                 propAttrDesc.ObjectType = BACNET_OBJECT_TYPE(bacnetObjectId.Bits.Type);
                 propAttrDesc.PropertyId = bacnetAttrDescDsec->Id;
-                propAttrDesc.Params.AssociatedAdapterValue = attribute;
+                propAttrDesc.Params.AssociatedAdapterValue = dynamic_cast<BACnetAdapterValue^>(attribute->Value);
                 propAttrDesc.ValueIndex = BACNET_ARRAY_ALL;
 
                 status = this->stackInterface->ReadObjectProperty(
@@ -821,14 +842,14 @@ namespace AdapterLib
 
                 if (bacnetAttrDescDsec->Id == PROP_OBJECT_NAME)
                 {
-                    IPropertyValue^ ipv = dynamic_cast<IPropertyValue^>(attribute->Data);
+                    IPropertyValue^ ipv = dynamic_cast<IPropertyValue^>(attribute->Value->Data);
                     DSB_ASSERT(ipv != nullptr);
 
                     bacnetAdapterProperty->SetName(ipv->GetString());
                 }
 
                 status = BACnetAdapterValue::TranslateAttributeValue(
-                                            attribute,
+                                            dynamic_cast<BACnetAdapterValue^>(attribute->Value),
                                             bacnetAttrDescDsec->Id,
                                             true // From BACnet
                                             );

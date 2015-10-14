@@ -37,9 +37,9 @@ namespace DeviceProviders
         // Note that it is possible to add a BusObject to a service after the initial About broadcast,
         // so this function may be called multiple times with new about info.
         void Initialize(alljoyn_msgarg aboutDataArg, alljoyn_msgarg objectDescriptionArg);
+        void Shutdown();
 
-        bool JoinSession();
-        void LeaveSession();
+        AllJoynBusObject^ GetBusObjectIfCreated(const std::string& path);
         AllJoynBusObject^ GetOrCreateBusObject(const std::string& path);
 
         inline AllJoynProvider ^ GetProvider() const { return m_provider; }
@@ -58,14 +58,6 @@ namespace DeviceProviders
         {
             Platform::String ^ get();
         }
-        virtual property uint16 SessionPort
-        {
-            uint16 get();
-        }
-        virtual property uint32 SessionId
-        {
-            uint32 get();
-        }
         virtual property IAboutData^ AboutData
         {
             IAboutData^ get();
@@ -76,19 +68,35 @@ namespace DeviceProviders
         }
 
         virtual AllJoynStatus^ Ping();
+        virtual AllJoynStatus^ JoinSession();
+        virtual AllJoynStatus^ JoinSession(uint16 port);
+        virtual AllJoynStatus^ LeaveSession();
+
         virtual bool ImplementsInterface(Platform::String^ interfaceName);
         virtual IBusObject^ GetBusObject(Platform::String^ path);
         virtual Windows::Foundation::Collections::IVector<IBusObject^>^ GetBusObjectsWhichImplementInterface(Platform::String^ interfaceName);
+
+
+#if _DEBUG
+        // Only for unit testing
+        virtual property int32 SessionUserCount
+        {
+            inline int32 get()
+            {
+                AutoLock lock(&m_objectsLock, true);
+                return m_sessionUserCount;
+            }
+        }
+#endif
 
     private:
         static void AJ_CALL SessionLost(const void* context, alljoyn_sessionid sessionId, alljoyn_sessionlostreason reason);
 
         Platform::WeakReference m_weakThis;
+        std::atomic<bool> m_active;
         std::map<std::string, Platform::WeakReference> m_objectsMap;
         CSLock m_objectsLock;
-
         AllJoynAboutData^ m_aboutData;
-        CSLock m_aboutDataLock;
 
         AllJoynProvider ^ m_provider;
         std::string m_name;
@@ -98,6 +106,7 @@ namespace DeviceProviders
         alljoyn_msgarg m_aboutDataArg;
         alljoyn_msgarg m_objectDescriptionArg;
         alljoyn_aboutobjectdescription m_objectDescription;
+        int m_sessionUserCount;
 
         static DWORD s_pingTimeout;
     };

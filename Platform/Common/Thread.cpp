@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -20,12 +20,12 @@
 namespace DsbCommon
 {
     //
-    // Class Thread 
+    // Class Thread
     // Description:
     //  Thread interface class.
     //  Thread is a pure virtual class that needs to be inherited
     //  for thread code implementation.
-    //      
+    //
     Thread::Thread()
         : isRunning(FALSE)
         , threadId(0)
@@ -62,7 +62,7 @@ namespace DsbCommon
         DWORD extitConde = threadPtr->ThreadStart();
 
         ::InterlockedExchange(&threadPtr->isRunning, FALSE);
-    
+
         threadPtr->threadHandle = NULL;
         threadPtr->threadId = 0;
 
@@ -102,11 +102,11 @@ namespace DsbCommon
                                 0,
                                 &ThreadLaunch,
                                 this,
-                                0, 
+                                0,
                                 &this->threadId
                                 );
 
-        if (this->threadHandle == NULL) 
+        if (this->threadHandle == NULL)
         {
             ::InterlockedExchange(&this->isRunning, FALSE);
 
@@ -147,7 +147,7 @@ namespace DsbCommon
         ::SetEvent(this->stopEvent);
 
         //
-        // If we are stopping the thread from within, 
+        // If we are stopping the thread from within,
         // we cannot wait here...
         //
         if (this->IsMe())
@@ -171,25 +171,25 @@ namespace DsbCommon
         SetEvent(this->startedEvent);
     }
 
-    DWORD   
+    DWORD
     Thread::GetStartStatus(void)
     {
         return this->startStatus;
     }
 
-    bool    
+    bool
     Thread::IsRunning(void)
     {
         return ::InterlockedExchangeAdd(&this->isRunning, 0) != FALSE;
     }
 
-    bool    
+    bool
     Thread::IsMe(void)
     {
         return ::GetCurrentThreadId() == this->threadId;
     }
 
-    HANDLE  
+    HANDLE
     Thread::GetStopEvent(void)
     {
         return this->stopEvent;

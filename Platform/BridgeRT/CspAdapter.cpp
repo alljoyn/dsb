@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -24,7 +24,7 @@
 using namespace BridgeRT;
 using namespace DsbCommon;
 
-CspAdapter::CspAdapter() 
+CspAdapter::CspAdapter()
     : AllJoynFileTransfer(),
 	m_configManager(nullptr)
 {
@@ -49,9 +49,7 @@ QStatus CspAdapter::Initialize(_In_ alljoyn_busattachment* bus, _In_ ConfigManag
 
     try
     {
-        m_busObjectPath = "/";
-        m_busObjectPath += ROOT_NAME_FOR_CSP_BUSOBJECT;
-        m_busObjectPath += "/AdapterConfig";
+        m_busObjectPath = "/AdapterConfig";
     }
     catch (std::bad_alloc& exception)
     {
@@ -87,7 +85,7 @@ HRESULT CspAdapter::PostFileWriteAction(_In_ std::wstring &appRelativeFileName, 
     StorageFolder^ tempFolder = ApplicationData::Current->LocalFolder;
     String^ tempFilePath = tempFolder->Path + L"\\";
     std::wstring absoluteFileName(L"");
- 
+
     // default post file write event to nothing
     if (nullptr != finalEvent)
     {
@@ -119,7 +117,7 @@ HRESULT CspAdapter::PostFileWriteAction(_In_ std::wstring &appRelativeFileName, 
 
     // Read the entire contents of the temporary data file
     if (!ReadFile(hFile, adapterConfigData->Data, fileAttribute.nFileSizeLow, &numBytesRead, nullptr))
-    { 
+    {
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto leave;
     }
@@ -130,7 +128,7 @@ HRESULT CspAdapter::PostFileWriteAction(_In_ std::wstring &appRelativeFileName, 
         hr = HRESULT_FROM_WIN32(ERROR_PARTIAL_COPY);
         goto leave;
     }
-    
+
     // Pass the configuration data to the adapter.
     hr = m_configManager->SetAdapterConfig(adapterConfigData);
 
@@ -200,16 +198,16 @@ HRESULT CspAdapter::PreFileReadAction(_Out_ std::wstring &appRelativeFileName)
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto leave;
     }
-      
+
     // Write all adapter data to the temporary file
     if (!WriteFile(hFile, adapterConfigData->Data, adapterConfigData->Length, &numBytesWritten, nullptr))
     {
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto leave;
-    }    
+    }
 
 leave:
-   
+
     if (hFile != INVALID_HANDLE_VALUE)
     {
         CloseHandle(hFile);
@@ -220,7 +218,7 @@ leave:
             DeleteFile(m_readFileNameFullPath.c_str());
             appRelativeFileName.clear();
             m_readFileNameFullPath.clear();
-        }        
+        }
     }
 
     return hr;

@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -50,9 +50,7 @@ QStatus CspBridge::Initialize(_In_ alljoyn_busattachment* bus, _In_ ConfigManage
 
     try
     {
-        m_busObjectPath = "/";
-        m_busObjectPath += ROOT_NAME_FOR_CSP_BUSOBJECT;
-        m_busObjectPath += "/BridgeConfig";
+        m_busObjectPath = "/BridgeConfig";
     }
     catch (...)
     {
@@ -74,7 +72,7 @@ QStatus CspBridge::Initialize(_In_ alljoyn_busattachment* bus, _In_ ConfigManage
         status = ER_OUT_OF_MEMORY;
         goto leave;
     }
-      
+
     status = AllJoynFileTransfer::Initialize(bus, m_busObjectPath.c_str(), configManager);
 
 leave:
@@ -96,8 +94,8 @@ HRESULT CspBridge::PostFileWriteAction(_In_ std::wstring &appRelativeFileName, _
 //************************************************************************************************
 //
 // Pre File Read Handler for Bridge
-// 
-// For the bridge, transfer the bridge configuration file directly. 
+//
+// For the bridge, transfer the bridge configuration file directly.
 // No temporary file is necessary
 //
 //************************************************************************************************
@@ -111,7 +109,7 @@ HRESULT CspBridge::PreFileReadAction(_Out_ std::wstring &appRelativeFileName)
         GUID guid = { 0 };
         StorageFolder^ tempFolder = ApplicationData::Current->LocalFolder;
         String^ tempFilePath = tempFolder->Path + L"\\";
-      
+
         // create 'new' temp file name
         hr = CoCreateGuid(&guid);
         if (FAILED(hr))
@@ -144,7 +142,7 @@ HRESULT CspBridge::PreFileReadAction(_Out_ std::wstring &appRelativeFileName)
     }
 
 leave:
-    
+
     return hr;
 }
 

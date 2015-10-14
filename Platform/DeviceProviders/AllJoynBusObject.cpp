@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -34,6 +34,7 @@ namespace DeviceProviders
         , m_proxyBusObject(nullptr)
         , m_path(path)
         , m_introspectedSuccessfully(false)
+        , m_active(true)
     {
         DEBUG_LIFETIME_IMPL(AllJoynBusObject);
 
@@ -48,28 +49,50 @@ namespace DeviceProviders
         , m_proxyBusObject(proxyBusObject)
         , m_path(path)
         , m_introspectedSuccessfully(false)
+        , m_active(true)
     {
         DEBUG_LIFETIME_IMPL(AllJoynBusObject);
     }
 
     AllJoynBusObject::~AllJoynBusObject()
     {
+        if (m_active)
         {
-            AutoLock lock(&m_interfacesLock, true);
+            Shutdown();
+        }
+    }
+
+    void AllJoynBusObject::Shutdown()
+    {
+        m_active = false;
+
+        {
+            AutoLock lock(&m_lock, true);
             for (auto iter : m_interfaces)
             {
                 auto iface = iter.second.Resolve<AllJoynInterface>();
                 if (iface != nullptr)
                 {
-                    delete iface;
+                    iface->Shutdown();
                 }
             }
             m_interfaces.clear();
+
+            for (auto iter : m_childObjects)
+            {
+                auto object = iter.second.Resolve<AllJoynBusObject>();
+                if (object != nullptr)
+                {
+                    object->Shutdown();
+                }
+            }
+            m_childObjects.clear();
         }
 
         if (nullptr != m_proxyBusObject)
         {
             alljoyn_proxybusobject_destroy(m_proxyBusObject);
+            m_proxyBusObject = nullptr;
         }
     }
 
@@ -77,23 +100,19 @@ namespace DeviceProviders
     {
         if (!m_introspectedSuccessfully)
         {
-            auto service = this->GetService();
-            if (service != nullptr)
+            if (m_proxyBusObject == nullptr)
             {
-                if (m_proxyBusObject == nullptr)
-                {
-                    m_proxyBusObject = alljoyn_proxybusobject_create(service->GetBusAttachment(),
-                        service->GetName().c_str(),
-                        m_path.c_str(),
-                        service->GetSessionId());
-                }
+                m_proxyBusObject = alljoyn_proxybusobject_create(m_service->GetBusAttachment(),
+                    m_service->GetName().c_str(),
+                    m_path.c_str(),
+                    m_service->GetSessionId());
+            }
 
-                if (m_proxyBusObject != nullptr)
+            if (m_proxyBusObject != nullptr)
+            {
+                if (ER_OK == alljoyn_proxybusobject_introspectremoteobject(m_proxyBusObject))
                 {
-                    if (ER_OK == alljoyn_proxybusobject_introspectremoteobject(m_proxyBusObject))
-                    {
-                        m_introspectedSuccessfully = true;
-                    }
+                    m_introspectedSuccessfully = true;
                 }
             }
         }
@@ -102,14 +121,13 @@ namespace DeviceProviders
 
     IVector<IInterface ^>^ AllJoynBusObject::Interfaces::get()
     {
-        auto interfaces = ref new Vector<IInterface ^>();
-
-        if (!this->Introspect())
+        if (!m_active || !this->Introspect())
         {
-            return interfaces;
-        }     
+            return nullptr;
+        }
 
-        AutoLock lock(&m_interfacesLock, true);
+        auto interfaces = ref new Vector<IInterface ^>();
+        AutoLock lock(&m_lock, true);
 
         // First check for interfaces we already know about. Not sure this is necessary. It will only matter if there are interface mention in the
         // About announcement but not returned in alljoyn_proxybusobject_getinterfaces
@@ -121,7 +139,7 @@ namespace DeviceProviders
                 alljoyn_interfacedescription description = alljoyn_proxybusobject_getinterface(m_proxyBusObject, interfaceNameIterator.first.data());
                 if (nullptr != description)
                 {
-                    iface = ref new AllJoynInterface(this, description);                    
+                    iface = ref new AllJoynInterface(this, description);
                 }
             }
             interfaces->Append(iface);
@@ -154,14 +172,15 @@ namespace DeviceProviders
 
     IVector<IBusObject ^>^ AllJoynBusObject::ChildObjects::get()
     {
+        if (!m_active || !this->Introspect())
+        {
+            return nullptr;
+        }
         auto childObjects = ref new Vector<IBusObject ^>();
 
-        if (!this->Introspect())
-        {
-            return childObjects;
-        }
-
         size_t childCount = alljoyn_proxybusobject_getchildren(m_proxyBusObject, nullptr, 0);
+
+        AutoLock lock(&m_lock, true);
 
         if (childCount > 0)
         {
@@ -172,9 +191,20 @@ namespace DeviceProviders
             {
                 string path = alljoyn_proxybusobject_getpath(children[i]);
 
-                // Check if we have already created this bus object based on the About announcement
-                auto busObject = m_service->GetOrCreateBusObject(path);
-                childObjects->Append(busObject ? busObject : ref new AllJoynBusObject(m_service, path, children[i]));
+                // Check if we have already added this object to our map of children
+                auto busObject = this->GetChildIfCreated(path);
+                if (busObject == nullptr)
+                {
+                    // Also check if the service already created this object, but it's not yet in our children map.
+                    busObject = m_service->GetBusObjectIfCreated(path);
+                    if (busObject == nullptr)
+                    {
+                        busObject = ref new AllJoynBusObject(m_service, path, children[i]);
+                    }
+                    m_childObjects[path] = WeakReference(busObject);
+                }
+
+                childObjects->Append(busObject);
             }
         }
         return childObjects;
@@ -185,16 +215,16 @@ namespace DeviceProviders
         return AllJoynHelpers::MultibyteToPlatformString(m_path.c_str());
     }
 
-    IInterface^ AllJoynBusObject::GetInterface(Platform::String^ interfaceName)
+    IInterface^ AllJoynBusObject::GetInterface(String^ interfaceName)
     {
-        if (!this->Introspect())
+        if (!m_active || !this->Introspect())
         {
             return nullptr;
         }
 
         string name = AllJoynHelpers::PlatformToMultibyteStandardString(interfaceName);
 
-        AutoLock lock(&m_interfacesLock, true);
+        AutoLock lock(&m_lock, true);
 
         auto iter = m_interfaces.find(name);
         if (iter != m_interfaces.end() && iter->second.Resolve<IInterface>() != nullptr)
@@ -211,5 +241,49 @@ namespace DeviceProviders
         }
 
         return nullptr;
+    }
+
+    IBusObject^ AllJoynBusObject::GetChild(String^ fullPath)
+    {
+        if (!m_active || !this->Introspect())
+        {
+            return nullptr;
+        }
+
+        AutoLock lock(&m_lock, true);
+
+        auto path = AllJoynHelpers::PlatformToMultibyteStandardString(fullPath);
+        auto busObject = GetChildIfCreated(path);
+
+        if (busObject == nullptr)
+        {
+            if (path.length() > m_path.length() + 1)
+            {
+                auto proxyBusObject = alljoyn_proxybusobject_getchild(m_proxyBusObject, path.substr(m_path.length() + 1).data());
+                if (proxyBusObject != nullptr)
+                {
+                    busObject = ref new AllJoynBusObject(m_service, path, proxyBusObject);
+                    m_childObjects[path] = WeakReference(busObject);
+                }
+            }
+        }
+        return busObject;
+    }
+
+    AllJoynBusObject^ AllJoynBusObject::GetChildIfCreated(const std::string& fullPath)
+    {
+        AllJoynBusObject^ busObject = nullptr;
+
+        if (m_active)
+        {
+            AutoLock lock(&m_lock, true);
+
+            auto iter = m_childObjects.find(fullPath);
+            if (iter != m_childObjects.end())
+            {
+                busObject = iter->second.Resolve<AllJoynBusObject>();
+            }
+        }
+        return busObject;
     }
 }

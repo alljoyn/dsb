@@ -105,13 +105,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
-    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
-    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -235,11 +231,13 @@
     <None Include="HeadlessAdapterApp_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Assets\Logo.scale-100.png" />
-    <Image Include="Assets\SmallLogo.scale-100.png" />
-    <Image Include="Assets\StoreLogo.scale-100.png" />
-    <Image Include="Assets\SplashScreen.scale-100.png" />
-    <Image Include="Assets\WideLogo.scale-100.png" />
+    <Image Include="Assets\LockScreenLogo.scale-200.png" />
+    <Image Include="Assets\SplashScreen.scale-200.png" />
+    <Image Include="Assets\Square150x150Logo.scale-200.png" />
+    <Image Include="Assets\Square44x44Logo.scale-200.png" />
+    <Image Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Image Include="Assets\StoreLogo.png" />
+    <Image Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -259,9 +257,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Platform\BridgeRT\BridgeRT.vcxproj">
       <Project>{2783a617-8e1d-40d1-9684-dfaeb8dd5406}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Platform\Common\Common.vcxproj">
-      <Project>{4d445253-3bba-455d-b324-ece00d4fe480}</Project>
     </ProjectReference>
     <ProjectReference Include="..\AdapterLib\AdapterLib.vcxproj">
       <Project>{44998192-fc7d-4e85-b15a-33c2925834e5}</Project>

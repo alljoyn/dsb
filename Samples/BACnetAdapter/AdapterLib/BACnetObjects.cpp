@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -47,49 +47,65 @@ namespace AdapterLib
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
                     false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_OBJECT_IDENTIFIER,                     // ID
                     PropertyType::UInt32,                       // Signature
                     BACNET_APPLICATION_TAG_OBJECT_ID,           // BACnet signature
-                    false                                       // Read from device?
+                    false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 {
                     PROP_OBJECT_NAME,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_VENDOR_NAME,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_DESCRIPTION,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_MODEL_NAME,                            // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_FIRMWARE_REVISION,                     // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_OBJECT_LIST,                           // ID
                     PropertyType::UInt32Array,                  // Signature
                     BACNET_APPLICATION_TAG_OBJECT_ID,           // BACnet signature
-                    false                                       // Read from device?
+                    false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 // ...
@@ -118,43 +134,57 @@ namespace AdapterLib
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
                     false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_OBJECT_IDENTIFIER,                     // ID
                     PropertyType::UInt32,                       // Signature
                     BACNET_APPLICATION_TAG_OBJECT_ID,           // BACnet signature
-                    false                                       // Read from device?
+                    false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 {
                     PROP_OBJECT_NAME,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_DEVICE_TYPE,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_DESCRIPTION,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_PRESENT_VALUE,                         // ID
                     PropertyType::Double,                       // Signature
                     BACNET_APPLICATION_TAG_REAL,                // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Always                       // COV behavior
                 },
                 {
                     PROP_UNITS,                                 // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_ENUMERATED,          // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 // ...
@@ -162,14 +192,14 @@ namespace AdapterLib
                 {BACNET_ADAPTER_LAST_ATTRIBUTE}
 
             }, // Attributes
-            
+
             // Signals
             {
                 {
                     BACnetAdapterSignalTypeValueChanged,
                     { PROP_PRESENT_VALUE }
                 },
-                
+
                 {BACNET_ADAPTER_LAST_SIGNAL}
 
             } // Signals
@@ -186,37 +216,49 @@ namespace AdapterLib
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
                     false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_OBJECT_IDENTIFIER,                     // ID
                     PropertyType::UInt32,                       // Signature
                     BACNET_APPLICATION_TAG_OBJECT_ID,           // BACnet signature
-                    false                                       // Read from device?
+                    false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 {
                     PROP_OBJECT_NAME,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_DESCRIPTION,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_PRESENT_VALUE,                         // ID
                     PropertyType::Double,                       // Signature
                     BACNET_APPLICATION_TAG_REAL,                // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Always                       // COV behavior
                 },
                 {
                     PROP_UNITS,                                 // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_ENUMERATED,          // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 // ...
@@ -248,37 +290,49 @@ namespace AdapterLib
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
                     false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_OBJECT_IDENTIFIER,                     // ID
                     PropertyType::UInt32,                       // Signature
                     BACNET_APPLICATION_TAG_OBJECT_ID,           // BACnet signature
-                    false                                       // Read from device?
+                    false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 {
                     PROP_OBJECT_NAME,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_DESCRIPTION,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_PRESENT_VALUE,                         // ID
                     PropertyType::Boolean,                      // Signature
                     BACNET_APPLICATION_TAG_ENUMERATED,          // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Always                       // COV behavior
                 },
                 {
                     PROP_POLARITY,                              // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_ENUMERATED,          // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 // ...
@@ -286,7 +340,7 @@ namespace AdapterLib
                 {BACNET_ADAPTER_LAST_ATTRIBUTE}
 
             }, // Attributes
-            
+
             // Signals
             {
                 {
@@ -310,43 +364,55 @@ namespace AdapterLib
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
                     false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_OBJECT_IDENTIFIER,                     // ID
                     PropertyType::UInt32,                       // Signature
                     BACNET_APPLICATION_TAG_OBJECT_ID,           // BACnet signature
-                    false                                       // Read from device?
+                    false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 {
                     PROP_OBJECT_NAME,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_DESCRIPTION,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_PRESENT_VALUE,                         // ID
                     PropertyType::Boolean,                      // Signature
                     BACNET_APPLICATION_TAG_ENUMERATED,          // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Always                       // COV behavior
                 },
                 {
                     PROP_POLARITY,                              // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_ENUMERATED,          // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 {BACNET_ADAPTER_LAST_ATTRIBUTE}
 
             }, // Attributes
-            
+
             // Signals
             {
                 {
@@ -370,43 +436,57 @@ namespace AdapterLib
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
                     false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_OBJECT_IDENTIFIER,                     // ID
                     PropertyType::UInt32,                       // Signature
                     BACNET_APPLICATION_TAG_OBJECT_ID,           // BACnet signature
-                    false                                       // Read from device?
+                    false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 {
                     PROP_OBJECT_NAME,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_DEVICE_TYPE,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_DESCRIPTION,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_PRESENT_VALUE,                         // ID
                     PropertyType::Double,                       // Signature
                     BACNET_APPLICATION_TAG_REAL,                // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Always                       // COV behavior
                 },
                 {
                     PROP_UNITS,                                 // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_ENUMERATED,          // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 // ...
@@ -438,31 +518,41 @@ namespace AdapterLib
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
                     false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_OBJECT_IDENTIFIER,                     // ID
                     PropertyType::UInt32,                       // Signature
                     BACNET_APPLICATION_TAG_OBJECT_ID,           // BACnet signature
-                    false                                       // Read from device?
+                    false,                                      // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
 
                 {
                     PROP_OBJECT_NAME,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READ,                 // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_DESCRIPTION,                           // ID
                     PropertyType::String,                       // Signature
                     BACNET_APPLICATION_TAG_CHARACTER_STRING,    // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Never                       // COV behavior
                 },
                 {
                     PROP_PRESENT_VALUE,                         // ID
                     PropertyType::Boolean,                      // Signature
                     BACNET_APPLICATION_TAG_ENUMERATED,          // BACnet signature
-                    true                                        // Read from device?
+                    true,                                       // Read from device?
+                    E_ACCESS_TYPE::ACCESS_READWRITE,            // Access
+                    SignalBehavior::Always                       // COV behavior
                 },
 
                 { BACNET_ADAPTER_LAST_ATTRIBUTE }
@@ -561,7 +651,7 @@ namespace AdapterLib
     {
         // Object type
 		UINT32              ObjectType;
-    
+
         // Object strings
         Platform::String^   ObjectString;
     };
@@ -573,7 +663,7 @@ namespace AdapterLib
 
     //
     // BACNET_PROPERTY_ID
-    // 
+    //
     static BACnetTypeMapEntry bacnetPropIdToStringMap[] =
     {
         { PROP_OBJECT_TYPE , L"Object_Type" },
@@ -602,7 +692,7 @@ namespace AdapterLib
 
     //
     // BACNET_OBJECT_TYPE
-    // 
+    //
     static BACnetTypeMapEntry bacnetObjecTypeToStringMap[] =
     {
         { OBJECT_DEVICE , L"DEVICE" },
@@ -670,13 +760,13 @@ namespace AdapterLib
     {
         { BACnetAdapterSignalTypeDeviceArrival, BridgeRT::Constants::DEVICE_ARRIVAL_SIGNAL },
         { BACnetAdapterSignalTypeValueChanged, BridgeRT::Constants::CHANGE_OF_VALUE_SIGNAL },
-    }; 
+    };
 
-    
+
     const wchar_t*
     bacnetObjectToString(
-        _In_ UINT32 BACnetObjectType, 
-        _In_reads_(MapArrayCount) BACnetTypeMapEntry MapArray[], 
+        _In_ UINT32 BACnetObjectType,
+        _In_reads_(MapArrayCount) BACnetTypeMapEntry MapArray[],
         _In_ size_t MapArrayCount
         )
     {
@@ -747,7 +837,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    DWORD 
+    DWORD
     FromString(const wchar_t* BACnetObjectTypeWsz, BACNET_OBJECT_TYPE* BACnetObjectTypePtr)
     {
         DSB_ASSERT(BACnetObjectTypePtr != nullptr);
@@ -765,7 +855,7 @@ namespace AdapterLib
 
 
     _Use_decl_annotations_
-    DWORD 
+    DWORD
     FromString(const wchar_t* BACnetObjectPropertyWsz, BACNET_PROPERTY_ID* BACnetObjectPropertyIdPtr)
     {
         DSB_ASSERT(BACnetObjectPropertyIdPtr != nullptr);
@@ -828,7 +918,7 @@ namespace AdapterLib
         case ERROR_CODE_DEVICE_BUSY:
             status = ERROR_BUSY;
             break;
-        
+
         case ERROR_CODE_CONFIGURATION_IN_PROGRESS:
             status = ERROR_OPERATION_IN_PROGRESS;
             break;
@@ -842,13 +932,13 @@ namespace AdapterLib
             __fallthrough;
         case ERROR_CODE_INVALID_TAG:
             __fallthrough;
-        case ERROR_CODE_PARAMETER_OUT_OF_RANGE: 
+        case ERROR_CODE_PARAMETER_OUT_OF_RANGE:
             __fallthrough;
         case ERROR_CODE_VALUE_OUT_OF_RANGE:
             status = ERROR_INVALID_DATA;
             break;
 
-        case ERROR_CODE_ACCESS_DENIED:			
+        case ERROR_CODE_ACCESS_DENIED:
             __fallthrough;
         case ERROR_CODE_WRITE_ACCESS_DENIED:
             status = ERROR_ACCESS_DENIED;

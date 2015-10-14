@@ -11,10 +11,9 @@
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationType>Windows Store</ApplicationType>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
-    <AppxOSMinVersionReplaceManifestVersion>false</AppxOSMinVersionReplaceManifestVersion>
-    <LogSDKReferenceResolutionErrorsAsWarnings>true</LogSDKReferenceResolutionErrorsAsWarnings>
     <UseAppLocalVCLibs>true</UseAppLocalVCLibs>
     <GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
+    <AppxPackage>true</AppxPackage>
     <AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
     <UapDefaultAssetScale>100</UapDefaultAssetScale>
   </PropertyGroup>
@@ -107,12 +106,8 @@
     <PackageCertificateKeyFile>HeadedAdapterApp_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
-    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
-    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
@@ -197,11 +192,13 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Assets\Logo.scale-100.png" />
-    <Image Include="Assets\SmallLogo.scale-100.png" />
-    <Image Include="Assets\StoreLogo.scale-100.png" />
-    <Image Include="Assets\SplashScreen.scale-100.png" />
-    <Image Include="Assets\WideLogo.scale-100.png" />
+    <Image Include="Assets\LockScreenLogo.scale-200.png" />
+    <Image Include="Assets\SplashScreen.scale-200.png" />
+    <Image Include="Assets\Square150x150Logo.scale-200.png" />
+    <Image Include="Assets\Square44x44Logo.scale-200.png" />
+    <Image Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Image Include="Assets\StoreLogo.png" />
+    <Image Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Platform\Common\DsbBridgeViewModel.cpp" />
@@ -223,9 +220,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Platform\BridgeRT\BridgeRT.vcxproj">
       <Project>{2783a617-8e1d-40d1-9684-dfaeb8dd5406}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Platform\Common\Common.vcxproj">
-      <Project>{4d445253-3bba-455d-b324-ece00d4fe480}</Project>
     </ProjectReference>
     <ProjectReference Include="..\AdapterLib\AdapterLib.vcxproj">
       <Project>{1765be3c-3ed6-453d-983d-0db452f5cde4}</Project>

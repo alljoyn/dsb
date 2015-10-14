@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -23,20 +23,23 @@
 #define PROPERTY_POWER   L"Meter.Power"
 #define ATTRIBUTE_VALUE  L"value"
 #define ATTRIBUTE_UNITS  L"units"
+#define ATTRIBUTE_LABEL  L"label"
+#define ATTRIBUTE_GENRE  L"genre"
+#define ATTRIBUTE_GENRE_TYPE_USER  L"user"
 
 namespace AdapterLib
 {
     //*********************************************************************************************************************
     //
-    // This class provides an example of a Basic Switch Control Panel Handler.  For a device with a single binary switch, a 
+    // This class provides an example of a Basic Switch Control Panel Handler.  For a device with a single binary switch, a
     // single device with a single switch will be displayed on an AllJoyn Control Panel Controller.  For a smart switch device
-    // with a single binary switch and a Power property, the Switch Control and Power will be displayed on an AllJoyn Control 
+    // with a single binary switch and a Power property, the Switch Control and Power will be displayed on an AllJoyn Control
     // Panel Controller.
     //
     // Other devices that have a single switch can also use this control panel handler as well.  For example a fan or
     // dimmer switch could use this, but the functionality will be limited to on-off.  To gain additional functionality
     // or controls, derive a new control panel handler from IControlPanelHandlerSimple and add a similar class in the
-    // AllJoyn Bridge.  See ControlPanel.h in the Alljoyn Bridge.  
+    // AllJoyn Bridge.  See ControlPanel.h in the Alljoyn Bridge.
     //
     //*********************************************************************************************************************
     ref class SimpleSwitchControlPanelHandler sealed :
@@ -84,7 +87,7 @@ namespace AdapterLib
             };
         }
 
-        // This Control Panel does not support the RunButton 
+        // This Control Panel does not support the RunButton
         virtual property Platform::String^ RunEntryBoxLabel
         {
             Platform::String^ get() { return nullptr; };
@@ -93,7 +96,7 @@ namespace AdapterLib
         // Run Handler
         virtual void Run(Platform::String ^);
 
-        // Return the Change of Value Signal 
+        // Return the Change of Value Signal
         virtual property BridgeRT::IAdapterSignal^ ChangeOfValueSignal
         {
             BridgeRT::IAdapterSignal^ get() { return m_covSignal; };

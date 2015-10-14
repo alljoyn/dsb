@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -24,7 +24,7 @@ using namespace BridgeRT;
 //**************************************************************************************************************************************
 //
 //  Constructor
-// 
+//
 //  pControlPanel           The control panel hosting this widget
 //
 //**************************************************************************************************************************************
@@ -157,9 +157,9 @@ const char* Widget::GetObjectPath()
 //      -   Creates the default Widget Interface and Properties
 //      -   Register Property Callback Handlers
 //      -   Adds custom interfaces and Properties of derived classes
-//      -   Announces the Interface and 
+//      -   Announces the Interface and
 //      -   Adds custom interface handlers for derived classes.
-// 
+//
 //  parentWidget        The widget that contains this widget (or null if the root container only)
 //  widgetName          The name of this widget.  This value is used on the alljoyn bus to identify the widget
 //  labelText           The static label of this widget.  This value is displayed by a control panel
@@ -227,20 +227,13 @@ QStatus Widget::Initialize(Widget* pParentWidget, const char* widgetName, const 
 
     // Add additional properties, methods or annotations belonging to derived classes
     status = AddCustomInterfaces(m_busInterface);
-    if ((status != ER_BUS_PROPERTY_ALREADY_EXISTS) && (status != ER_OK))
+    if ((status != ER_BUS_PROPERTY_ALREADY_EXISTS) && (status != ER_BUS_MEMBER_ALREADY_EXISTS) && (status != ER_OK))
     {
         goto leave;
     }
 
     // Add metadata changed signal
     status = alljoyn_interfacedescription_addsignal(m_busInterface, SIGNAL_METACHANGED_STR, ARG_NONE_STR, ARG_NONE_STR, 0, nullptr);
-    if ((status != ER_BUS_MEMBER_ALREADY_EXISTS) && (status != ER_OK))
-    {
-        goto leave;
-    }
-
-    // Add value changed signal
-    status = alljoyn_interfacedescription_addsignal(m_busInterface, SIGNAL_VALUCHANGED_STR, ARG_VARIANT_STR, nullptr, 0, nullptr);
     if ((status != ER_BUS_MEMBER_ALREADY_EXISTS) && (status != ER_OK))
     {
         goto leave;
@@ -256,7 +249,7 @@ QStatus Widget::Initialize(Widget* pParentWidget, const char* widgetName, const 
 
     // Add additional properties belonging to derived class
     status = AddCustomInterfaceHandlers(m_busObject, m_busInterface);
-    if ((status != ER_BUS_PROPERTY_ALREADY_EXISTS) && (status != ER_OK))
+    if ((status != ER_BUS_PROPERTY_ALREADY_EXISTS) && (status != ER_BUS_MEMBER_ALREADY_EXISTS) && (status != ER_OK))
     {
         goto leave;
     }
@@ -320,23 +313,30 @@ void Widget::Destroy()
 
 //**************************************************************************************************************************************
 //
-//  Gets the new value of value managed by this widget and raises the value changed Signal for this widget. 
+//  Gets the new value of value managed by this widget and raises the value changed Signal for this widget.
 //
 //**************************************************************************************************************************************
 void Widget::RaiseValueChangedSignal()
 {
     QStatus status = ER_OK;
     alljoyn_interfacedescription_member signalDescription = { 0 };
+    alljoyn_msgarg variantarg = nullptr;
 
     // send signal on AllJoyn
     QCC_BOOL signalFound = alljoyn_interfacedescription_getsignal(m_busInterface, SIGNAL_VALUCHANGED_STR, &signalDescription);
     if (QCC_TRUE == signalFound)
     {
-        alljoyn_msgarg variantarg = alljoyn_msgarg_create();
+        variantarg = alljoyn_msgarg_create();
         CHK_AJSTATUS(GetValue(variantarg));
-        CHK_AJSTATUS(alljoyn_busobject_signal(m_busObject, nullptr, ALLJOYN_SESSION_ID_ALL_HOSTED, signalDescription, variantarg, 1, 0, 0, NULL));
+        CHK_AJSTATUS(alljoyn_busobject_signal(m_busObject, nullptr, ALLJOYN_SESSION_ID_ALL_HOSTED, signalDescription, variantarg, 1, 0, 0, NULL));       
     }
 
 leave:
+    if (variantarg != nullptr)
+    {
+        alljoyn_msgarg_destroy(variantarg);
+        variantarg = nullptr;
+    }
+
     return;
 }

@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -124,7 +124,7 @@ AdapterConfig::SetConfig(String^ XmlString)
         XmlDocument^ xmlDoc = ref new XmlDocument();
         xmlDoc->LoadXml(XmlString);
 
-        // Load and validate the parameters 
+        // Load and validate the parameters
         hr = this->fromXml(xmlDoc);
         if (FAILED(hr))
         {
@@ -184,7 +184,7 @@ AdapterConfig::fromFile()
     task<StorageFile^> getConfigFileTask;
     StorageFolder^ appFolder = ApplicationData::Current->LocalFolder;
 
-    // First load the XML document from file 
+    // First load the XML document from file
     try
     {
         xmlDoc = ref new XmlDocument();
@@ -308,7 +308,7 @@ AdapterConfig::fromXml(XmlDocument^ XmlDoc)
             XmlNamedNodeMap^ stackAttributes = stackParamsElement->Attributes;
             IXmlNode^ stackAttr;
 
-            // IP address 
+            // IP address
             stackAttr = stackAttributes->GetNamedItem(BACNET_STACK_XML_BBMD_IP_ADDR);
             if (stackAttr == nullptr)
             {
@@ -316,7 +316,7 @@ AdapterConfig::fromXml(XmlDocument^ XmlDoc)
             }
             tempConfig.BbmdIpAddress = stackAttr->NodeValue->ToString();
 
-            // IP port 
+            // IP port
             stackAttr = stackAttributes->GetNamedItem(BACNET_STACK_XML_BBMD_IP_PORT);
             if (stackAttr == nullptr)
             {
@@ -352,7 +352,7 @@ AdapterConfig::fromXml(XmlDocument^ XmlDoc)
                 tempConfig.RequestPriority = UINT8(requestPriority);
             }
 
-            // Min device instance 
+            // Min device instance
             stackAttr = stackAttributes->GetNamedItem(BACNET_STACK_XML_DEV_INSTANCE_MIN);
             if (stackAttr == nullptr)
             {
@@ -360,7 +360,7 @@ AdapterConfig::fromXml(XmlDocument^ XmlDoc)
             }
             tempConfig.DeviceInstanceMin = stoul(stackAttr->NodeValue->ToString()->Data());
 
-            // Max device instance 
+            // Max device instance
             stackAttr = stackAttributes->GetNamedItem(BACNET_STACK_XML_DEV_INSTANCE_MAX);
             if (stackAttr == nullptr)
             {
@@ -397,7 +397,7 @@ AdapterConfig::fromXml(XmlDocument^ XmlDoc)
                 {
                     tempConfig.AllowedDeviceList.push_back(ToLower(allowedDev->InnerText->Data()));
                 }
-                    
+
                 // Next filter...
                 allowedDev = dynamic_cast<XmlElement^>(allowedDev->NextSibling);
 
@@ -417,7 +417,7 @@ AdapterConfig::fromXml(XmlDocument^ XmlDoc)
 }
 
 _Use_decl_annotations_
-HRESULT 
+HRESULT
 AdapterConfig::toXml(XmlDocument^& XmlDoc)
 {
     try

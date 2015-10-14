@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -33,7 +33,7 @@ AllJoynHelper::AllJoynHelper()
 
 void AllJoynHelper::BuildBusObjectName(_In_ Platform::String ^inString, _Inout_ std::string &builtName)
 {
-    // only use a-z A-Z 0-9 char 
+    // only use a-z A-Z 0-9 char
     // translate ' ' into '_'
     for (size_t index = 0; index < inString->Length(); index++)
     {
@@ -55,19 +55,34 @@ void AllJoynHelper::BuildBusObjectName(_In_ Platform::String ^inString, _Inout_ 
 
 void AllJoynHelper::BuildPropertyOrMethodOrSignalName(_In_ Platform::String ^inString, _Inout_ std::string &builtName)
 {
-    // only use a-z A-Z 0-9 and _ char 
-    // translate ' ' into '_'
+    // 1st char must be upper case => default to true
+    bool upperCaseNextChar = true;
+    bool is1stChar = true;
+
+    // only use a-z A-Z 0-9
+    // upper case 1st letter of each word (non alpha num char are considered as word separator)
+    // 1st char must be a letter
     for (size_t index = 0; index < inString->Length(); index++)
     {
         wchar_t origChar = inString->Data()[index];
-        if (::isalnum(origChar) ||
-            '_' == char(origChar))
+        if ((::isalnum(origChar) && !is1stChar) ||
+            (::isalpha(origChar) && is1stChar))
         {
-            builtName += char(origChar);
+            if (upperCaseNextChar && ::isalpha(origChar) && ::islower(origChar))
+            {
+                builtName += char(::toupper(origChar));
+            }
+            else
+            {
+                builtName += char(origChar);
+            }
+            upperCaseNextChar = false;
+            is1stChar = false;
         }
-        else if (::isspace(origChar))
+        else
         {
-            builtName += '_';
+            // new word coming => upper case its 1st letter
+            upperCaseNextChar = true;
         }
     }
 }
@@ -217,7 +232,7 @@ QStatus AllJoynHelper::SetMsgArg(_In_ IAdapterValue ^adapterValue, _Inout_ alljo
         }
         else
         {
-            // set empty string 
+            // set empty string
             status = alljoyn_msgarg_set(msgArg, "s", "");
         }
         break;
@@ -231,7 +246,7 @@ QStatus AllJoynHelper::SetMsgArg(_In_ IAdapterValue ^adapterValue, _Inout_ alljo
             size_t i = 0;
             char** tempBuffer = new (nothrow) char*[strArray->Length];
             for (auto str : strArray)
-            {                
+            {
                 tempBuffer[i] = new char[str->Length() + 1] { 0 };
                 strcpy_s(tempBuffer[i], str->Length() + 1, ConvertTo<string>(str).c_str());
                 ++i;
@@ -248,8 +263,41 @@ QStatus AllJoynHelper::SetMsgArg(_In_ IAdapterValue ^adapterValue, _Inout_ alljo
         }
         else
         {
-            // set empty string 
+            // set empty string
             status = alljoyn_msgarg_set(msgArg, "as", 1, "");
+        }
+        break;
+    }
+    case PropertyType::UInt32Array:
+    {
+        Platform::Array<uint32>^ unsignedIntArray;
+        propertyValue->GetUInt32Array(&unsignedIntArray);
+        uint32* tempBuffer = nullptr;
+
+        if (unsignedIntArray && unsignedIntArray->Length > 0)
+        {
+            size_t i = 0;
+            tempBuffer = new (nothrow) uint32[unsignedIntArray->Length];
+
+            for (auto uIntValue : unsignedIntArray)
+            {
+                tempBuffer[i] = uIntValue;
+                ++i;
+            }
+
+            status = alljoyn_msgarg_set_and_stabilize(msgArg, "au", unsignedIntArray->Length, tempBuffer);
+
+            // delete temporary buffer
+            delete [] tempBuffer;
+        }
+        else
+        {
+            tempBuffer = new (nothrow) uint32[1];
+            tempBuffer[0] = 0;
+            status = alljoyn_msgarg_set_and_stabilize(msgArg, "au", 1, tempBuffer);
+
+            // delete temporary buffer
+            delete [] tempBuffer;
         }
         break;
     }
@@ -407,7 +455,7 @@ QStatus AllJoynHelper::GetAdapterValue(_Inout_ IAdapterValue ^adapterValue, _In_
         if (ER_OK == status)
         {
             Platform::Array<String^>^ stringArray = ref new Platform::Array<String^>(numVals);
-            
+
             for (size_t i = 0; i < numVals; ++i)
             {
                 char *tempBuffer = nullptr;
@@ -416,9 +464,33 @@ QStatus AllJoynHelper::GetAdapterValue(_Inout_ IAdapterValue ^adapterValue, _In_
                 {
                     stringArray[i] = ref new String(ConvertTo<wstring>(string(tempBuffer)).c_str());
                 }
-                
+
             }
             adapterValue->Data = PropertyValue::CreateStringArray(stringArray);
+        }
+        break;
+    }
+
+    case PropertyType::UInt32Array:
+    {
+        alljoyn_msgarg entries;
+        size_t numVals = 0;
+
+        status = alljoyn_msgarg_get(msgArg, "au", &numVals, &entries);
+        if (ER_OK == status)
+        {
+            Platform::Array<uint32>^ unsignedIntArray = ref new Platform::Array<uint32>(numVals);
+
+            uint32 tempUintBuffer;
+            for (size_t i = 0; i < numVals; i++)
+            {
+                status = alljoyn_msgarg_get(alljoyn_msgarg_array_element(entries, i), "u", &tempUintBuffer);
+                if (ER_OK == status)
+                {
+                    unsignedIntArray[i] = tempUintBuffer;
+                }
+            }
+            adapterValue->Data = PropertyValue::CreateUInt32Array(unsignedIntArray);
         }
         break;
     }
@@ -445,7 +517,7 @@ QStatus BridgeRT::AllJoynHelper::GetAdapterObject(IAdapterValue ^adapterValue, a
         goto leave;
     }
 
-    // IAdapterProperty is the only 
+    // IAdapterProperty is the only
     // translate bus object path into IAdapterProperty
     status = alljoyn_msgarg_get(msgArg, "s", &tempChar);
     if (ER_OK != status)
@@ -557,7 +629,11 @@ QStatus AllJoynHelper::GetSignature(_In_ PropertyType propertyType, _Out_ std::s
     case PropertyType::StringArray:
         signature = "as";
         break;
-        
+
+    case PropertyType::UInt32Array:
+        signature = "au";
+        break;
+
     default:
         status = ER_NOT_IMPLEMENTED;
         break;

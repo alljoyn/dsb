@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -64,7 +64,7 @@ namespace DeviceProviders
             case 's': case 't': case 'u': case 'v': case 'x': case 'y':
             {
                 if (signature.length() == 2)
-                {                    
+                {
                     uint16 temp = signature[1] << 8;
                     m_type = (TypeId)(temp | 'a');
                 }
@@ -94,13 +94,13 @@ namespace DeviceProviders
                     m_type = TypeId::StructArray;
                 }
                 break;
-            }                
-            default:
-                break;            
             }
-            
+            default:
+                break;
+            }
+
             break;
-        }        
+        }
         case '(': // we are a struct
         {
             PopulateFields(signature);
@@ -135,7 +135,7 @@ namespace DeviceProviders
         auto typeDefinitions = ref new Vector<ITypeDefinition ^>();
         vector<string> completeTypeSignatureVector;
         TypeConversionHelpers::CreateCompleteTypeSignatureArrayFromSignature(signature.c_str(), completeTypeSignatureVector);
-        
+
         for (auto& completeTypeSignature : completeTypeSignatureVector)
         {
             auto typeDef = ref new AllJoynTypeDefinition(completeTypeSignature);
@@ -179,7 +179,7 @@ namespace DeviceProviders
         {
             signature += 'a';
             auto arrayType = static_cast<TypeId>(static_cast<uint32>(typeDefinition->Type) >> 8);
-            
+
             if (arrayType == TypeId::Struct)
             {
                 signature += '(';

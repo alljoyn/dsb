@@ -87,34 +87,28 @@ namespace AdapterLib
         m_attributes.clear();
 
         //instance
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"instance", (int32)(m_valueId.GetInstance())));
+        m_attributes.push_back(ref new ZWaveAdapterAttribute(L"instance", (int32)(m_valueId.GetInstance())));
 
         //index
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"index", (int32)(m_valueId.GetIndex())));
+        m_attributes.push_back(ref new ZWaveAdapterAttribute(L"index", (int32)(m_valueId.GetIndex())));
 
         //genre
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"genre", string(Value::GetGenreNameFromEnum(m_valueId.GetGenre()))));
+        m_attributes.push_back(ref new ZWaveAdapterAttribute(L"genre", string(Value::GetGenreNameFromEnum(m_valueId.GetGenre()))));
         
         //label
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"label", Manager::Get()->GetValueLabel(m_valueId)));
+        m_attributes.push_back(ref new ZWaveAdapterAttribute(L"label", Manager::Get()->GetValueLabel(m_valueId)));
 
         //units
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"units", Manager::Get()->GetValueUnits(m_valueId)));
+        m_attributes.push_back(ref new ZWaveAdapterAttribute(L"units", Manager::Get()->GetValueUnits(m_valueId)));
 
         //help
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"help", Manager::Get()->GetValueHelp(m_valueId)));
+        m_attributes.push_back(ref new ZWaveAdapterAttribute(L"help", Manager::Get()->GetValueHelp(m_valueId)));
 
         //min
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"min", Manager::Get()->GetValueMin(m_valueId)));
+        m_attributes.push_back(ref new ZWaveAdapterAttribute(L"min", Manager::Get()->GetValueMin(m_valueId)));
 
         //max
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"max", Manager::Get()->GetValueMax(m_valueId)));
-
-        //readonly
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"read_only", Manager::Get()->IsValueReadOnly(m_valueId)));
-
-        //writeonly
-        m_attributes.push_back(ref new ZWaveAdapterValue(L"write_only", Manager::Get()->IsValueWriteOnly(m_valueId)));
+        m_attributes.push_back(ref new ZWaveAdapterAttribute(L"max", Manager::Get()->GetValueMax(m_valueId)));
 
         //values
         ValueID::ValueType type = m_valueId.GetType();
@@ -124,7 +118,7 @@ namespace AdapterLib
             vector<string> items;
             Manager::Get()->GetValueListItems(m_valueId, &items);
 
-            m_attributes.push_back(ref new ZWaveAdapterValue(L"valid_values", items));
+            m_attributes.push_back(ref new ZWaveAdapterAttribute(L"valid_values", items));
         }
 
         UpdateValue();
@@ -135,16 +129,32 @@ namespace AdapterLib
         ValueID::ValueType type = m_valueId.GetType();
 
         //look for the value in AdapterValue
-        auto iter = find_if(m_attributes.begin(), m_attributes.end(), [&](IAdapterValue^ adapterValue)
+        auto iter = find_if(m_attributes.begin(), m_attributes.end(), [&](IAdapterAttribute^ adapterAttr)
         {
-            return dynamic_cast<ZWaveAdapterValue^>(adapterValue)->m_name->Data() == ValueName;
+            return adapterAttr->Value->Name->Data() == ValueName;
         });
 
         if (iter == m_attributes.end())
         {
             //add the AdapterValue
-            m_attributes.push_back(ref new ZWaveAdapterValue(ref new String(ValueName.c_str()), nullptr));
+            m_attributes.push_back(ref new ZWaveAdapterAttribute(ref new String(ValueName.c_str()), nullptr));
             iter = prev(m_attributes.end());
+
+            //add the access
+            E_ACCESS_TYPE access = E_ACCESS_TYPE::ACCESS_READWRITE;
+            if (Manager::Get()->IsValueReadOnly(m_valueId))
+            {
+                access = E_ACCESS_TYPE::ACCESS_READ;
+            }
+            else if(Manager::Get()->IsValueWriteOnly(m_valueId))
+            {
+                access = E_ACCESS_TYPE::ACCESS_WRITE;
+            }
+
+            dynamic_cast<ZWaveAdapterAttribute^>(*iter)->Access = access;
+
+            //add COV signal behavior
+            dynamic_cast<ZWaveAdapterAttribute^>(*iter)->COVBehavior = SignalBehavior::Always;
         }
 
         switch (type)
@@ -153,14 +163,14 @@ namespace AdapterLib
         {
             bool bVal;
             Manager::Get()->GetValueAsBool(m_valueId, &bVal);
-            (*iter)->Data = PropertyValue::CreateBoolean(bVal);
+            (*iter)->Value->Data = PropertyValue::CreateBoolean(bVal);
         }
         break;
         case ValueID::ValueType_Byte:
         {
             uint8 byteVal;
             Manager::Get()->GetValueAsByte(m_valueId, &byteVal);
-            (*iter)->Data = PropertyValue::CreateUInt8(byteVal);
+            (*iter)->Value->Data = PropertyValue::CreateUInt8(byteVal);
         }
         break;
         case ValueID::ValueType_Decimal:
@@ -172,7 +182,7 @@ namespace AdapterLib
             Manager::Get()->GetValueAsFloat(m_valueId, &val);
             Manager::Get()->GetValueFloatPrecision(m_valueId, &precision);
 
-            (*iter)->Data = PropertyValue::CreateDouble(val);
+            (*iter)->Value->Data = PropertyValue::CreateDouble(val);
         }
         break;
         case ValueID::ValueType_Int:
@@ -180,7 +190,7 @@ namespace AdapterLib
             int32 val;
             Manager::Get()->GetValueAsInt(m_valueId, &val);
 
-            (*iter)->Data = PropertyValue::CreateInt32(val);
+            (*iter)->Value->Data = PropertyValue::CreateInt32(val);
         }
         break;
         case ValueID::ValueType_Short:
@@ -188,7 +198,7 @@ namespace AdapterLib
             int16 val;
             Manager::Get()->GetValueAsShort(m_valueId, &val);
 
-            (*iter)->Data = PropertyValue::CreateInt16(val);
+            (*iter)->Value->Data = PropertyValue::CreateInt16(val);
         }
         break;
         case ValueID::ValueType_String:
@@ -196,7 +206,7 @@ namespace AdapterLib
             string strValue;
             Manager::Get()->GetValueAsString(m_valueId, &strValue);
 
-            (*iter)->Data = PropertyValue::CreateString(ref new String(ConvertTo<wstring>(strValue).c_str()));
+            (*iter)->Value->Data = PropertyValue::CreateString(ref new String(ConvertTo<wstring>(strValue).c_str()));
         }
         break;
         case ValueID::ValueType_Raw:
@@ -206,7 +216,7 @@ namespace AdapterLib
             Manager::Get()->GetValueAsRaw(m_valueId, &pVal, &len);
 
             Platform::Array<uint8_t>^ octetArray = ref new Platform::Array<uint8_t>(pVal, len);
-            (*iter)->Data = PropertyValue::CreateUInt8Array(octetArray);
+            (*iter)->Value->Data = PropertyValue::CreateUInt8Array(octetArray);
 
             delete[] pVal;
         }
@@ -216,7 +226,7 @@ namespace AdapterLib
             string strValue;
             Manager::Get()->GetValueListSelection(m_valueId, &strValue);
 
-            (*iter)->Data = PropertyValue::CreateString(ref new String(ConvertTo<wstring>(strValue).c_str()));
+            (*iter)->Value->Data = PropertyValue::CreateString(ref new String(ConvertTo<wstring>(strValue).c_str()));
         }
         break;
         default:
@@ -270,9 +280,9 @@ namespace AdapterLib
     {
         for (auto attr : this->m_attributes)
         {
-            if (attr->Name == name)
+            if (attr->Value->Name == name)
             {
-                return dynamic_cast<ZWaveAdapterValue^>(attr);
+                return dynamic_cast<ZWaveAdapterValue^>(attr->Value);
             }
         }
 
@@ -300,5 +310,49 @@ namespace AdapterLib
             }
         }
         return encodedString;
+    }
+
+    ZWaveAdapterAttribute::ZWaveAdapterAttribute(String^ name, Object^ data)
+        : m_value(ref new ZWaveAdapterValue(name, data))
+    {
+    }
+
+    ZWaveAdapterAttribute::ZWaveAdapterAttribute(String^ name, const wstring& data)
+    {
+        m_value = ref new ZWaveAdapterValue(name, PropertyValue::CreateString(ref new String(data.c_str())));
+    }
+
+    ZWaveAdapterAttribute::ZWaveAdapterAttribute(String^ name, const string& data)
+    {
+        m_value = ref new ZWaveAdapterValue(name, PropertyValue::CreateString(ref new String(ConvertTo<wstring>(data).c_str())));
+    }
+
+    ZWaveAdapterAttribute::ZWaveAdapterAttribute(String^ name, int32 data)
+    {
+        m_value = ref new ZWaveAdapterValue(name, PropertyValue::CreateInt32(data));
+    }
+
+    ZWaveAdapterAttribute::ZWaveAdapterAttribute(String^ name, bool data)
+    {
+        m_value = ref new ZWaveAdapterValue(name, PropertyValue::CreateBoolean(data));
+    }
+
+    ZWaveAdapterAttribute::ZWaveAdapterAttribute(String^ name, const vector<string>& data)
+    {
+        Platform::Array<String^>^ stringArray = ref new Platform::Array<String^>(static_cast<unsigned int>(data.size()));
+        for (unsigned int i = 0; i < static_cast<unsigned int>(data.size()); ++i)
+        {
+            stringArray[i] = ref new String(ConvertTo<wstring>(data[i]).c_str());
+        }
+        m_value = ref new ZWaveAdapterValue(name, PropertyValue::CreateStringArray(stringArray));
+    }
+
+    ZWaveAdapterAttribute::ZWaveAdapterAttribute(const ZWaveAdapterAttribute^ other)
+        : m_value(other->m_value)
+        , m_annotations(other->m_annotations)
+        , m_covBehavior(other->m_covBehavior)
+        , m_access(other->m_access)
+    {
+
     }
 }

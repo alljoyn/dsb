@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -157,13 +157,13 @@ QStatus BridgeRT::DeviceProperty::PairAjProperties()
 {
     QStatus status = ER_OK;
 
-    vector <IAdapterValue ^> tempList;
+    vector <IAdapterAttribute ^> tempList;
 
-    // create temporary list of IAdapterValue that have to match with one of the 
+    // create temporary list of IAdapterValue that have to match with one of the
     // AllJoyn properties
-    for (auto adapterValue : m_deviceProperty->Attributes)
+    for (auto adapterAttr : m_deviceProperty->Attributes)
     {
-        tempList.push_back(adapterValue);
+        tempList.push_back(adapterAttr);
     }
 
     // go through AllJoyn properties and find matching IAdapterValue
@@ -171,12 +171,12 @@ QStatus BridgeRT::DeviceProperty::PairAjProperties()
     {
         bool paired = false;
 
-        auto adapterValue = tempList.end();
-        for (adapterValue = tempList.begin(); adapterValue != tempList.end(); adapterValue++)
+        auto adapterAttr = tempList.end();
+        for (adapterAttr = tempList.begin(); adapterAttr != tempList.end(); adapterAttr++)
         {
-            if (ajProperty->IsSameType(*adapterValue))
+            if (ajProperty->IsSameType(*adapterAttr))
             {
-                AJpropertyAdapterValuePair tempPair = { ajProperty, *adapterValue};
+                AJpropertyAdapterValuePair tempPair = { ajProperty, *adapterAttr };
                 m_AJpropertyAdapterValuePairs.insert(std::make_pair(*ajProperty->GetName(), tempPair));
                 paired = true;
                 break;
@@ -190,7 +190,7 @@ QStatus BridgeRT::DeviceProperty::PairAjProperties()
         }
 
         // remove adapterValue from temp list
-        tempList.erase(adapterValue);
+        tempList.erase(adapterAttr);
     }
 
 leave:
@@ -202,6 +202,7 @@ QStatus AJ_CALL DeviceProperty::GetProperty(_In_ const void* context, _In_z_ con
     QStatus status = ER_OK;
     uint32 adapterStatus = ERROR_SUCCESS;
     DeviceProperty *deviceProperty = nullptr;
+    IAdapterAttribute ^adapterAttr = nullptr;
     IAdapterValue ^adapterValue = nullptr;
     AllJoynProperty *ajProperty = nullptr;
     IAdapterIoRequest^ request;
@@ -223,11 +224,12 @@ QStatus AJ_CALL DeviceProperty::GetProperty(_In_ const void* context, _In_z_ con
     }
 
     ajProperty = index->second.ajProperty;
-    adapterValue = index->second.adapterValue;
+    adapterAttr = index->second.adapterAttr;
+    adapterValue = adapterAttr->Value;
 
     // get value of adapter value
     adapterStatus = DsbBridge::SingleInstance()->GetAdapter()->GetPropertyValue(deviceProperty->m_deviceProperty, adapterValue->Name, &adapterValue, &request);
-    if (ERROR_IO_PENDING == adapterStatus && 
+    if (ERROR_IO_PENDING == adapterStatus &&
         nullptr != request)
     {
         // wait for completion
@@ -251,6 +253,7 @@ QStatus AJ_CALL DeviceProperty::SetProperty(_In_ const void* context, _In_z_ con
     QStatus status = ER_OK;
     uint32 adapterStatus = ERROR_SUCCESS;
     DeviceProperty *deviceProperty = nullptr;
+    IAdapterAttribute^ adapterAttr = nullptr;
     IAdapterValue ^adapterValue = nullptr;
     AllJoynProperty *ajProperty = nullptr;
     IAdapterIoRequest^ request;
@@ -272,7 +275,8 @@ QStatus AJ_CALL DeviceProperty::SetProperty(_In_ const void* context, _In_z_ con
     }
 
     ajProperty = index->second.ajProperty;
-    adapterValue = index->second.adapterValue;
+    adapterAttr = index->second.adapterAttr;
+    adapterValue = adapterAttr->Value;
 
     // update IAdapterValue from AllJoyn message
     status = AllJoynHelper::GetAdapterValue(adapterValue, val);
@@ -281,7 +285,7 @@ QStatus AJ_CALL DeviceProperty::SetProperty(_In_ const void* context, _In_z_ con
         goto leave;
     }
 
-    // set value in adapter 
+    // set value in adapter
     adapterStatus = DsbBridge::SingleInstance()->GetAdapter()->SetPropertyValue(deviceProperty->m_deviceProperty, adapterValue, &request);
     if (ERROR_IO_PENDING == adapterStatus &&
         nullptr != request)
@@ -319,7 +323,7 @@ void DeviceProperty::EmitSignalCOV(IAdapterValue ^newValue, const std::vector<al
     // get AllJoyn property that match with IAdapterValue that has changed
     for (valuePair = m_AJpropertyAdapterValuePairs.begin(); valuePair != m_AJpropertyAdapterValuePairs.end(); valuePair++)
     {
-        if (valuePair->second.adapterValue->Name == newValue->Name)
+        if (valuePair->second.adapterAttr->Value->Name == newValue->Name)
         {
             break;
         }

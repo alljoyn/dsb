@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -41,7 +41,7 @@ BridgeAuthHandler::~BridgeAuthHandler()
 }
 
 _Use_decl_annotations_
-QStatus 
+QStatus
 BridgeAuthHandler::InitializeWithAllAuthenticationMethods(_In_ alljoyn_busattachment bus,
     _In_ Platform::String^ keyx,
     _In_ Platform::String^ username, _In_ Platform::String^ password,
@@ -195,7 +195,7 @@ void BridgeAuthHandler::ResetAccess(_In_ std::string remoteName)
         goto leave;
     }
 
-    // get peer Guid and reset access authorization 
+    // get peer Guid and reset access authorization
     status = alljoyn_busattachment_getpeerguid(m_busAttachment, remoteName.c_str(), nullptr, &peerGuidSize);
     if (ER_OK == status &&
         0 != peerGuidSize)
@@ -221,7 +221,7 @@ void BridgeAuthHandler::ShutDown()
         alljoyn_busattachment_enablepeersecurity(m_busAttachment, nullptr, m_authListener, nullptr, QCC_FALSE);
         alljoyn_authlistener_destroy(m_authListener);
         alljoyn_busattachment_clearkeystore(m_busAttachment);
- 
+
         m_authListener = nullptr;
     }
 
@@ -267,7 +267,7 @@ BridgeAuthHandler::ReqCredentialsAsync(
         status = alljoyn_authlistener_requestcredentialsresponse(listener, authContext, QCC_TRUE, creds);
     }
     else if ((strcmp(authMechanism, CREDENTIAL_AUTHENTICATION) == 0) &&
-        ((credMask & ALLJOYN_CRED_PASSWORD) == ALLJOYN_CRED_PASSWORD) && 
+        ((credMask & ALLJOYN_CRED_PASSWORD) == ALLJOYN_CRED_PASSWORD) &&
          username == pThis->m_username)
     {
         // username/password authentication (and username match)
@@ -297,13 +297,13 @@ BridgeAuthHandler::ReqCredentialsAsync(
 }
 
 _Use_decl_annotations_
-QStatus AJ_CALL 
+QStatus AJ_CALL
 BridgeAuthHandler::VerifyCredentialsAsync(
-    const void * context, 
-    alljoyn_authlistener listener, 
-    const char * authMechanism, 
-    const char * authPeer, 
-    const alljoyn_credentials creds, 
+    const void * context,
+    alljoyn_authlistener listener,
+    const char * authMechanism,
+    const char * authPeer,
+    const alljoyn_credentials creds,
     void * authContext)
 {
     UNREFERENCED_PARAMETER(listener);
@@ -313,9 +313,9 @@ BridgeAuthHandler::VerifyCredentialsAsync(
     QStatus status = ER_OK;
     bool isVerified = false;
 
-    if (strcmp(authMechanism, ECDHE_ECDSA_AUTHENTICATION) == 0) 
+    if (strcmp(authMechanism, ECDHE_ECDSA_AUTHENTICATION) == 0)
     {
-        if (alljoyn_credentials_isset(creds, ALLJOYN_CRED_CERT_CHAIN)) 
+        if (alljoyn_credentials_isset(creds, ALLJOYN_CRED_CERT_CHAIN))
         {
             // get the cert chain to verify
             const char *cert = alljoyn_credentials_getcertchain(creds);

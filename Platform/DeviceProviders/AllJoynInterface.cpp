@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -20,6 +20,7 @@
 #include "AllJoynMethod.h"
 #include "AllJoynHelpers.h"
 #include "AllJoynSignal.h"
+#include "TypeConversionHelpers.h"
 
 using namespace Windows::Foundation::Collections;
 using namespace Platform::Collections;
@@ -31,6 +32,7 @@ namespace DeviceProviders
     AllJoynInterface::AllJoynInterface(AllJoynBusObject ^ parent, alljoyn_interfacedescription interfaceDescription)
         : m_parent(parent)
         , m_interfaceDescription(interfaceDescription)
+        , m_active(true)
     {
         DEBUG_LIFETIME_IMPL(AllJoynInterface);
 
@@ -45,11 +47,21 @@ namespace DeviceProviders
 
     AllJoynInterface::~AllJoynInterface()
     {
+        if (m_active)
+        {
+            Shutdown();
+        }
+    }
+
+    void AllJoynInterface::Shutdown()
+    {
+        m_active = false;
+
         if (nullptr != m_properties)
         {
             for (auto prop : m_properties)
             {
-                delete prop;
+                dynamic_cast<AllJoynProperty^>(static_cast<Object^>(prop))->Shutdown();
             }
             m_properties->Clear();
             m_properties = nullptr;
@@ -58,7 +70,7 @@ namespace DeviceProviders
         {
             for (auto method : m_methods)
             {
-                delete method;
+                dynamic_cast<AllJoynMethod^>(static_cast<Object^>(method))->Shutdown();
             }
             m_methods->Clear();
             m_methods = nullptr;
@@ -67,7 +79,7 @@ namespace DeviceProviders
         {
             for (auto signal : m_signals)
             {
-                delete signal;
+                dynamic_cast<AllJoynSignal^>(static_cast<Object^>(signal))->Shutdown();
             }
             m_signals->Clear();
             m_signals = nullptr;
@@ -116,31 +128,68 @@ namespace DeviceProviders
         }
     }
 
+    void AllJoynInterface::CreateAnnotations()
+    {
+        m_annotations = TypeConversionHelpers::GetAnnotationsView<alljoyn_interfacedescription>(
+            m_interfaceDescription,
+            alljoyn_interfacedescription_getannotationscount,
+            alljoyn_interfacedescription_getannotationatindex);
+    }
+
     IVectorView<IProperty ^>^ AllJoynInterface::Properties::get()
     {
-        if (nullptr == m_properties)
+        IVectorView<IProperty ^>^ properties = nullptr;
+        if (m_active)
         {
-            this->CreateProperties();
+            if (m_properties == nullptr)
+            {
+                this->CreateProperties();
+            }
+            properties = m_properties->GetView();
         }
-        return m_properties->GetView();
+        return properties;
     }
 
     IVectorView<IMethod ^>^ AllJoynInterface::Methods::get()
     {
-        if (nullptr == m_methods)
+        IVectorView<IMethod ^>^ methods = nullptr;
+        if (m_active)
         {
-            this->CreateMethodsAndSignals();
+            if (m_methods == nullptr)
+            {
+                this->CreateMethodsAndSignals();
+            }
+            methods = m_methods->GetView();
         }
-        return m_methods->GetView();
+        return methods;
     }
 
     IVectorView<ISignal ^>^ AllJoynInterface::Signals::get()
     {
-        if (nullptr == m_signals)
+        IVectorView<ISignal ^>^ signals = nullptr;
+        if (m_active)
         {
-            this->CreateMethodsAndSignals();
+            if (m_signals == nullptr)
+            {
+                this->CreateMethodsAndSignals();
+            }
+            signals = m_signals->GetView();
         }
-        return m_signals->GetView();
+        return signals;
+    }
+
+    IMapView<String^, String^>^ AllJoynInterface::Annotations::get()
+    {
+        IMapView<String^, String^>^ annotations = nullptr;
+        if (m_active)
+        {
+            if (m_annotations == nullptr)
+            {
+                this->CreateAnnotations();
+            }
+            annotations = m_annotations;
+        }
+        return annotations;
     }
 
     String ^ AllJoynInterface::IntrospectXml::get()
@@ -155,28 +204,46 @@ namespace DeviceProviders
 
     IProperty^ AllJoynInterface::GetProperty(Platform::String^ propertyName)
     {
-        auto iter = std::find_if(begin(Properties), end(Properties), [&propertyName](IProperty^ prop) -> bool
+        IProperty^ prop = nullptr;
+        if (m_active)
         {
-            return prop->Name == propertyName;
-        });
-        return iter == end(Properties) ? nullptr : *iter;
+            auto properties = this->Properties;
+            auto iter = std::find_if(begin(properties), end(properties), [&propertyName](IProperty^ prop) -> bool
+            {
+                return prop->Name == propertyName;
+            });
+            prop = iter == end(properties) ? nullptr : *iter;
+        }
+        return prop;
     }
 
     IMethod^ AllJoynInterface::GetMethod(Platform::String^ methodName)
     {
-        auto iter = std::find_if(begin(Methods), end(Methods), [&methodName](IMethod^ method) -> bool
+        IMethod^ method = nullptr;
+        if (m_active)
         {
-            return method->Name == methodName;
-        });
-        return iter == end(Methods) ? nullptr : *iter;
+            auto methods = this->Methods;
+            auto iter = std::find_if(begin(methods), end(methods), [&methodName](IMethod^ method) -> bool
+            {
+                return method->Name == methodName;
+            });
+            method = iter == end(methods) ? nullptr : *iter;
+        }
+        return method;
     }
 
     ISignal^ AllJoynInterface::GetSignal(Platform::String^ signalName)
     {
-        auto iter = std::find_if(begin(Signals), end(Signals), [&signalName](ISignal^ signal) -> bool
+        ISignal^ signal = nullptr;
+        if (m_active)
         {
-            return signal->Name == signalName;
-        });
-        return iter == end(Signals) ? nullptr : *iter;
+            auto signals = this->Signals;
+            auto iter = std::find_if(begin(signals), end(signals), [&signalName](ISignal^ signal) -> bool
+            {
+                return signal->Name == signalName;
+            });
+            signal = iter == end(signals) ? nullptr : *iter;
+        }
+        return signal;
     }
 }

@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -26,6 +26,7 @@
 #include "DeviceMain.h"
 #include "AllJoynHelper.h"
 #include "ControlPanel.h"
+#include "LSF.h"
 
 using namespace Platform;
 using namespace Platform::Collections;
@@ -47,7 +48,8 @@ BridgeDevice::BridgeDevice()
     m_AJSessionPortListener(NULL),
     m_uniqueIdForInterfaces(FIRST_UNIQUE_ID),
     m_deviceMain(nullptr),
-    m_supportCOVSignal(false)
+    m_supportCOVSignal(false),
+    m_pLightingService(nullptr)
 {
 }
 BridgeRT::BridgeDevice::~BridgeDevice()
@@ -56,7 +58,7 @@ BridgeRT::BridgeDevice::~BridgeDevice()
 
 QStatus BridgeDevice::Initialize(IAdapterDevice ^device)
 {
-    const wchar_t CONTROL_PANEL_NAME[] = L"Simple";
+    
     QStatus status = ER_OK;
     HRESULT hr = S_OK;
 
@@ -95,9 +97,16 @@ QStatus BridgeDevice::Initialize(IAdapterDevice ^device)
     m_about.SetDeviceName(m_device->Name->Data());
     m_about.SetManufacturer(m_device->Vendor->Data());
     m_about.SetModel(m_device->Model->Data());
-    m_about.SetVersion(m_device->Version->Data());
+    m_about.SetSWVersion(m_device->Version->Data());
     m_about.SetDeviceId(m_device->SerialNumber->Data());
     m_about.SetDescription(m_device->Description->Data());
+
+
+    // If an Icon is available, try to add it to the bus attachment too.  Just continue on error
+    if (device->Icon != nullptr)
+    {
+        m_icon.Initialize(m_AJBusAttachment, device->Icon);
+    }
 
     // create device properties
     status = CreateDeviceProperties();
@@ -106,7 +115,7 @@ QStatus BridgeDevice::Initialize(IAdapterDevice ^device)
         goto leave;
     }
 
-    // create main device 
+    // create main device
     m_deviceMain = new(std::nothrow) DeviceMain();
     if (nullptr == m_deviceMain)
     {
@@ -118,22 +127,19 @@ QStatus BridgeDevice::Initialize(IAdapterDevice ^device)
     {
         goto leave;
     }
-    
-    // Create a control panel if requested by the caller.
-    if (GetAdapterDevice()->ControlPanelHandler != nullptr)
-    {
-        auto controlPanelHandler = GetAdapterDevice()->ControlPanelHandler;
-        if (dynamic_cast<IControlPanelHandlerSimple^>(controlPanelHandler) != nullptr)
-        {
-            m_pControlPanel = new (std::nothrow) ControlPanelSimple((IControlPanelHandlerSimple^)GetAdapterDevice()->ControlPanelHandler, m_device);
-            if (m_pControlPanel == nullptr)
-            {
-                goto leave;
-            }
 
-            // If Control Panel Initialization fails, proceed anyway.  This should not be a blocker
-            m_pControlPanel->Initialize(GetBusAttachment(), GetAdapterDevice()->Name->Begin(), CONTROL_PANEL_NAME);
-        }
+    // Create a control panel if requested by the caller.
+    status = InitControlPanel();
+    if (ER_OK != status)
+    {
+        goto leave;
+    }
+    
+    // Create Lighting Service if requested
+    status = InitLightingService();
+    if (ER_OK != status)
+    {
+        goto leave;
     }
 
     m_about.AddObject(m_deviceMain->GetBusObject(), m_deviceMain->GetInterfaceDescription());
@@ -178,6 +184,7 @@ void BridgeDevice::Shutdown()
     // shutdown about
     m_about.ShutDown();
 
+    m_icon.ShutDown();
 
     if (nullptr != m_pControlPanel)
     {
@@ -191,7 +198,7 @@ void BridgeDevice::Shutdown()
         var.second->Shutdown();
         delete var.second;
     }
-    m_deviceProperties.clear(); 
+    m_deviceProperties.clear();
 
     // shutdown main device interface
     if (nullptr != m_deviceMain)
@@ -200,7 +207,7 @@ void BridgeDevice::Shutdown()
         m_deviceMain = nullptr;
     }
 
-    // shutdown interface 
+    // shutdown interface
     for (auto &propertyInterface : m_propertyInterfaces)
     {
         delete propertyInterface;
@@ -221,7 +228,7 @@ QStatus BridgeDevice::BuildServiceName()
 {
     QStatus status = ER_OK;
     string tempString;
-    
+
     m_RootStringForAllJoynNames.clear();
 
     // set root/prefix for AllJoyn service name (aka bus name) and interface names :
@@ -254,7 +261,7 @@ QStatus BridgeDevice::BuildServiceName()
         m_ServiceName += ".";
         m_ServiceName += tempString;
     }
-    
+
     // add serial number to service name if not empty
     AllJoynHelper::EncodeStringForServiceName(m_device->SerialNumber, tempString);
     if (!tempString.empty())
@@ -290,13 +297,13 @@ QStatus BridgeDevice::CreateDeviceProperties()
             goto leave;
         }
 
-        // get the interface 
+        // get the interface
         status = GetInterfaceProperty(tempProperty, &propertyInterface);
         if (ER_OK != status)
         {
             goto leave;
         }
-        
+
         status = deviceProperty->Initialize(tempProperty, propertyInterface, this);
         if (ER_OK != status)
         {
@@ -309,7 +316,7 @@ QStatus BridgeDevice::CreateDeviceProperties()
     }
 
 leave:
-    if (ER_OK != status && 
+    if (ER_OK != status &&
         nullptr != deviceProperty)
     {
         delete deviceProperty;
@@ -503,7 +510,7 @@ void BridgeDevice::ShutdownAllJoyn()
         m_AJSessionPortListener = NULL;
     }
 
-  
+
 
 }
 
@@ -731,7 +738,7 @@ HRESULT BridgeDevice::registerSignalHandlers(bool IsRegister)
         if (IsRegister)
         {
             // silently failing here is OK because it could happen that adapter device
-            // have some signal in its list and still to register listener 
+            // have some signal in its list and still to register listener
             DsbBridge::SingleInstance()->GetAdapter()->RegisterSignalListener(signal, this, nullptr);
         }
         else
@@ -810,7 +817,7 @@ IAdapterProperty ^BridgeDevice::GetAdapterProperty(_In_ std::string busObjectPat
 {
     IAdapterProperty ^adapterProperty = nullptr;
 
-    // find IAdapterProperty from its exposed bus object path 
+    // find IAdapterProperty from its exposed bus object path
     auto val = m_deviceProperties.find(busObjectPath.c_str());
     if (val != m_deviceProperties.end())
     {
@@ -833,4 +840,96 @@ std::string BridgeDevice::GetBusObjectPath(_In_ IAdapterProperty ^adapterPropert
         }
     }
     return busObjectPath;
+}
+
+QStatus BridgeDevice::InitControlPanel()
+{
+    const wchar_t CONTROL_PANEL_NAME[] = L"Simple";
+    QStatus status = ER_OK;
+
+    IAdapterDeviceControlPanel^ controlPanelDevice = dynamic_cast<IAdapterDeviceControlPanel^>(m_device);
+    if (controlPanelDevice == nullptr)
+    {
+        // Continue without initialization
+        goto leave;
+    }
+    
+    if (controlPanelDevice->ControlPanelHandler != nullptr)
+    {
+        auto controlPanelHandler = controlPanelDevice->ControlPanelHandler;
+        if (dynamic_cast<IControlPanelHandlerSimple^>(controlPanelHandler) != nullptr)
+        {
+            m_pControlPanel = new (std::nothrow) ControlPanelSimple((IControlPanelHandlerSimple^) controlPanelHandler, m_device);
+            if (m_pControlPanel == nullptr)
+            {
+                status = ER_OUT_OF_MEMORY;
+                goto leave;
+            }
+
+            // If Control Panel Initialization fails, proceed anyway.  This should not be a blocker
+            status = m_pControlPanel->Initialize(GetBusAttachment(), m_device->Name->Begin(), CONTROL_PANEL_NAME);
+            if (status != ER_OK)
+            {
+                delete m_pControlPanel;
+                m_pControlPanel = nullptr;
+                status = ER_OK;
+            }
+        }
+        else if (dynamic_cast<IControlPanelHandlerUniversal^>(controlPanelHandler) != nullptr)
+        {
+            m_pControlPanel = new (std::nothrow) ControlPanelUniversal((IControlPanelHandlerUniversal^) controlPanelHandler, m_device);
+            if (m_pControlPanel == nullptr)
+            {
+                goto leave;
+            }
+
+            // If Control Panel Initialization fails, proceed anyway.  This should not be a blocker
+            status = m_pControlPanel->Initialize(GetBusAttachment(), m_device->Name->Begin(), CONTROL_PANEL_NAME);
+            if (status != ER_OK)
+            {
+                delete m_pControlPanel;
+                m_pControlPanel = nullptr;
+                status = ER_OK;
+            }
+        }
+    }
+
+leave:
+    
+    return status;
+}
+
+QStatus BridgeDevice::InitLightingService()
+{
+    QStatus status = ER_OK;
+
+    IAdapterDeviceLightingService^ lightingDevice = dynamic_cast<IAdapterDeviceLightingService^>(m_device);
+    if (lightingDevice == nullptr)
+    {
+        // Continue without initialization
+        goto leave;
+    }
+    
+    if (lightingDevice->LightingServiceHandler != nullptr)
+    {
+        m_pLightingService = new (std::nothrow) LSF(m_device);
+        if (m_pLightingService == nullptr)
+        {
+            status = ER_OUT_OF_MEMORY;
+            goto leave;
+        }
+
+        // If Lighting Service Initialization fails, proceed anyway.  This should not be a blocker
+        status = m_pLightingService->Initialize(GetBusAttachment());
+        if (status != ER_OK)
+        {
+            delete m_pLightingService;
+            m_pLightingService = nullptr;
+            status = ER_OK;
+        }
+    }
+
+leave:
+    
+    return status;
 }

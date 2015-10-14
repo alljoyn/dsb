@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -35,10 +35,14 @@ using namespace BridgeRT;
 
 namespace AdapterLib
 {
+    
+
     ZWaveAdapterDevice::ZWaveAdapterDevice(uint32 homeId, uint8 nodeId)
         : m_homeId(homeId)
         , m_nodeId(nodeId)
         , m_controlPanel(nullptr)
+        , m_lightingServiceHandler(nullptr)
+        , m_parent(nullptr)
     {
 
     }
@@ -151,6 +155,24 @@ namespace AdapterLib
             }
         }
         return nullptr;
+    }
+
+    void ZWaveAdapterDevice::AddLampStateChangedSignal()
+    {
+        try
+        {
+            ZWaveAdapterSignal^ lampStateChangedSignal = ref new ZWaveAdapterSignal(Constants::LAMP_STATE_CHANGED_SIGNAL_NAME);
+
+            Platform::Object^ data = PropertyValue::CreateString(m_serialNumber);
+            ZWaveAdapterValue^ lampIdSignalParameter = ref new ZWaveAdapterValue(Constants::SIGNAL_PARAMETER__LAMP_ID__NAME, data);
+            lampStateChangedSignal->AddParam(lampIdSignalParameter);
+
+            m_signals.push_back(lampStateChangedSignal);
+        }
+        catch (OutOfMemoryException^ ex)
+        {
+            return;
+        }
     }
 
     void ZWaveAdapterDevice::Initialize()

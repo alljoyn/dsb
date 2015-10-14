@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -50,6 +50,8 @@ const char* WidgetContainer::GetInterfaceName()
 QStatus WidgetContainer::Get(_In_z_ const char* interfaceName, _In_z_ const char* propName, _Out_ alljoyn_msgarg val) const
 {
     QStatus status = ER_OK;
+    alljoyn_msgarg values = nullptr;
+    alljoyn_msgarg dictEntries = nullptr;
 
     // Handle the Optional Parameters if requested
     if (strcmp(propName, PROPERTY_OPTPARAMS_STR) == 0)
@@ -58,7 +60,7 @@ QStatus WidgetContainer::Get(_In_z_ const char* interfaceName, _In_z_ const char
         uint16_t layoutHints[] = { VERTICAL_ALIGNMENT };
 
         // Create an array of Variant Type-Data value pairs
-        alljoyn_msgarg values = alljoyn_msgarg_array_create(_countof(keys));
+        values = alljoyn_msgarg_array_create(_countof(keys));
         CHK_POINTER(values);
 
         // Set each Variant "Type-Data Pair"
@@ -67,7 +69,7 @@ QStatus WidgetContainer::Get(_In_z_ const char* interfaceName, _In_z_ const char
         CHK_AJSTATUS(alljoyn_msgarg_set(alljoyn_msgarg_array_element(values, HINT_KEY), ARG_UINT16_ARRY_STR, _countof(layoutHints), layoutHints));
 
         // Create an array of Dictionary Entries
-        alljoyn_msgarg dictEntries = alljoyn_msgarg_array_create(_countof(keys));
+        dictEntries = alljoyn_msgarg_array_create(_countof(keys));
         CHK_POINTER(dictEntries);
         // Load the Dictionary Entries into the array of dictionary entries where the Keys are Number values that map to Variant Type-Data pairs
         for (int idx = 0; idx < _countof(keys); idx++)
@@ -91,5 +93,15 @@ QStatus WidgetContainer::Get(_In_z_ const char* interfaceName, _In_z_ const char
     }
 
 leave:
+    if (values != nullptr)
+    {
+        alljoyn_msgarg_destroy(values);
+        values = nullptr;
+    }
+    if (dictEntries != nullptr)
+    {
+        alljoyn_msgarg_destroy(dictEntries);
+        dictEntries = nullptr;
+    }
     return status;
 }

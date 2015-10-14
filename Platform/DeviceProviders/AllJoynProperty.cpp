@@ -31,25 +31,19 @@ using namespace concurrency;
 
 namespace DeviceProviders
 {
+    Platform::String^ EmitsValueChangedAnnotation = L"org.freedesktop.DBus.Property.EmitsChangedSignal";
+
     AllJoynProperty::AllJoynProperty(AllJoynInterface ^ parent, const alljoyn_interfacedescription_property& propertyDescription)
         : m_interface(parent)
         , m_name(propertyDescription.name)
         , m_signature(propertyDescription.signature)
         , m_weakThis(this)
+        , m_active(true)
     {
         DEBUG_LIFETIME_IMPL(AllJoynProperty);
 
         m_canRead  = propertyDescription.access == ALLJOYN_PROP_ACCESS_READ  || propertyDescription.access == ALLJOYN_PROP_ACCESS_RW;
         m_canWrite = propertyDescription.access == ALLJOYN_PROP_ACCESS_WRITE || propertyDescription.access == ALLJOYN_PROP_ACCESS_RW;
-
-        const char * namePtr = m_name.c_str();
-        auto status = alljoyn_proxybusobject_registerpropertieschangedlistener(
-            parent->GetBusObject()->GetProxyBusObject(),
-            parent->GetName().c_str(),
-            &namePtr,
-            1,
-            AllJoynProperty::OnPropertyChanged,
-            &m_weakThis);
 
         auto typeDefinitons = AllJoynTypeDefinition::CreateTypeDefintions(m_signature);
         if (typeDefinitons->Size == 1)
@@ -58,27 +52,36 @@ namespace DeviceProviders
         }
 
         //annotations
-        auto annotations = ref new Map<String^, String^>();
-        auto nCount = alljoyn_interfacedescription_property_getannotationscount(propertyDescription);
-        for (size_t i = 0; i < nCount; ++i)
+        m_annotations = TypeConversionHelpers::GetAnnotationsView<alljoyn_interfacedescription_property>(
+            propertyDescription,
+            alljoyn_interfacedescription_property_getannotationscount,
+            alljoyn_interfacedescription_property_getannotationatindex);
+
+        if (m_annotations->HasKey(EmitsValueChangedAnnotation))
         {
-            size_t nSizeName = 0;
-            size_t nSizeValue = 0;
-
-            //get the buffer size for name and value pair
-            alljoyn_interfacedescription_property_getannotationatindex(propertyDescription, i, nullptr, &nSizeName, nullptr, &nSizeValue);
-            auto pName = vector<char>(nSizeName);
-            auto pValue = vector<char>(nSizeValue);
-
-            //get the annotation at index i
-            alljoyn_interfacedescription_property_getannotationatindex(propertyDescription, i, pName.data(), &nSizeName, pValue.data(), &nSizeValue);
-            annotations->Insert(AllJoynHelpers::MultibyteToPlatformString(pName.data()), AllJoynHelpers::MultibyteToPlatformString(pValue.data()));
+            const char * namePtr = m_name.c_str();
+            auto status = alljoyn_proxybusobject_registerpropertieschangedlistener(
+                parent->GetBusObject()->GetProxyBusObject(),
+                parent->GetName().c_str(),
+                &namePtr,
+                1,
+                AllJoynProperty::OnPropertyChanged,
+                &m_weakThis);
         }
-        m_annotations = annotations->GetView();
     }
 
     AllJoynProperty::~AllJoynProperty()
     {
+        if (!m_active)
+        {
+            Shutdown();
+        }
+    }
+
+    void AllJoynProperty::Shutdown()
+    {
+        m_active = false;
+
         alljoyn_proxybusobject_unregisterpropertieschangedlistener(
             m_interface->GetBusObject()->GetProxyBusObject(),
             m_interface->GetName().c_str(),
@@ -130,6 +133,12 @@ namespace DeviceProviders
         {
             auto result = ref new ReadValueResult();
 
+            if (!m_active)
+            {
+                result->Status = ref new AllJoynStatus(ER_FAIL, "Service no longer available!");
+                return result;
+            }
+
             auto msgarg = alljoyn_msgarg_create();
             auto status = alljoyn_proxybusobject_getproperty(
                 m_interface->GetBusObject()->GetProxyBusObject(),
@@ -155,6 +164,11 @@ namespace DeviceProviders
     {
         return create_async([this, newValue]() -> AllJoynStatus^
         {
+            if (!m_active)
+            {
+                return ref new AllJoynStatus(ER_FAIL, "Service no longer available!");
+            }
+
             auto msgarg = alljoyn_msgarg_create();
             auto status = (QStatus)TypeConversionHelpers::SetAllJoynMessageArg(msgarg, m_signature.c_str(), newValue);
             if (status == ER_OK)

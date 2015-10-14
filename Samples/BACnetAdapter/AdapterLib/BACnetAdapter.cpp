@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -97,7 +97,7 @@ namespace AdapterLib
             status = WIN32_FROM_HRESULT(ex->HResult);
             goto done;
         }
-        
+
     done:
         return status;
     }
@@ -130,7 +130,7 @@ namespace AdapterLib
     BACnetAdapter::Initialize()
     {
         uint32 status = ERROR_SUCCESS;
-        
+
         status = WIN32_FROM_HRESULT(this->adapterConfig.Init());
         if (status != ERROR_SUCCESS)
         {
@@ -325,7 +325,7 @@ namespace AdapterLib
             return ERROR_INVALID_HANDLE;
         }
 
-        BACnetAdapterValue^ attribute = adapterProperty->GetAttributeByName(AttributeName);
+        auto attribute = adapterProperty->GetAttributeByName(AttributeName);
         if (attribute == nullptr)
         {
             return ERROR_NOT_FOUND;
@@ -333,7 +333,7 @@ namespace AdapterLib
 
         try
         {
-            *ValuePtr = ref new BACnetAdapterValue(attribute);
+            *ValuePtr = ref new BACnetAdapterValue(dynamic_cast<BACnetAdapterValue^>(attribute->Value));
 
             return device->ReadPropertyAttribute(adapterProperty, ValuePtr, RequestPtr);
         }
@@ -369,7 +369,7 @@ namespace AdapterLib
             return ERROR_INVALID_HANDLE;
         }
 
-        BACnetAdapterValue^ attribute = adapterProperty->GetAttributeByName(Value->Name);
+        auto attribute = adapterProperty->GetAttributeByName(Value->Name);
         if (attribute == nullptr)
         {
             return ERROR_NOT_FOUND;
@@ -434,7 +434,7 @@ namespace AdapterLib
                 }
             }
 
-            // add it to the map. 
+            // add it to the map.
             this->signalListeners.insert(
             { mmapkey, SIGNAL_LISTENER_ENTRY(Signal, Listener, ListenerContext) }
             );
@@ -558,7 +558,7 @@ namespace AdapterLib
     }
 
 
-    bool 
+    bool
     BACnetAdapter::IsAllowedDevice(String^ DeviceModelName)
     {
         if (this->adapterConfig.AllowedDeviceList.size() == 0)
@@ -596,7 +596,7 @@ namespace AdapterLib
                 //
                 signal += ref new BACnetAdapterValue(
                                     Constants::DEVICE_ARRIVAL__DEVICE_HANDLE,
-                                    signal, 
+                                    signal,
                                     ref new BACnetAdapterDevice(L"DsbDevice", this) // For signature spec
                                     );
 
@@ -723,7 +723,7 @@ namespace AdapterLib
             }
 
             //
-            // Send 'Device Arrival' notification... 
+            // Send 'Device Arrival' notification...
             //
 
             IAdapterSignal^ deviceArrivalSignal = this->getSignalByName(Constants::DEVICE_ARRIVAL_SIGNAL);

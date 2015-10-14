@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -66,69 +66,69 @@ public:
     //******************************************************************************************************
     //
     //  Initialize this object
-    //  
+    //
     //  pFileName:			Relative path and filename to initialize from, or null.
     //
     //  faileIfNotPresent:  If a file name is specified and the file is not detected, fail, instead
     //                      of calling the default initialization method.  Ignored if filename is not
     //                      specified
-    //  
-    //  If the file specified by pFileName is not found, this routine will try to create a default 
+    //
+    //  If the file specified by pFileName is not found, this routine will try to create a default
     //  file with the specified name at the specified path.  If the file specified by pFileName is found,
     //  the file will be schema validated and loaded.  In either case, the filename is cached within
     //  this object and does not need to be specified in the ToFile function when the configuration is updated.
     //
     //  If the file specified by pFileName is null, a later call to FromFile or FromString is required.
     //
-    //  returns: S_OK on success, 
+    //  returns: S_OK on success,
     //           HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) if the file is missing.
     //           Other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT Init(_In_ String^ pFileName, bool failIfNotPresent = false);
 
     //******************************************************************************************************
     //
-    //  Loads this configuration object from the specified XML file using the 
-    //  
-    //  pFileName:   Fully qualified path and filename 
+    //  Loads this configuration object from the specified XML file using the
+    //
+    //  pFileName:   Fully qualified path and filename
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT FromFile(_In_ String^ pFileName);
 
     //******************************************************************************************************
     //
     //  Loads this configuration object from the specified String.
-    //  
+    //
     //  xmlString:  A complete XML configuration.
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT FromString(_In_ String^ xmlString);
 
     //******************************************************************************************************
     //
     //  Saves the current in memory XML file to disk
-    //  
+    //
     //  pFileName:  The file name to save this configuration object to.  Can be null if filename was
     //              specified by earlier call to Init.
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT ToFile(_In_ String^ pFileName = nullptr);
 
     //******************************************************************************************************
     //
     //  Converts the in memory XML configuration to a string
-    //  
+    //
     //  xmlString:  The returned string-ized version of the current XML document
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT ToString(_Out_ String^* xmlString);
 
@@ -149,7 +149,7 @@ public:
     //
     //	Add object into the xml configurations.
     //
-    //	object: the device object to be added	
+    //	object: the device object to be added
     //
     //	returns: S_OK on success, other HRESULT on fail
     //
@@ -161,13 +161,13 @@ public:
     //	Remove the object with the given id.
     //
     //	id: ID of the device object
-    //	
+    //
     //	returns: S_OK on success, other HRESULT on fail
     //
     //******************************************************************************************************
     HRESULT RemoveObject(_In_ String^ id);
 
- 
+
     //******************************************************************************************************
     //
     //	Merge an input xml document into the current in-memory xml document
@@ -184,7 +184,7 @@ public:
     //
     //	Returns App Local relative file name managed by this Bridge Configuration XML File
     //
-    //	returns: null if not initialized, full Path and File Name of Configuration file managed by this 
+    //	returns: null if not initialized, full Path and File Name of Configuration file managed by this
     //           instance
     //
     //******************************************************************************************************
@@ -260,7 +260,7 @@ public:
 
 private:
     //******************************************************************************************************
-    //	
+    //
     //	Loads default adapter configuration xml.
     //
     //	returns: S_OK on success, other HRESULT on fail
@@ -278,19 +278,19 @@ private:
     //  parentNode:  pointer to parent node to add this node to
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT addTextNode(_In_ String^ nodeName, _In_ String^ text, _In_ XmlElement^ parentNode);
 
     //******************************************************************************************************
     //
     //  Helper method for handling boolean XML data vailes
-    //  
+    //
     //  varValue:   Variant value read from the XML file.
     //  bool:       The boolean value read from the file.
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //      
+    //
     //******************************************************************************************************
     HRESULT convertXsBooleanToBool(_In_ String^ varValue, _Out_ bool &bValue);
 
@@ -305,8 +305,8 @@ private:
     //  text:           The text value of the requested node
     //
     //  returns: S_OK on success, other HRESULT on fail
-    //   
-    //******************************************************************************************************        
+    //
+    //******************************************************************************************************
     HRESULT readTextNode(
         _In_ String^ nodeName,
         _In_ XmlElement^ parentNode,
@@ -337,11 +337,11 @@ private:
     //
     //******************************************************************************************************
     bool isFilePresent(_In_ StorageFolder^ appFolder, _In_ String^ pFileName);
-    
+
 
     //******************************************************************************************************
     //
-    //	Merge source node into the current in-memory xml document	
+    //	Merge source node into the current in-memory xml document
     //
     //	pCurrSrcNode: source object node to be merged into the xml document
     //
@@ -357,7 +357,7 @@ private:
     //
     //	Internal method that merges settings from source document to the locally persisted copy
     //
-    //  pSrcDoc - Source document to merge settings from 
+    //  pSrcDoc - Source document to merge settings from
     //
     //******************************************************************************************************
     HRESULT MergeSettingsNode(_In_ XmlDocument^ pSrcDoc);

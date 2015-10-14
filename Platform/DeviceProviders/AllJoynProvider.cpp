@@ -1,15 +1,15 @@
 //
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -30,6 +30,8 @@ using namespace std;
 
 namespace DeviceProviders
 {
+    const char * c_sessionlessSignalMatchString = "type='signal',sessionless='t'";
+
     AllJoynProvider::AllJoynProvider()
         : m_aboutListener(nullptr)
         , m_busAttachment(nullptr)
@@ -78,6 +80,11 @@ namespace DeviceProviders
                 {
                     goto leave;
                 }
+                status = alljoyn_busattachment_addmatch(m_busAttachment, c_sessionlessSignalMatchString);
+                if (ER_OK != status)
+                {
+                    goto leave;
+                }
             }
 
             if (nullptr == m_aboutListener)
@@ -94,7 +101,7 @@ namespace DeviceProviders
 
             if (nullptr == m_busListener)
             {
-                alljoyn_buslistener_callbacks buslistenerCallbacks = { nullptr, nullptr, nullptr, nullptr, NameOwnerChanged, nullptr, nullptr, nullptr };
+                alljoyn_buslistener_callbacks buslistenerCallbacks = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
                 m_busListener = alljoyn_buslistener_create(&buslistenerCallbacks, &m_weakThis);
                 if (nullptr == m_aboutListener)
                 {
@@ -168,6 +175,7 @@ namespace DeviceProviders
         // stop and delete bus attachment
         if (nullptr != m_busAttachment)
         {
+            alljoyn_busattachment_removematch(m_busAttachment, c_sessionlessSignalMatchString);
             alljoyn_busattachment_disconnect(m_busAttachment, nullptr);
             alljoyn_busattachment_stop(m_busAttachment);
             alljoyn_busattachment_join(m_busAttachment);
@@ -211,34 +219,41 @@ namespace DeviceProviders
 
         if (provider != nullptr)
         {
-            AllJoynService ^ newService = nullptr;
-            {
-                AutoLock lock(&provider->m_servicesLock, true);
+            auto objectDescriptionArgCopy = alljoyn_msgarg_copy(objectDescriptionArg);
+            auto aboutDataArgCopy = alljoyn_msgarg_copy(aboutDataArg);
+            string serviceNameString = serviceName;
 
-                auto iter = provider->m_servicesMap.find(serviceName);
-                if (iter != provider->m_servicesMap.end())
-                {
-                    iter->second->Initialize(aboutDataArg, objectDescriptionArg);
-                }
-                else
-                {
-                    newService = ref new AllJoynService(provider, serviceName, port);
-                    newService->Initialize(aboutDataArg, objectDescriptionArg);
-
-                    provider->m_servicesMap[serviceName] = newService;
-                }
-            }
-            if (newService)
+            create_task([provider, objectDescriptionArgCopy, aboutDataArgCopy, serviceNameString, port]
             {
-                try
+                AllJoynService ^ newService = nullptr;
                 {
-                    provider->ServiceJoined(provider, ref new ServiceJoinedEventArgs(newService));
+                    AutoLock lock(&provider->m_servicesLock, true);
+
+                    auto iter = provider->m_servicesMap.find(serviceNameString);
+                    if (iter != provider->m_servicesMap.end())
+                    {
+                        iter->second->Initialize(aboutDataArgCopy, objectDescriptionArgCopy);
+                    }
+                    else
+                    {
+                        newService = ref new AllJoynService(provider, serviceNameString, port);
+                        newService->Initialize(aboutDataArgCopy, objectDescriptionArgCopy);
+
+                        provider->m_servicesMap[serviceNameString] = newService;
+                    }
                 }
-                catch (Exception^ ex)
+                if (newService)
                 {
-                    OutputDebugString(ex->Message->Data());
+                    try
+                    {
+                        provider->ServiceJoined(provider, ref new ServiceJoinedEventArgs(newService));
+                    }
+                    catch (Exception^ ex)
+                    {
+                        OutputDebugString(ex->Message->Data());
+                    }
                 }
-            }
+            });
         }
     }
 
@@ -246,13 +261,13 @@ namespace DeviceProviders
     {
         AllJoynProvider ^provider = static_cast<const WeakReference *>(context)->Resolve<AllJoynProvider>();
 
-        if (provider != nullptr && newOwner == nullptr)
+        if (provider != nullptr && newOwner == nullptr && strcmp(busName, previousOwner) == 0)
         {
             AllJoynService^ service = nullptr;
             {
                 AutoLock lock(&provider->m_servicesLock, true);
-                auto iter = provider->m_servicesMap.find(previousOwner);
-                if (iter != provider->m_servicesMap.end() && iter->second->SessionId == 0)
+                auto iter = provider->m_servicesMap.find(busName);
+                if (iter != provider->m_servicesMap.end() && iter->second->GetSessionId() == 0)
                 {
                     service = iter->second;
                 }
@@ -272,6 +287,8 @@ namespace DeviceProviders
             m_servicesMap.erase(AllJoynHelpers::PlatformToMultibyteStandardString(service->Name));
         }
 
+        service->Shutdown();
+
         try
         {
             ServiceDropped(this, ref new ServiceDroppedEventArgs(service, static_cast<AllJoynSessionLostReason>(reason)));
@@ -280,7 +297,5 @@ namespace DeviceProviders
         {
             OutputDebugString(ex->Message->Data());
         }
-
-        delete service;
     }
 }

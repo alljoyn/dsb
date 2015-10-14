@@ -141,13 +141,9 @@
   <PropertyGroup />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <GenerateManifest>false</GenerateManifest>
-    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
-    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <GenerateManifest>false</GenerateManifest>
-    <OutDir>$(SolutionDir)$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
-    <IntDir>$(PlatformTarget)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <GenerateManifest>false</GenerateManifest>
@@ -177,9 +173,10 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Handler_Library.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Object_definitions.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>BACnet_Handler_Library.lib;BACnet_Object_definitions.lib;BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ImageHasSafeExceptionHandlers>true</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>$(OutDir);$(OutDIr)..\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -197,8 +194,9 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Handler_Library.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Object_definitions.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>BACnet_Handler_Library.lib;BACnet_Object_definitions.lib;BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <AdditionalLibraryDirectories>$(OutDir);$(OutDIr)..\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -215,9 +213,10 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Handler_Library.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Object_definitions.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>BACnet_Handler_Library.lib;BACnet_Object_definitions.lib;BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>$(OutDir);$(OutDIr)..\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -234,9 +233,10 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Handler_Library.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Object_definitions.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>BACnet_Handler_Library.lib;BACnet_Object_definitions.lib;BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>$(OutDir);$(OutDIr)..\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -253,9 +253,10 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Handler_Library.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Object_definitions.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>BACnet_Handler_Library.lib;BACnet_Object_definitions.lib;BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>$(OutDir);$(OutDIr)..\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -272,9 +273,10 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Handler_Library.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Object_definitions.lib;$(SolutionDir)$(PlatformTarget)\$(Configuration)\BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>BACnet_Handler_Library.lib;BACnet_Object_definitions.lib;BACnet_Stack_Library.lib;runtimeobject.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>$(OutDir);$(OutDIr)..\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -23,9 +23,13 @@
 
 using namespace BridgeRT;
 using namespace std;
+using namespace DsbCommon;
 
 static std::string EMIT_CHANGE_SIGNAL_ANNOTATION = "org.freedesktop.DBus.Property.EmitsChangedSignal";
 static std::string TRUE_VALUE = "true";
+static std::string CONST_VALUE = "const";
+static std::string FALSE_VALUE = "false";
+static std::string INVALIDATES_VALUE = "invalidates";
 
 PropertyInterface::PropertyInterface()
     : m_interfaceDescription(NULL),
@@ -99,32 +103,74 @@ QStatus PropertyInterface::Create(IAdapterProperty ^adapterProperty, _In_ string
             goto leave;
         }
 
+        //property access
+        uint8_t alljoynAccess;
+
+        switch (adapterAttribute->Access)
+        {
+        case E_ACCESS_TYPE::ACCESS_READ: 
+            alljoynAccess = ALLJOYN_PROP_ACCESS_READ;
+            break;
+        case E_ACCESS_TYPE::ACCESS_WRITE:
+            alljoynAccess = ALLJOYN_PROP_ACCESS_WRITE;
+            break;
+        default:
+            alljoynAccess = ALLJOYN_PROP_ACCESS_RW;
+            break;
+        }
+
         // expose property on alljoyn
         status = alljoyn_interfacedescription_addproperty(m_interfaceDescription, 
             ajProperty->GetName()->c_str(), 
             ajProperty->GetSignature()->c_str(), 
-            ALLJOYN_PROP_ACCESS_RW);
+            alljoynAccess);
         if (ER_OK != status)
         {
             goto leave;
         }
-        // add change signal annotation to property if
-        // device support COV signal (Change Of Value)
-        //
-        // note: 
-        // COV signal is at adapter device level hence either supported for all interfaces
-        // or not supported by any interface
-        if (device->IsCOVSupported())
+
+        //add the annotations
+        for (auto annotation : adapterAttribute->Annotations)
         {
             status = alljoyn_interfacedescription_addpropertyannotation(m_interfaceDescription,
                 ajProperty->GetName()->c_str(),
-                EMIT_CHANGE_SIGNAL_ANNOTATION.c_str(),
-                TRUE_VALUE.c_str());
+                ConvertTo<string>(annotation->Key).c_str(),
+                ConvertTo<string>(annotation->Value).c_str());
             if (ER_OK != status)
             {
                 goto leave;
             }
         }
+        // add change signal annotation to property if
+        // the property support COV signal (Change Of Value)
+        string annotationValue;
+        switch (adapterAttribute->COVBehavior)
+        {
+        case SignalBehavior::Always:
+            annotationValue = TRUE_VALUE;
+            break;
+        case SignalBehavior::Unspecified:
+            annotationValue = FALSE_VALUE;
+            break;
+        case SignalBehavior::AlwaysWithNoValue:
+            annotationValue = INVALIDATES_VALUE;
+            break;
+        case SignalBehavior::Never:
+            annotationValue = CONST_VALUE;
+            break;
+        default:
+            break;
+        }
+        
+            status = alljoyn_interfacedescription_addpropertyannotation(m_interfaceDescription,
+                ajProperty->GetName()->c_str(),
+                EMIT_CHANGE_SIGNAL_ANNOTATION.c_str(),
+            annotationValue.c_str());
+
+            if (ER_OK != status)
+            {
+                goto leave;
+            }
 
         // add property in list
         m_AJProperties.push_back(ajProperty);
@@ -145,23 +191,23 @@ leave:
 bool PropertyInterface::InterfaceMatchWithAdapterProperty(IAdapterProperty ^adapterProperty)
 {
     bool retVal = false;
-    vector <IAdapterValue ^> tempList;
+    vector <IAdapterAttribute ^> tempList;
 
     // create temporary list of IAdapterValue that have to match with one of the 
     // AllJoyn properties
-    for (auto adapterValue : adapterProperty->Attributes)
+    for (auto adapterAttr : adapterProperty->Attributes)
     {
-        tempList.push_back(adapterValue);
+        tempList.push_back(adapterAttr);
     }
 
     // go through AllJoyn properties and find matching IAdapterValue
     for (auto ajProperty : m_AJProperties)
     {
         retVal = false;
-        auto adapterValue = tempList.end();
-        for (adapterValue = tempList.begin(); adapterValue != tempList.end(); adapterValue++)
+        auto adapterAttr = tempList.end();
+        for (adapterAttr = tempList.begin(); adapterAttr != tempList.end(); adapterAttr++)
         {
-            if (ajProperty->IsSameType(*adapterValue))
+            if (ajProperty->IsSameType(*adapterAttr))
             {
                 retVal = true;
                 break;
@@ -170,7 +216,7 @@ bool PropertyInterface::InterfaceMatchWithAdapterProperty(IAdapterProperty ^adap
         if (retVal)
         {
             // remove adapterValue from temp list
-            tempList.erase(adapterValue);
+            tempList.erase(adapterAttr);
         }
         else
         {

@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -39,7 +39,7 @@ namespace AdapterLib
     // Description:
     //      Common BACnet attribute indexes
     //
-    enum COMMON_ATTRIBUTES 
+    enum COMMON_ATTRIBUTES
     {
         CommonAttribute_Object_Type = 0,
         CommonAttribute_Object_Identifer,
@@ -147,6 +147,12 @@ namespace AdapterLib
 
         // Do we need to read it from device?
         bool                    IsReadFromDevice;
+
+        //Access
+        BridgeRT::E_ACCESS_TYPE Access;
+
+        //COV Signal Behavior
+        BridgeRT::SignalBehavior COVBehavior;
     };
 
     //
@@ -186,7 +192,7 @@ namespace AdapterLib
         // BACnet object type
         BACNET_OBJECT_TYPE              ObjectType;
 
-        // BACnet object attribute descriptors 
+        // BACnet object attribute descriptors
         BACNET_ADAPTER_ATTRIBUTE_DESCRIPTOR AttributeDescriptors[BACNET_ADAPTER_MAX_OBJECT_ATTRIBUTES];
 
         // BACnet object signals descriptors
@@ -227,7 +233,7 @@ namespace AdapterLib
     //
     //      BACnetObjectDescriptorPtr - The property descriptor address.
     //
-    //      BACNetPropertyId - The BACnet property ID to look for. 
+    //      BACNetPropertyId - The BACnet property ID to look for.
     //
     //  Return Value:
     //      The index of the matching BACNET_ADAPTER_ATTRIBUTE_DESCRIPTOR or -1,
@@ -249,10 +255,10 @@ namespace AdapterLib
     //
     //      BACnetObjectType - The BACnet object type.
     //
-    //      BACnetPropertyId - The BACnet property ID to look for. 
+    //      BACnetPropertyId - The BACnet property ID to look for.
     //
     //  Return Value:
-    //      The address of the of BACNET_ADAPTER_ATTRIBUTE_DESCRIPTOR or nullptr, 
+    //      The address of the of BACNET_ADAPTER_ATTRIBUTE_DESCRIPTOR or nullptr,
     //      if the give BACnet property does not have the desired property as one of
     //      its attributes.
     //
@@ -281,7 +287,7 @@ namespace AdapterLib
     //  Routine Description:
     //      GetWin32Code() gets the Win32 error code, given the BACnet
     //      error code.
-    //      
+    //
     //      Note:
     //          Not all BACnet codes are translated, if an error code
     //          is not translated, ERROR_GEN_FAILURE is returned.

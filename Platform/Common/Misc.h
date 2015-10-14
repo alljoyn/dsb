@@ -1,15 +1,15 @@
 ﻿//
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -63,7 +63,7 @@ namespace DsbCommon
     };
 
     //
-    //  Class CSLock 
+    //  Class CSLock
     //  Description:
     //      Multi thread safe lock (CRITICAL_SECTION based)
     //
@@ -102,10 +102,10 @@ namespace DsbCommon
     };
 
     //
-    //  Class AutoLock 
+    //  Class AutoLock
     //  Description:
     //      Automatic lock, which unlocks when out of scope.
-    //      
+    //
     class AutoLock
     {
     public:
@@ -428,7 +428,7 @@ namespace DsbCommon
 
     //
     //  Routine Description:
-    //      ToLower returns a lower case version of a given string. 
+    //      ToLower returns a lower case version of a given string.
     //
     //  Arguments:
     //
@@ -439,7 +439,7 @@ namespace DsbCommon
     //      A String^ string that contains a lower case version of StringWsz.
     //      An OutOfMemoryException/std::bad_alloc exception is raised when out of resources.
     //      An std::length_error exception is raised when SourceStringWsz is invalid (not null terminated).
-    //      
+    //
     Platform::String^ ToLower(_In_ const wchar_t* SourceStringWsz);
 
     bool FileExist(_In_ Platform::String^ filePath);

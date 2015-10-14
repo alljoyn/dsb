@@ -492,6 +492,35 @@ internal:
         return ER_BUS_BAD_VALUE_TYPE;
     }
 
+    template<typename T>
+    static _Check_return_ Windows::Foundation::Collections::IMapView<Platform::String^, Platform::String^>^ GetAnnotationsView(
+        const T& member,
+        std::function<size_t(T)> fnGetAnnotationCount,
+        std::function<void(T, size_t, char*, size_t*, char*, size_t*)> fnGetAnnotationAtIndex)
+    {
+        {
+            //annotations
+            auto annotations = ref new Map<String^, String^>();
+            auto nCount = fnGetAnnotationCount(member);
+            for (size_t i = 0; i < nCount; ++i)
+            {
+                size_t nSizeName = 0;
+                size_t nSizeValue = 0;
+                
+                //get the buffer size for name and value pair
+                fnGetAnnotationAtIndex(member, i, nullptr, &nSizeName, nullptr, &nSizeValue);
+                auto name = vector<char>(nSizeName);
+                auto value = vector<char>(nSizeValue);
+                
+                //get the annotation at index i
+                fnGetAnnotationAtIndex(member, i, name.data(), &nSizeName, value.data(), &nSizeValue);
+                annotations->Insert(AllJoynHelpers::MultibyteToPlatformString(name.data()), AllJoynHelpers::MultibyteToPlatformString(value.data()));
+            }
+
+            return annotations->GetView();
+        }
+    }
+
 private:
 
     template<class T>

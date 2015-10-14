@@ -1,14 +1,14 @@
 // Copyright (c) 2015, Microsoft Corporation
-// 
-// Permission to use, copy, modify, and/or distribute this software for any 
-// purpose with or without fee is hereby granted, provided that the above 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES 
-// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF 
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 // SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN 
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
@@ -29,7 +29,7 @@ namespace AdapterLib
 {
     //const definitions
     static const std::wstring cVendor = L"Microsoft";
-    static const std::wstring cAdapterName = L"ZWaveAdapter";
+    static const std::wstring cAdapterName = L"ZWave Bridge";
     static const std::wstring cDomainPrefix = L"com";
     static const std::wstring cAdapterPrefix = cDomainPrefix + L"." + DsbCommon::ToLower(cVendor.c_str())->Data();
 
@@ -79,10 +79,10 @@ namespace AdapterLib
         }
 
         //
-        // IAdapter interface 
+        // IAdapter interface
         //
         virtual uint32 GetConfiguration(_Out_ Platform::Array<byte>^* ConfigurationDataPtr);
-        virtual uint32 SetConfiguration(_In_ const Platform::Array<byte>^ ConfigurationData);        
+        virtual uint32 SetConfiguration(_In_ const Platform::Array<byte>^ ConfigurationData);
 
         virtual uint32 Initialize();
         virtual uint32 Shutdown();
@@ -188,7 +188,7 @@ namespace AdapterLib
         std::vector<BridgeRT::IAdapterDevice^> m_devices;
         std::vector<BridgeRT::IAdapterDevice^> m_pendingDevices;
 
-        // Signals 
+        // Signals
         std::vector<BridgeRT::IAdapterSignal^> m_signals;
 
         // Sync object
