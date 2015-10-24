@@ -21,6 +21,8 @@ namespace DeviceProviders
     interface class IAboutData;
     interface class IBusObject;
     interface class IProvider;
+    interface class ISession;
+    ref class AllJoynSession;
     ref class AllJoynStatus;
 
     public interface class IService
@@ -41,22 +43,22 @@ namespace DeviceProviders
         {
             IProvider^ get();
         }
+        property uint16 AnnouncedPort
+        {
+            uint16 get();
+        }
+        property uint16 PreferredPort
+        {
+            uint16 get();
+            void set(uint16 value);
+        }
 
         AllJoynStatus^ Ping();
-        AllJoynStatus^ JoinSession();
-        AllJoynStatus^ JoinSession(uint16 port);
-        AllJoynStatus^ LeaveSession();
+        AllJoynSession^ JoinSession();
+        AllJoynSession^ JoinSession(uint16 port);
 
         bool ImplementsInterface(Platform::String^ interfaceName);
         IBusObject^ GetBusObject(Platform::String^ path);
-        Windows::Foundation::Collections::IVector<IBusObject^>^ GetBusObjectsWhichImplementInterface(Platform::String^ interfaceName);
-
-#if _DEBUG
-        // Only for unit testing
-        property int32 SessionUserCount
-        {
-            int32 get();
-        }
-#endif
+        Windows::Foundation::Collections::IVector<IBusObject^>^ GetBusObjectsWhichImplementInterface(Platform::String ^ interfaceName);
     };
 }

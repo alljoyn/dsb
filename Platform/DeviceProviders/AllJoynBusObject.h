@@ -19,6 +19,7 @@
 #include "pch.h"
 #include "IBusObject.h"
 #include "AllJoynService.h"
+#include "AllJoynSessionImplementation.h"
 
 namespace DeviceProviders
 {
@@ -27,14 +28,15 @@ namespace DeviceProviders
         DEBUG_LIFETIME_DECL(AllJoynBusObject);
 
     internal:
-        AllJoynBusObject(AllJoynService ^ service, const std::string& path, const char **interfaceNames, size_t interfaceCount);
-        AllJoynBusObject(AllJoynService ^ service, const std::string& path, alljoyn_proxybusobject proxyBusObject);
+        AllJoynBusObject(AllJoynSessionImplementation^ session, const std::string& path, const std::vector<const char*> interfaceNames);
+        AllJoynBusObject(AllJoynSessionImplementation^ session, const std::string& path, alljoyn_proxybusobject proxyBusObject);
         void Shutdown();
 
         inline const std::string& GetPath() const { return m_path; }
-        inline AllJoynService^ GetService() const { return m_service; }
+        inline AllJoynService^ GetService() const { return m_session->GetService(); }
+        inline AllJoynSessionImplementation^ GetSession() const { return m_session; }
         inline alljoyn_proxybusobject GetProxyBusObject() const { return m_proxyBusObject; }
-        inline alljoyn_busattachment GetBusAttachment() const { return m_service->GetBusAttachment(); }
+        inline alljoyn_busattachment GetBusAttachment() const { return GetService()->GetBusAttachment(); }
 
     public:
         virtual ~AllJoynBusObject();
@@ -53,7 +55,7 @@ namespace DeviceProviders
         }
         virtual property IService^ Service
         {
-            inline IService^ get() { return m_service; }
+            inline IService^ get() { return m_session->GetService(); }
         }
 
         virtual IInterface^ GetInterface(Platform::String^ interfaceName);
@@ -63,7 +65,7 @@ namespace DeviceProviders
         AllJoynBusObject^ GetChildIfCreated(const std::string& fullPath);
 
         std::atomic<bool> m_active;
-        AllJoynService ^ m_service;
+        AllJoynSessionImplementation^ m_session;
         alljoyn_proxybusobject m_proxyBusObject;
         std::string m_path;
         bool m_introspectedSuccessfully;

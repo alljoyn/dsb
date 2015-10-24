@@ -228,6 +228,8 @@
     <ClInclude Include="AllJoynMethod.h" />
     <ClInclude Include="AllJoynProperty.h" />
     <ClInclude Include="AllJoynService.h" />
+    <ClInclude Include="AllJoynSessionImplementation.h" />
+    <ClInclude Include="AllJoynSession.h" />
     <ClInclude Include="AllJoynSignal.h" />
     <ClInclude Include="AllJoynStatus.h" />
     <ClInclude Include="DebugLifetime.h" />
@@ -257,6 +259,8 @@
     <ClCompile Include="AllJoynProperty.cpp" />
     <ClCompile Include="AllJoynProvider.cpp" />
     <ClCompile Include="AllJoynService.cpp" />
+    <ClCompile Include="AllJoynSessionImplementation.cpp" />
+    <ClCompile Include="AllJoynSession.cpp" />
     <ClCompile Include="AllJoynSignal.cpp" />
     <ClCompile Include="AllJoynStatus.cpp" />
     <ClCompile Include="AllJoynTypeDefinition.cpp" />

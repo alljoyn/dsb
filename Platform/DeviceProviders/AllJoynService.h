@@ -24,8 +24,10 @@
 
 namespace DeviceProviders
 {
-    ref class AllJoynBusObject;
     ref class AllJoynAboutData;
+    ref class AllJoynBusObject;
+    ref class AllJoynSession;
+    ref class AllJoynSessionImplementation;
 
     ref class AllJoynService : public IService
     {
@@ -39,13 +41,22 @@ namespace DeviceProviders
         void Initialize(alljoyn_msgarg aboutDataArg, alljoyn_msgarg objectDescriptionArg);
         void Shutdown();
 
-        AllJoynBusObject^ GetBusObjectIfCreated(const std::string& path);
-        AllJoynBusObject^ GetOrCreateBusObject(const std::string& path);
+        bool GetHasAnySessions();
 
         inline AllJoynProvider ^ GetProvider() const { return m_provider; }
         inline alljoyn_busattachment GetBusAttachment() const { return m_provider->GetBusAttachment(); }
         inline const std::string& GetName() const { return m_name; }
-        inline uint32 GetSessionId() const { return m_sessionId; }
+        inline alljoyn_aboutobjectdescription GetObjectDescription() const { return m_objectDescription; }
+        inline bool GetIsActive()
+        {
+            AutoLock lock(&m_lock, true);
+            return m_active;
+        }
+        void SessionLost(AllJoynSessionImplementation^ session, alljoyn_sessionlostreason reason);
+
+    private:
+        void ClearDeadSessionReferences();
+        AllJoynSession^ GetImplicitSession();
 
     public:
         virtual ~AllJoynService();
@@ -66,47 +77,45 @@ namespace DeviceProviders
         {
             inline IProvider^ get() { return m_provider; }
         }
+        virtual property uint16 AnnouncedPort
+        {
+            inline uint16 get() { return m_announcedPort; }
+        }
+        virtual property uint16 PreferredPort
+        {
+            uint16 get()
+            {
+                AutoLock lock(&m_lock, true);
+                return m_preferredPort;
+            }
+            void set(uint16 value)
+            {
+                AutoLock lock(&m_lock, true);
+                m_preferredPort = value;
+            }
+        }
 
         virtual AllJoynStatus^ Ping();
-        virtual AllJoynStatus^ JoinSession();
-        virtual AllJoynStatus^ JoinSession(uint16 port);
-        virtual AllJoynStatus^ LeaveSession();
+        virtual AllJoynSession^ JoinSession();
+        virtual AllJoynSession^ JoinSession(uint16 port);
 
         virtual bool ImplementsInterface(Platform::String^ interfaceName);
         virtual IBusObject^ GetBusObject(Platform::String^ path);
-        virtual Windows::Foundation::Collections::IVector<IBusObject^>^ GetBusObjectsWhichImplementInterface(Platform::String^ interfaceName);
-
-
-#if _DEBUG
-        // Only for unit testing
-        virtual property int32 SessionUserCount
-        {
-            inline int32 get()
-            {
-                AutoLock lock(&m_objectsLock, true);
-                return m_sessionUserCount;
-            }
-        }
-#endif
+        virtual Windows::Foundation::Collections::IVector<IBusObject^>^ GetBusObjectsWhichImplementInterface(Platform::String ^ interfaceName);
 
     private:
-        static void AJ_CALL SessionLost(const void* context, alljoyn_sessionid sessionId, alljoyn_sessionlostreason reason);
-
-        Platform::WeakReference m_weakThis;
-        std::atomic<bool> m_active;
-        std::map<std::string, Platform::WeakReference> m_objectsMap;
-        CSLock m_objectsLock;
+        CSLock m_lock;
+        bool m_active;
+        AllJoynSession^ m_implicitSession;
+        std::map<uint16, Platform::WeakReference> m_sessionsMap;
         AllJoynAboutData^ m_aboutData;
-
         AllJoynProvider ^ m_provider;
         std::string m_name;
-        alljoyn_sessionport m_sessionPort;
-        alljoyn_sessionid m_sessionId;
-        alljoyn_sessionlistener m_sessionListener;
+        alljoyn_sessionport m_announcedPort;
+        alljoyn_sessionport m_preferredPort;
         alljoyn_msgarg m_aboutDataArg;
         alljoyn_msgarg m_objectDescriptionArg;
         alljoyn_aboutobjectdescription m_objectDescription;
-        int m_sessionUserCount;
 
         static DWORD s_pingTimeout;
     };

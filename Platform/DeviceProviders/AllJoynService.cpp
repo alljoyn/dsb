@@ -20,6 +20,8 @@
 #include "AllJoynProvider.h"
 #include "AllJoynHelpers.h"
 #include "AllJoynAboutData.h"
+#include "AllJoynSession.h"
+#include "AllJoynSessionImplementation.h"
 #include "AllJoynStatus.h"
 
 using namespace Windows::Foundation;
@@ -35,14 +37,11 @@ namespace DeviceProviders
     AllJoynService::AllJoynService(AllJoynProvider ^ provider, std::string serviceName, alljoyn_sessionport port)
         : m_provider(provider)
         , m_name(serviceName)
-        , m_sessionPort(port)
-        , m_sessionId(0)
-        , m_sessionListener(nullptr)
-        , m_sessionUserCount(0)
+        , m_announcedPort(port)
+        , m_preferredPort(0)
         , m_aboutDataArg(nullptr)
         , m_objectDescriptionArg(nullptr)
         , m_objectDescription(nullptr)
-        , m_weakThis(this)
         , m_active(false)
     {
         DEBUG_LIFETIME_IMPL(AllJoynService);
@@ -50,7 +49,7 @@ namespace DeviceProviders
 
     AllJoynService::~AllJoynService()
     {
-        if (m_active)
+        if (GetIsActive())
         {
             Shutdown();
         }
@@ -58,7 +57,7 @@ namespace DeviceProviders
 
     void AllJoynService::Initialize(alljoyn_msgarg aboutDataArg, alljoyn_msgarg objectDescriptionArg)
     {
-        AutoLock lock(&m_objectsLock, true);
+        AutoLock lock(&m_lock, true);
 
         if (m_aboutDataArg != nullptr)
         {
@@ -77,44 +76,36 @@ namespace DeviceProviders
         m_objectDescriptionArg = objectDescriptionArg;
         m_objectDescription = alljoyn_aboutobjectdescription_create_full(m_objectDescriptionArg);
 
-        size_t pathCount = alljoyn_aboutobjectdescription_getpaths(m_objectDescription, nullptr, 0);
-        if (0 != pathCount)
-        {
-            auto pathArray = vector<const char*>(pathCount);
-            alljoyn_aboutobjectdescription_getpaths(m_objectDescription, pathArray.data(), pathCount);
+        m_active = true;
+        OutputDebugString(L"AllJoynService::Initialize: m_active=true\n");
 
-            auto pathSet = set<string>(pathArray.begin(), pathArray.end());
-            for (auto& path : pathSet)
+        ClearDeadSessionReferences();
+        for (auto& kvp : m_sessionsMap)
+        {
+            auto session = kvp.second.Resolve<AllJoynSessionImplementation>();
+            if (session)
             {
-                m_objectsMap.insert(make_pair(path, WeakReference(nullptr)));
-            }
-            for (auto& kvp : m_objectsMap)
-            {
-                if (pathSet.find(kvp.first) == pathSet.end())
-                {
-                    m_objectsMap.erase(kvp.first);
-                }
+                session->OnObjectDescriptionChanged();
             }
         }
-
-        m_active = true;
     }
 
     void AllJoynService::Shutdown()
     {
-        AutoLock lock(&m_objectsLock, true);
+        AutoLock lock(&m_lock, true);
         m_active = false;
 
-        for (auto iter : m_objectsMap)
+        m_implicitSession = nullptr;
+
+        for (auto& kvp : m_sessionsMap)
         {
-            auto busObject = iter.second.Resolve<AllJoynBusObject>();
-            if (busObject != nullptr)
+            auto session = kvp.second.Resolve<AllJoynSessionImplementation>();
+            if (session)
             {
-                busObject->Shutdown();
+                session->Shutdown();
             }
         }
-        m_objectsMap.clear();
-
+        m_sessionsMap.clear();
 
         if (m_aboutDataArg != nullptr)
         {
@@ -133,180 +124,91 @@ namespace DeviceProviders
             alljoyn_aboutobjectdescription_destroy(m_objectDescription);
             m_objectDescription = nullptr;
         }
-
-        while (m_sessionUserCount > 0)
-        {
-            LeaveSession();
-        }
     }
 
-    AllJoynStatus^ AllJoynService::JoinSession()
+    AllJoynSession^ AllJoynService::JoinSession()
     {
-        return this->JoinSession(m_sessionPort);
+        auto session = this->JoinSession(m_announcedPort);
+        return session;
     }
 
-    AllJoynStatus^ AllJoynService::JoinSession(uint16 sessionPort)
+    AllJoynSession^ AllJoynService::JoinSession(uint16 sessionPort)
     {
-        AutoLock lock(&m_objectsLock, true);
+        AutoLock lock(&m_lock, true);
 
         QStatus status = ER_OK;
+        AllJoynSessionImplementation^ session;
 
-        if (m_sessionId == 0 && m_sessionUserCount == 0)
+        auto sessionIterator = m_sessionsMap.find(sessionPort);
+        if (sessionIterator != m_sessionsMap.end())
         {
-            alljoyn_sessionlistener_callbacks sessionListenerCallbacks = { SessionLost, nullptr, nullptr };
-            m_sessionListener = alljoyn_sessionlistener_create(&sessionListenerCallbacks, &m_weakThis);
-
-            alljoyn_sessionopts sessionOpts = alljoyn_sessionopts_create(ALLJOYN_TRAFFIC_TYPE_MESSAGES, QCC_FALSE, ALLJOYN_PROXIMITY_ANY, ALLJOYN_TRANSPORT_ANY);
-
-            status = alljoyn_busattachment_joinsession(m_provider->GetBusAttachment(),
-                m_name.c_str(),
-                sessionPort,
-                m_sessionListener,
-                &m_sessionId,
-                sessionOpts);
-
-            if (status == ER_OK)
+            session = sessionIterator->second.Resolve<AllJoynSessionImplementation>();
+            if (!session)
             {
-                m_sessionUserCount = 1;
-            }
-            else
-            {
-                lock.Unlock();
-                m_provider->RemoveService(this, alljoyn_sessionlostreason::ALLJOYN_SESSIONLOST_REMOTE_END_CLOSED_ABRUPTLY);
+                m_sessionsMap.erase(sessionIterator);
             }
         }
-        else
+
+        if (!session)
         {
-            ++m_sessionUserCount;
+            session = AllJoynSessionImplementation::CreateSession(this, sessionPort);
+            if (session)
+            {
+                session->OnObjectDescriptionChanged();
+                m_sessionsMap.insert(make_pair(sessionPort, WeakReference(session)));
+            }
         }
-        return ref new AllJoynStatus(status);
+
+        return session ? ref new AllJoynSession(session) : nullptr;
     }
 
-    AllJoynStatus^ AllJoynService::LeaveSession()
+    bool AllJoynService::GetHasAnySessions()
     {
-        AutoLock lock(&m_objectsLock, true);
-
-        QStatus status = ER_OK;
-
-        if (--m_sessionUserCount == 0)
-        {
-            if (m_sessionId != 0)
-            {
-                auto status = alljoyn_busattachment_ping(m_provider->GetBusAttachment(), m_name.c_str(), s_pingTimeout);
-                if (status == ER_OK)
-                {
-                    status = alljoyn_busattachment_leavesession(this->GetProvider()->GetBusAttachment(), m_sessionId);
-                    m_sessionId = 0;
-                }
-                else if (m_active)
-                {
-                    lock.Unlock();
-                    m_provider->RemoveService(this, alljoyn_sessionlostreason::ALLJOYN_SESSIONLOST_REMOTE_END_CLOSED_ABRUPTLY);
-                    status = ER_ALLJOYN_LEAVESESSION_REPLY_NO_SESSION;
-                }
-            }
-            if (m_sessionListener != nullptr)
-            {
-                alljoyn_sessionlistener_destroy(m_sessionListener);
-                m_sessionListener = nullptr;
-            }
-        }
-        else if (m_sessionUserCount < 0)
-        {
-            m_sessionUserCount = 0;
-        }
-
-        return ref new AllJoynStatus(status);
+        AutoLock lock(&m_lock, true);
+        ClearDeadSessionReferences();
+        return !m_sessionsMap.empty();
     }
 
-    void AJ_CALL AllJoynService::SessionLost(const void* context, alljoyn_sessionid sessionId, alljoyn_sessionlostreason reason)
+    void AllJoynService::SessionLost(AllJoynSessionImplementation^ session, alljoyn_sessionlostreason reason)
     {
-        auto service = static_cast<const WeakReference *>(context)->Resolve<AllJoynService>();
-        if (service && sessionId == service->m_sessionId)
-        {
-            {
-                AutoLock lock(&service->m_objectsLock, true);
-
-                service->m_sessionId = 0;
-                service->m_sessionUserCount = 0;
-            }
-            service->GetProvider()->RemoveService(service, reason);
-        }
-    };
-
-    AllJoynBusObject^ AllJoynService::GetBusObjectIfCreated(const string& path)
-    {
-        AllJoynBusObject^ busObject = nullptr;
-
-        if (m_active)
-        {
-            AutoLock lock(&m_objectsLock, true);
-
-            auto iter = m_objectsMap.find(path);
-            if (iter != m_objectsMap.end())
-            {
-                busObject = iter->second.Resolve<AllJoynBusObject>();
-            }
-        }
-        return busObject;
+        GetProvider()->RemoveService(this, reason);
     }
 
-    AllJoynBusObject^ AllJoynService::GetOrCreateBusObject(const string& path)
+    void AllJoynService::ClearDeadSessionReferences()
     {
-        AllJoynBusObject^ busObject = nullptr;
+        AutoLock lock(&m_lock, true);
 
-        if (m_active)
+        vector<uint16> entriesToErase;
+        for (auto kvp : m_sessionsMap)
         {
-            AutoLock lock(&m_objectsLock, true);
-
-            busObject = GetBusObjectIfCreated(path);
-
-            if (busObject == nullptr && m_objectsMap.find(path) != m_objectsMap.end())
+            if (!kvp.second.Resolve<AllJoynSessionImplementation>())
             {
-                if (m_sessionId != 0 || JoinSession()->IsSuccess)
-                {
-                    size_t interfaceCount = 0;
-                    interfaceCount = alljoyn_aboutobjectdescription_getinterfaces(m_objectDescription, path.data(), nullptr, 0);
-                    vector<const char*> interfacesArray;
-
-                    if (0 != interfaceCount)
-                    {
-                        interfacesArray = vector<const char*>(interfaceCount);
-                        alljoyn_aboutobjectdescription_getinterfaces(m_objectDescription, path.data(), interfacesArray.data(), interfaceCount);
-                    }
-
-                    busObject = ref new AllJoynBusObject(this, path, interfacesArray.data(), interfaceCount);
-                    m_objectsMap[path] = WeakReference(busObject);
-                }
+                entriesToErase.push_back(kvp.first);
             }
         }
-        return busObject;
+
+        for (auto sessionPort : entriesToErase)
+        {
+            m_sessionsMap.erase(sessionPort);
+        }
     }
 
-    IVector<IBusObject^> ^ AllJoynService::Objects::get()
+    AllJoynSession^ AllJoynService::GetImplicitSession()
     {
-        if (!m_active)
+        AutoLock lock(&m_lock, true);
+
+        if (!m_implicitSession)
         {
-            return nullptr;
+            m_implicitSession = this->JoinSession(m_preferredPort ? m_preferredPort : m_announcedPort);
         }
 
-        auto busObjects = ref new Vector<IBusObject^>();
-        AutoLock lock(&m_objectsLock, true);
+        return m_implicitSession;
+    }
 
-        for (auto& kvp : m_objectsMap)
-        {
-            auto busObject = GetOrCreateBusObject(kvp.first);
-            if (busObject)
-            {
-                busObjects->Append(busObject);
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return busObjects;
+    IVector<IBusObject ^>^ AllJoynService::Objects::get()
+    {
+        auto session = GetImplicitSession();
+        return session ? session->Objects : nullptr;
     }
 
     String ^ AllJoynService::Name::get()
@@ -316,7 +218,7 @@ namespace DeviceProviders
 
     IAboutData ^ AllJoynService::AboutData::get()
     {
-        AutoLock lock(&m_objectsLock, true);
+        AutoLock lock(&m_lock, true);
 
         if (!m_aboutData && m_aboutDataArg)
         {
@@ -329,22 +231,13 @@ namespace DeviceProviders
     AllJoynStatus^ AllJoynService::Ping()
     {
         auto status = alljoyn_busattachment_ping(m_provider->GetBusAttachment(), m_name.c_str(), s_pingTimeout);
-        if (status != ER_OK)
-        {
-            {
-                AutoLock lock(&m_objectsLock, true);
-                m_sessionUserCount = 0;
-            }
-
-            m_provider->RemoveService(this, alljoyn_sessionlostreason::ALLJOYN_SESSIONLOST_REMOTE_END_CLOSED_ABRUPTLY);
-        }
         return ref new AllJoynStatus(status);
     }
 
-    bool AllJoynService::ImplementsInterface(Platform::String^ interfaceName)
+    bool AllJoynService::ImplementsInterface(String^ interfaceName)
     {
         bool implementsInterface = false;
-        if (m_active)
+        if (GetIsActive())
         {
             implementsInterface = alljoyn_aboutobjectdescription_hasinterface(
                 m_objectDescription,
@@ -353,53 +246,15 @@ namespace DeviceProviders
         return implementsInterface;
     }
 
-    IBusObject^ AllJoynService::GetBusObject(String^ fullpath)
+    IBusObject^ AllJoynService::GetBusObject(String^ path)
     {
-        auto path = AllJoynHelpers::PlatformToMultibyteStandardString(fullpath);
-        IBusObject^ busObject = GetOrCreateBusObject(path);
-
-        if (busObject == nullptr)
-        {
-            // find an ancestor of the provided path if we know of one
-            auto iter = std::find_if(m_objectsMap.begin(), m_objectsMap.end(), [&path](pair<string, WeakReference> kvp) -> bool
-            {
-                return path.substr(0, kvp.first.length()) == kvp.first;
-            });
-
-            if (iter != m_objectsMap.end())
-            {
-                auto ancestor = GetOrCreateBusObject(iter->first);
-                busObject = ancestor->GetChild(fullpath);
-            }
-        }
-        return busObject;
+        auto session = GetImplicitSession();
+        return session ? session->GetBusObject(path) : nullptr;
     }
 
-    IVector<IBusObject^>^ AllJoynService::GetBusObjectsWhichImplementInterface(Platform::String^ interfaceName)
+    IVector<IBusObject^>^ AllJoynService::GetBusObjectsWhichImplementInterface(String ^ interfaceName)
     {
-        if (!m_active)
-        {
-            return nullptr;
-        }
-
-        auto busObjects = ref new Vector<IBusObject^>();
-
-        string interfaceNameString = AllJoynHelpers::PlatformToMultibyteStandardString(interfaceName);
-
-        AutoLock lock(&m_objectsLock, true);
-
-        // get number of bus object path
-        size_t pathCount = alljoyn_aboutobjectdescription_getinterfacepaths(m_objectDescription, interfaceNameString.data(), nullptr, 0);
-        if (0 != pathCount)
-        {
-            auto pathArray = vector<const char*>(pathCount);
-            alljoyn_aboutobjectdescription_getinterfacepaths(m_objectDescription, interfaceNameString.data(), pathArray.data(), pathCount);
-
-            for (auto& path : pathArray)
-            {
-                busObjects->Append(GetOrCreateBusObject(path));
-            }
-        }
-        return busObjects;
+        auto session = GetImplicitSession();
+        return session ? session->GetBusObjectsWhichImplementInterface(interfaceName) : nullptr;
     }
 }
