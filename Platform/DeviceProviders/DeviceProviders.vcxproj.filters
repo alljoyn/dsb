@@ -52,6 +52,12 @@
     <ClCompile Include="AllJoynAboutIcon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AllJoynSessionImplementation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AllJoynSession.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AllJoynProvider.h">
@@ -137,6 +143,12 @@
       <Filter>Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="AllJoynAboutIcon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AllJoynSessionImplementation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AllJoynSession.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

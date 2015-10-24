@@ -267,7 +267,7 @@ namespace DeviceProviders
             {
                 AutoLock lock(&provider->m_servicesLock, true);
                 auto iter = provider->m_servicesMap.find(busName);
-                if (iter != provider->m_servicesMap.end() && iter->second->GetSessionId() == 0)
+                if (iter != provider->m_servicesMap.end() && !iter->second->GetHasAnySessions())
                 {
                     service = iter->second;
                 }

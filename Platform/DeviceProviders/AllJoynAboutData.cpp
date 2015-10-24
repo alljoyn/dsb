@@ -19,6 +19,7 @@
 #include "AllJoynAboutIcon.h"
 #include "AllJoynHelpers.h"
 #include "AllJoynMessageArgVariant.h"
+#include "AllJoynSession.h"
 #include "AllJoynStatus.h"
 #include "TypeConversionHelpers.h"
 
@@ -356,9 +357,10 @@ namespace DeviceProviders
         {
             auto allFields = ref new Vector<IStringVariantPair ^>();
 
-            if (m_service->JoinSession()->IsSuccess)
+            auto session = m_service->JoinSession();
+            if (session)
             {
-                auto aboutProxy = alljoyn_aboutproxy_create(m_service->GetBusAttachment(), m_service->GetName().c_str(), m_service->GetSessionId());
+                auto aboutProxy = alljoyn_aboutproxy_create(m_service->GetBusAttachment(), m_service->GetName().c_str(), session->SessionId);
 
                 alljoyn_msgarg extendedAboutMsgArg = alljoyn_msgarg_create();
                 QStatus status = alljoyn_aboutproxy_getaboutdata(aboutProxy, nullptr, extendedAboutMsgArg);
@@ -372,7 +374,6 @@ namespace DeviceProviders
                     }
                 }
 
-                m_service->LeaveSession();
                 m_allFields = allFields->GetView();
             }
         }
@@ -384,27 +385,25 @@ namespace DeviceProviders
     {
         return create_async([this]() -> IAboutIcon^
         {
-            AllJoynAboutIcon^ icon = nullptr;
+            AllJoynAboutIcon^ icon;
             AllJoynBusObject^ iconBusObject;
+            AllJoynSession^ session;
 
             try
             {
-                iconBusObject = m_service->GetOrCreateBusObject(AllJoynAboutIcon::AboutIconObjectPath);
-                if (!iconBusObject)
+                session = m_service->JoinSession();
+                if (session)
                 {
-                    return nullptr;
+                    iconBusObject = session->GetImplementation()->GetOrCreateBusObject(AllJoynAboutIcon::AboutIconObjectPath);
+                    if (iconBusObject)
+                    {
+                        icon = ref new AllJoynAboutIcon();
+                        create_task(icon->InitializeAsync(iconBusObject)).wait();
+                    }
                 }
-
-                icon = ref new AllJoynAboutIcon();
-                create_task(icon->InitializeAsync(iconBusObject)).wait();
             }
             catch (...)
             {
-            }
-
-            if (iconBusObject)
-            {
-                m_service->LeaveSession();
             }
 
             return icon;

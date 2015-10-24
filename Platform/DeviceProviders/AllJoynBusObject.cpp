@@ -29,8 +29,8 @@ using namespace Platform;
 namespace DeviceProviders
 {
 
-    AllJoynBusObject::AllJoynBusObject(AllJoynService ^ service, const string& path, const char **interfaceNames, size_t interfaceCount)
-        : m_service(service)
+    AllJoynBusObject::AllJoynBusObject(AllJoynSessionImplementation^ session, const string& path, const vector<const char*> interfaceNames)
+        : m_session(session)
         , m_proxyBusObject(nullptr)
         , m_path(path)
         , m_introspectedSuccessfully(false)
@@ -38,14 +38,14 @@ namespace DeviceProviders
     {
         DEBUG_LIFETIME_IMPL(AllJoynBusObject);
 
-        for (size_t i = 0; i < interfaceCount; ++i)
+        for (auto interfaceName : interfaceNames)
         {
-            m_interfaces.insert(make_pair<string, WeakReference>(interfaceNames[i], WeakReference(nullptr)));
+            m_interfaces[interfaceName] = WeakReference(nullptr);
         }
     }
 
-    AllJoynBusObject::AllJoynBusObject(AllJoynService ^ service, const string& path, alljoyn_proxybusobject proxyBusObject)
-        : m_service(service)
+    AllJoynBusObject::AllJoynBusObject(AllJoynSessionImplementation^ session, const string& path, alljoyn_proxybusobject proxyBusObject)
+        : m_session(session)
         , m_proxyBusObject(proxyBusObject)
         , m_path(path)
         , m_introspectedSuccessfully(false)
@@ -102,10 +102,10 @@ namespace DeviceProviders
         {
             if (m_proxyBusObject == nullptr)
             {
-                m_proxyBusObject = alljoyn_proxybusobject_create(m_service->GetBusAttachment(),
-                    m_service->GetName().c_str(),
+                m_proxyBusObject = alljoyn_proxybusobject_create(GetService()->GetBusAttachment(),
+                    GetService()->GetName().c_str(),
                     m_path.c_str(),
-                    m_service->GetSessionId());
+                    m_session->GetSessionId());
             }
 
             if (m_proxyBusObject != nullptr)
@@ -196,10 +196,10 @@ namespace DeviceProviders
                 if (busObject == nullptr)
                 {
                     // Also check if the service already created this object, but it's not yet in our children map.
-                    busObject = m_service->GetBusObjectIfCreated(path);
+                    busObject = m_session->GetBusObjectIfCreated(path);
                     if (busObject == nullptr)
                     {
-                        busObject = ref new AllJoynBusObject(m_service, path, children[i]);
+                        busObject = ref new AllJoynBusObject(m_session, path, children[i]);
                     }
                     m_childObjects[path] = WeakReference(busObject);
                 }
@@ -262,7 +262,7 @@ namespace DeviceProviders
                 auto proxyBusObject = alljoyn_proxybusobject_getchild(m_proxyBusObject, path.substr(m_path.length() + 1).data());
                 if (proxyBusObject != nullptr)
                 {
-                    busObject = ref new AllJoynBusObject(m_service, path, proxyBusObject);
+                    busObject = ref new AllJoynBusObject(m_session, path, proxyBusObject);
                     m_childObjects[path] = WeakReference(busObject);
                 }
             }
