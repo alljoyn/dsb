@@ -5,6 +5,7 @@
 #include "MockAdapter.h"
 
 using namespace AdapterLib;
+using namespace BridgeRT;
 
 LSFHandler::LSFHandler(MockLampDevice^ parentDevice)
     : m_parentDevice(parentDevice)
@@ -53,9 +54,6 @@ LSFHandler::ClearLampFault(
     return ERROR_SUCCESS;
 }
 
-
-
-
 // LampParameters Interface
 uint32 
 LSFHandler::LampParameters_Version::get()
@@ -67,17 +65,15 @@ LSFHandler::LampParameters_Version::get()
 uint32 
 LSFHandler::LampParameters_EnergyUsageMilliwatts::get()
 {
-    return 0;
+    return 600;
 }
 
 
 uint32 
 LSFHandler::LampParameters_BrightnessLumens::get()
 {
-    return 0;
+    return 1000;
 }
-
-
 
 
 // LampDetails Interface
@@ -91,42 +87,42 @@ LSFHandler::LampDetails_Version::get()
 uint32 
 LSFHandler::LampDetails_Make::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampMake::MAKE_OEM1);
 }
 
 
 uint32 
 LSFHandler::LampDetails_Model::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampModel::MODEL_LED);
 }
 
 
 uint32 
 LSFHandler::LampDetails_Type::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampType::LAMPTYPE_A15);
 }
 
 
 uint32 
 LSFHandler::LampDetails_LampType::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampType::LAMPTYPE_A19);
 }
 
 
 uint32 
 LSFHandler::LampDetails_LampBaseType::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampBaseType::BASETYPE_E26);
 }
 
 
 uint32 
 LSFHandler::LampDetails_LampBeamAngle::get()
 {
-    return 0;
+    return 160;
 }
 
 
@@ -161,63 +157,63 @@ LSFHandler::LampDetails_HasEffects::get()
 uint32 
 LSFHandler::LampDetails_MinVoltage::get()
 {
-    return 0;
+    return 100;
 }
 
 
 uint32 
 LSFHandler::LampDetails_MaxVoltage::get()
 {
-    return 0;
+    return 120;
 }
 
 
 uint32 
 LSFHandler::LampDetails_Wattage::get()
 {
-    return 0;
+    return 9;
 }
 
 
 uint32 
 LSFHandler::LampDetails_IncandescentEquivalent::get()
 {
-    return 0;
+    return 60;
 }
 
 
 uint32 
 LSFHandler::LampDetails_MaxLumens::get()
 {
-    return 0;
+    return 620;
 }
 
 
 uint32 
 LSFHandler::LampDetails_MinTemperature::get()
 {
-    return 0;
+    return 2700;
 }
 
 
 uint32 
 LSFHandler::LampDetails_MaxTemperature::get()
 {
-    return 0;
+    return 9000;
 }
 
 
 uint32 
 LSFHandler::LampDetails_ColorRenderingIndex::get()
 {
-    return 0;
+    return 80;
 }
 
 
 Platform::String^ 
 LSFHandler::LampDetails_LampID::get()
 {
-    return LAMP_ID;
+    return m_parentDevice->SerialNumber;
 }
 
 

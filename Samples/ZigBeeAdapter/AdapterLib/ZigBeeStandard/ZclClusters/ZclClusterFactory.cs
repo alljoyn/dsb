@@ -31,11 +31,15 @@ namespace AdapterLib
         // Basic Cluster is supported by all devices and must not be part of the supported cluster list
         // otherwise any ZigBee device/end point might be recognized as a supported device
         private UInt16[] m_clusterIdList = {
+            PowerConfigurationCluster.CLUSTER_ID,
             OnOffCluster.CLUSTER_ID,
             LevelControlCluster.CLUSTER_ID,
-            ColorControlCluster.CLUSTER_ID,
+            AlarmCluster.CLUSTER_ID,
             DoorLockCluster.CLUSTER_ID,
-            IASZoneCluster.CLUSTER_ID
+            ColorControlCluster.CLUSTER_ID,
+            TemperatureCluster.CLUSTER_ID,
+            RelativeHumidityCluster.CLUSTER_ID,
+            IASZoneCluster.CLUSTER_ID,
         };
 
         private ZclClusterFactory()
@@ -55,22 +59,30 @@ namespace AdapterLib
             {
                 switch (clusterId)
                 {
+                    case PowerConfigurationCluster.CLUSTER_ID:
+                        cluster = new PowerConfigurationCluster(endPoint, supportedAttributes);
+                        break;
                     case OnOffCluster.CLUSTER_ID:
                         cluster = new OnOffCluster(endPoint, supportedAttributes);
                         break;
-
                     case LevelControlCluster.CLUSTER_ID:
                         cluster = new LevelControlCluster(endPoint, supportedAttributes);
                         break;
-
-                    case ColorControlCluster.CLUSTER_ID:
-                        cluster = new ColorControlCluster(endPoint, supportedAttributes);
+                    case AlarmCluster.CLUSTER_ID:
+                        cluster = new AlarmCluster(endPoint, supportedAttributes);
                         break;
-
                     case DoorLockCluster.CLUSTER_ID:
                         cluster = new DoorLockCluster(endPoint, supportedAttributes);
                         break;
-
+                    case ColorControlCluster.CLUSTER_ID:
+                        cluster = new ColorControlCluster(endPoint, supportedAttributes);
+                        break;
+                    case TemperatureCluster.CLUSTER_ID:
+                        cluster = new TemperatureCluster(endPoint, supportedAttributes);
+                        break;
+                    case RelativeHumidityCluster.CLUSTER_ID:
+                        cluster = new RelativeHumidityCluster(endPoint, supportedAttributes);
+                        break;
                     case IASZoneCluster.CLUSTER_ID:
                         cluster = new IASZoneCluster(endPoint, supportedAttributes);
                         break;

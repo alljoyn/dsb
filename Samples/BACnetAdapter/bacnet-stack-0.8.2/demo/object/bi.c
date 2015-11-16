@@ -164,6 +164,13 @@ BACNET_BINARY_PV Binary_Input_Present_Value(
     index = Binary_Input_Instance_To_Index(object_instance);
     if (index < MAX_BINARY_INPUTS) {
         value = Present_Value[index];
+        if (Polarity[index] != POLARITY_NORMAL) {
+            if (value == BINARY_INACTIVE) {
+                value = BINARY_ACTIVE;
+            } else {
+                value = BINARY_INACTIVE;
+            }
+        }
     }
 
     return value;
@@ -222,6 +229,7 @@ bool Binary_Input_Encode_Value_List(
         value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
         value_list->value.context_specific = false;
         value_list->value.tag = BACNET_APPLICATION_TAG_ENUMERATED;
+        value_list->value.next = NULL;			/* 2014.09.03 - edward@bac-test.com - added this, lack was causing exceptions under MSVC emulation */
         value_list->value.type.Enumerated =
             Binary_Input_Present_Value(object_instance);
         value_list->priority = BACNET_NO_PRIORITY;
@@ -232,6 +240,7 @@ bool Binary_Input_Encode_Value_List(
         value_list->propertyArrayIndex = BACNET_ARRAY_ALL;
         value_list->value.context_specific = false;
         value_list->value.tag = BACNET_APPLICATION_TAG_BIT_STRING;
+        value_list->value.next = NULL;			/* 2014.09.03 - edward@bac-test.com - added this, lack was causing exceptions under MSVC emulation */
         bitstring_init(&value_list->value.type.Bit_String);
         bitstring_set_bit(&value_list->value.type.Bit_String,
             STATUS_FLAG_IN_ALARM, false);
@@ -247,6 +256,7 @@ bool Binary_Input_Encode_Value_List(
                 STATUS_FLAG_OUT_OF_SERVICE, false);
         }
         value_list->priority = BACNET_NO_PRIORITY;
+        value_list->next = NULL;   /* 2014.09.03 - edward@bac-test.com - added this, lack was causing exceptions under MSVC emulation */
     }
     status = Binary_Input_Change_Of_Value(object_instance);
 
@@ -262,6 +272,13 @@ bool Binary_Input_Present_Value_Set(
 
     index = Binary_Input_Instance_To_Index(object_instance);
     if (index < MAX_BINARY_INPUTS) {
+        if (Polarity[index] != POLARITY_NORMAL) {
+            if (value == BINARY_INACTIVE) {
+                value = BINARY_ACTIVE;
+            } else {
+                value = BINARY_INACTIVE;
+            }
+        }
         if (Present_Value[index] != value) {
             Change_Of_Value[index] = true;
         }
@@ -272,7 +289,7 @@ bool Binary_Input_Present_Value_Set(
     return status;
 }
 
-static void Binary_Input_Out_Of_Service_Set(
+void Binary_Input_Out_Of_Service_Set(
     uint32_t object_instance,
     bool value)
 {
@@ -295,8 +312,10 @@ bool Binary_Input_Object_Name(
 {
     static char text_string[32] = "";   /* okay for single thread */
     bool status = false;
+    unsigned index = 0;
 
-    if (object_instance < MAX_BINARY_INPUTS) {
+    index = Binary_Input_Instance_To_Index(object_instance);
+    if (index < MAX_BINARY_INPUTS) {
         sprintf(text_string, "BINARY INPUT %lu",
             (unsigned long) object_instance);
         status = characterstring_init_ansi(object_name, text_string);
@@ -309,9 +328,11 @@ BACNET_POLARITY Binary_Input_Polarity(
     uint32_t object_instance)
 {
     BACNET_POLARITY polarity = POLARITY_NORMAL;
+    unsigned index = 0;
 
-    if (object_instance < MAX_BINARY_INPUTS) {
-        polarity = Polarity[object_instance];
+    index = Binary_Input_Instance_To_Index(object_instance);
+    if (index < MAX_BINARY_INPUTS) {
+        polarity = Polarity[index];
     }
 
     return polarity;
@@ -322,9 +343,11 @@ bool Binary_Input_Polarity_Set(
     BACNET_POLARITY polarity)
 {
     bool status = false;
+    unsigned index = 0;
 
-    if (object_instance < MAX_BINARY_INPUTS) {
-        Polarity[object_instance] = polarity;
+    index = Binary_Input_Instance_To_Index(object_instance);
+    if (index < MAX_BINARY_INPUTS) {
+        Polarity[index] = polarity;
     }
 
     return status;
@@ -339,6 +362,7 @@ int Binary_Input_Read_Property(
     BACNET_BIT_STRING bit_string;
     BACNET_CHARACTER_STRING char_string;
     uint8_t *apdu = NULL;
+    bool state = false;
 
     if ((rpdata == NULL) || (rpdata->application_data == NULL) ||
         (rpdata->application_data_len == 0)) {
@@ -374,13 +398,8 @@ int Binary_Input_Read_Property(
             bitstring_set_bit(&bit_string, STATUS_FLAG_IN_ALARM, false);
             bitstring_set_bit(&bit_string, STATUS_FLAG_FAULT, false);
             bitstring_set_bit(&bit_string, STATUS_FLAG_OVERRIDDEN, false);
-            if (Binary_Input_Out_Of_Service(rpdata->object_instance)) {
-                bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
-                    true);
-            } else {
-                bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE,
-                    false);
-            }
+            state = Binary_Input_Out_Of_Service(rpdata->object_instance);
+            bitstring_set_bit(&bit_string, STATUS_FLAG_OUT_OF_SERVICE, state);
             apdu_len = encode_application_bitstring(&apdu[0], &bit_string);
             break;
         case PROP_EVENT_STATE:
@@ -389,9 +408,8 @@ int Binary_Input_Read_Property(
                 encode_application_enumerated(&apdu[0], EVENT_STATE_NORMAL);
             break;
         case PROP_OUT_OF_SERVICE:
-            apdu_len =
-                encode_application_boolean(&apdu[0],
-                Binary_Input_Out_Of_Service(rpdata->object_instance));
+            state = Binary_Input_Out_Of_Service(rpdata->object_instance);
+            apdu_len = encode_application_boolean(&apdu[0], state);
             break;
         case PROP_POLARITY:
             apdu_len =

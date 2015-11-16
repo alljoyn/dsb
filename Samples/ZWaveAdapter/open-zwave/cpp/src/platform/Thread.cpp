@@ -84,12 +84,13 @@ bool Thread::Start
 //-----------------------------------------------------------------------------
 bool Thread::Stop
 (
+    bool bWait  // = true
 )
 {
 	int32 timeout = 2000;	// Give the thread 2 seconds to exit
 	m_exitEvent->Set();
 
-	if( Wait::Single( this, timeout ) < 0 )
+	if( bWait && Wait::Single( this, timeout ) < 0 )
 	{
 		// Timed out
 			m_pImpl->Terminate();

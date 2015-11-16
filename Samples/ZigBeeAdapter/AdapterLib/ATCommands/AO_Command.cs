@@ -21,6 +21,10 @@ using System.Threading.Tasks;
 
 namespace AdapterLib
 {
+    /// <summary>
+    /// Configure options for API. Current options select the type of receive 
+    /// API frame to send out the Uart for received RF data packets. 
+    /// </summary>
     class AO_Command : XBeeATCommand
     {
         private static readonly byte[] DEFAULT_API_MODE = { 0 };

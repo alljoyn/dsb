@@ -1,4 +1,4 @@
-#Makefile to build BACnet Application for the Linux Port
+#Makefile to build BACnet Application for the GCC port
 
 # tools - only if you need them.
 # Most platforms have this already defined
@@ -19,8 +19,12 @@ OBJECT_SRC = \
 	$(BACNET_OBJECT)/bi.c \
 	$(BACNET_OBJECT)/bo.c \
 	$(BACNET_OBJECT)/bv.c \
+	$(BACNET_OBJECT)/channel.c \
+	$(BACNET_OBJECT)/command.c \
 	$(BACNET_OBJECT)/csv.c \
+	$(BACNET_OBJECT)/iv.c \
 	$(BACNET_OBJECT)/lc.c \
+	$(BACNET_OBJECT)/lo.c \
 	$(BACNET_OBJECT)/lsp.c \
 	$(BACNET_OBJECT)/ms-input.c \
 	$(BACNET_OBJECT)/mso.c \

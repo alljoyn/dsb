@@ -21,6 +21,10 @@ using System.Threading.Tasks;
 
 namespace AdapterLib
 {
+    /// <summary>
+    /// Read the 16-bit network address of the module. A value of 0xFFFE means the
+    /// module has not joined a ZigBee network 
+    /// </summary>
     class MY_Command : XBeeATCommand
     {
         private UInt16 m_networkAddress = AdapterHelper.UNKNOWN_NETWORK_ADDRESS;

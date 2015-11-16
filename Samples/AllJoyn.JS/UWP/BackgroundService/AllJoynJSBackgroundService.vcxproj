@@ -42,13 +42,10 @@
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationType>Windows Store</ApplicationType>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
-    <UseAppLocalVCLibs>true</UseAppLocalVCLibs>
     <AppxPackage>true</AppxPackage>
-    <AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
     <PackageCertificateKeyFile>AllJoynJSBackgroundService_TemporaryKey.pfx</PackageCertificateKeyFile>
     <ContainsStartupTask>true</ContainsStartupTask>
     <ProjectName>AllJoynJSBackgroundService</ProjectName>
-    <UapDefaultAssetScale>100</UapDefaultAssetScale>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

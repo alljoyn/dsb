@@ -622,6 +622,8 @@ static void MSTP_Receive_Frame_FSM(
                         MSTP_Flag.ReceivedInvalidFrame = true;
                     }
                     Receive_State = MSTP_RECEIVE_STATE_IDLE;
+                    MSTP_Flag.ReceivedInvalidFrame = true;
+                    Receive_State = MSTP_RECEIVE_STATE_IDLE;
                 }
             }
             break;
@@ -1118,7 +1120,6 @@ static bool MSTP_Master_Node_FSM(
                 }
                 MSTP_Send_Frame(frame_type, pkt->destination_mac, This_Station,
                     (uint8_t *) & pkt->buffer[0], pkt->length);
-                (void) Ringbuf_Pop(&PDU_Queue, NULL);
                 Master_State = MSTP_MASTER_STATE_IDLE;
                 /* clear our flag we were holding for comparison */
                 MSTP_Flag.ReceivedValidFrame = false;
@@ -1231,15 +1232,22 @@ int dlmstp_send_pdu(
     struct mstp_pdu_packet *pkt;
     uint16_t i = 0;
 
-    pkt = (struct mstp_pdu_packet *) Ringbuf_Alloc(&PDU_Queue);
+    pkt = (struct mstp_pdu_packet *) Ringbuf_Data_Peek(&PDU_Queue);
     if (pkt) {
         pkt->data_expecting_reply = npdu_data->data_expecting_reply;
         for (i = 0; i < pdu_len; i++) {
             pkt->buffer[i] = pdu[i];
         }
         pkt->length = pdu_len;
-        pkt->destination_mac = dest->mac[0];
-        bytes_sent = pdu_len;
+        if (dest && dest->mac_len) {
+            pkt->destination_mac = dest->mac[0];
+        } else {
+            /* mac_len = 0 is a broadcast address */
+            pkt->destination_mac = MSTP_BROADCAST_ADDRESS;
+        }
+        if (Ringbuf_Data_Put(&PDU_Queue, (uint8_t *)pkt)) {
+            bytes_sent = pdu_len;
+        }
     }
 
     return bytes_sent;
@@ -1274,7 +1282,7 @@ uint16_t dlmstp_receive(
     }
     if (Receive_State == MSTP_RECEIVE_STATE_IDLE) {
         /* only do master state machine while rx is idle */
-        if (This_Station <= DEFAULT_MAX_MASTER) {
+        if (This_Station <= 127) {
             while (MSTP_Master_Node_FSM()) {
                 /* do nothing while some states fast transition */
             };

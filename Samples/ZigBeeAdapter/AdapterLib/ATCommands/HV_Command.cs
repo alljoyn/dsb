@@ -21,6 +21,12 @@ using System.Threading.Tasks;
 
 namespace AdapterLib
 {
+    /// <summary>
+    /// Hardware Version. Read the hardware version of the module.version of the module.  
+    /// This command can be used to distinguish among different hardware platforms. 
+    /// The upper byte returns a value that is unique to each module type.  The lower 
+    /// byte indicates the hardware revision.
+    /// </summary>
     class HV_Command : XBeeATCommand
     {
         private UInt16 m_HWVersion = 0;

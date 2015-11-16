@@ -67,10 +67,11 @@ namespace OpenZWave
 		 * Stop a function running on this thread.  
 		 * Attempts to stop a function running on this thread.  The call will fail if no 
 		 * function is running.
+         * \param _bWait optional parameter to specify if the stop should wait for the thread to exit.
 		 * \return True if the function was successfully stopped.
 		 * \see Start, IsRunning
 		 */
-		bool Stop();
+		bool Stop( bool _bWait = true );
 
 		/**
 		 * Causes the thread to sleep for the specified number of milliseconds.

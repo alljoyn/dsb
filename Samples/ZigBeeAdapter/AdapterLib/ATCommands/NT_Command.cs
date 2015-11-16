@@ -21,6 +21,12 @@ using System.Threading.Tasks;
 
 namespace AdapterLib
 {
+    /// <summary>
+    /// Set/Read the node discovery timeout. When the network discovery (ND) command is 
+    /// issued, the NT value is included in the transmission to provide all remote 
+    /// devices with a response timeout. Remote devices wait a random time, less than 
+    /// NT, before sending their response.
+    /// </summary>
     class NT_Command : XBeeATCommand
     {
         private UInt16 m_nodeDiscoveryTimeOut = 0;

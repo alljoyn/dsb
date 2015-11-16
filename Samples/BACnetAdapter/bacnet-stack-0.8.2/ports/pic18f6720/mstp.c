@@ -1151,7 +1151,7 @@ bool MSTP_Master_Node_FSM(
                 matched =
                     mstp_compare_data_expecting_reply(&mstp_port->InputBuffer
                     [0], mstp_port->DataLength, mstp_port->SourceAddress,
-                    &mstp_port->TxBuffer[0], mstp_port->TxLength,
+                    &mstp_port->TxBuffer[8], mstp_port->TxLength,
                     mstp_port->TxDestination);
             }
             if (matched && mstp_port->TxReady) {
@@ -1166,7 +1166,7 @@ bool MSTP_Master_Node_FSM(
                     (uint8_t *) & mstp_port->TxBuffer[0], mstp_port->TxLength);
                 mstp_port->TxReady = false;
                 mstp_port->master_state = MSTP_MASTER_STATE_IDLE;
-            } else {
+            } else if (mstp_port->SilenceTimer > Treply_delay) {
                 /* DeferredReply */
                 /* If no reply will be available from the higher layers */
                 /* within Treply_delay after the reception of the */

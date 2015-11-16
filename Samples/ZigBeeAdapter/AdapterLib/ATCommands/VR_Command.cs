@@ -21,6 +21,11 @@ using System.Threading.Tasks;
 
 namespace AdapterLib
 {
+    /// <summary>
+    /// Read firmware version of the module. The firmware version returns 4 hexadecimal values (2 bytes)
+    /// "ABCD".  Digits ABC are the main release number and D is the revision number from the main release.
+    /// "B" is a variant designator.
+    /// </summary>
     class VR_Command : XBeeATCommand
     {
         private UInt16 m_SWVersion = 0;

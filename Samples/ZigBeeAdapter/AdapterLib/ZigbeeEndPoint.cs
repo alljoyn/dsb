@@ -53,9 +53,10 @@ namespace AdapterLib
 
         public string Description { get; private set; }
 
+        private LSFHandler m_lsfHandler = null;
         public ILSFHandler LightingServiceHandler
         {
-            get { return null; }
+            get { return m_lsfHandler; }
         }
 
         // Device properties
@@ -98,11 +99,13 @@ namespace AdapterLib
             this.Id = id;
             this.Name = UNKNOWN_NAME;
             this.DeviceId = DeviceId;
-            this.ProfileId = profileId;
+            this.m_originalProfileId = profileId;
+            this.m_commandProfileId = profileId;
             this.Vendor = UNKNOWN_MANUFACTURER;
             this.Model = UNKNOWN_MODEL;
+            this.Version = UNKNOWN_VERSION;
             this.SerialNumber = id.ToString() + "." + profileId.ToString() + "." + DeviceId.ToString();
-            this.Description = NO_DESCRIPTION; 
+            this.Description = NO_DESCRIPTION;
 
             this.m_basicCluster = new BasicCluster(this);
             this.m_inClusters = new Dictionary<UInt16, ZclCluster>();
@@ -125,7 +128,8 @@ namespace AdapterLib
 
             this.Id = Other.Id;
             this.DeviceId = Other.DeviceId;
-            this.ProfileId = Other.ProfileId;
+            this.m_originalProfileId = Other.m_originalProfileId;
+            this.m_commandProfileId = Other.m_commandProfileId;
 
             this.Name = Other.Name;
             this.Vendor = Other.Vendor;
@@ -153,7 +157,15 @@ namespace AdapterLib
         //
         // ZigBee implementation
         //
-        internal UInt16 ProfileId { get; private set; }
+        // note that profile ID that will be used to send command might be different
+        // than the profile ID of the ZigBee device. For example, command will be sent using HA profile ID 
+        // instead of ZLL profile ID for ZLL devices (as required by ZLL standard)
+        private UInt16 m_originalProfileId = 0;
+        private UInt16 m_commandProfileId = 0;
+        internal UInt16 CommandProfileId
+        {
+            get { return m_commandProfileId; }
+        }
         internal UInt16 DeviceId { get; private set; }
         internal byte Id { get; private set; }
 
@@ -168,7 +180,7 @@ namespace AdapterLib
             ZigBeeProfileLibrary profileLibrary = ZigBeeProfileLibrary.Instance;
             string profileName;
             string deviceType;
-            profileLibrary.GetProfileAndDeviceNames(ProfileId, DeviceId, out profileName, out deviceType);
+            profileLibrary.GetProfileAndDeviceNames(m_originalProfileId, DeviceId, out profileName, out deviceType, out m_commandProfileId);
 
             // set name and description
             this.Description = profileName + " - " + deviceType;
@@ -208,6 +220,13 @@ namespace AdapterLib
                 }
             }
 
+            // create AllJoyn LSF if this device is a light
+            ZigBeeProfileLibrary.DeviceType zigBeeDeviceType;
+            if (profileLibrary.IsLight(m_originalProfileId, DeviceId, out zigBeeDeviceType))
+            {
+                m_lsfHandler = new LSFHandler(this, zigBeeDeviceType);
+            }
+
             // create signals
             CreateSignals();
         }
@@ -221,7 +240,7 @@ namespace AdapterLib
                 return false;
             }
 
-            // discover supported attributes 
+            // discover supported attributes
             List<UInt16> attributeIdList = null;
             var discoverAttributes = new ZclDiscoverAttributes();
             discoverAttributes.GetListOfAttributeIds(m_device.Module, m_device, this, clusterId, out attributeIdList);
@@ -309,6 +328,7 @@ namespace AdapterLib
 
         private const string UNKNOWN_MANUFACTURER = "Unknown";
         private const string UNKNOWN_MODEL = "Unknown";
+        private const string UNKNOWN_VERSION = "";
         private const string UNKNOWN_NAME = "Unknown";
         private const string NO_DESCRIPTION = "No description";
 

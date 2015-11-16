@@ -55,9 +55,9 @@ namespace DeviceProviders
             return m_vector->IndexOf(value, index);
         }
 
-        virtual unsigned int GetMany(unsigned int startIndex, Platform::WriteOnlyArray<Platform::Object^>^ dest)
+        virtual unsigned int GetMany(unsigned int startIndex, Platform::WriteOnlyArray<Platform::Object^>^ items)
         {
-            return m_vector->GetMany(startIndex, dest);
+            return m_vector->GetMany(startIndex, items);
         }
 
         virtual Windows::Foundation::Collections::IVectorView<Platform::Object^>^ GetView()

@@ -113,7 +113,7 @@ namespace AdapterLib
             {
                 destinationEndPoint = new byte[sizeof(byte)];
                 destinationEndPoint[0] = m_endPoint.Id ;
-                profileId = AdapterHelper.ToXbeeFrame(m_endPoint.ProfileId);
+                profileId = AdapterHelper.ToXbeeFrame(m_endPoint.CommandProfileId);
             }
             // set destination (mac address and network address)
             byte[] macAddress = null;

@@ -64,13 +64,8 @@ void handler_who_is(
         Send_I_Am(&Handler_Transmit_Buffer[0]);
     } else if (len != BACNET_STATUS_ERROR) {
         /* is my device id within the limits? */
-        /* or */
-        /* BACnet wildcard is the max instance number - everyone responds */
-        if (((Device_Object_Instance_Number() >= (uint32_t) low_limit) &&
-                (Device_Object_Instance_Number() <= (uint32_t) high_limit))
-            ||
-            ((BACNET_MAX_INSTANCE >= (uint32_t) low_limit) &&
-                (BACNET_MAX_INSTANCE <= (uint32_t) high_limit))) {
+        if ((Device_Object_Instance_Number() >= (uint32_t) low_limit) &&
+                (Device_Object_Instance_Number() <= (uint32_t) high_limit)) {
             Send_I_Am(&Handler_Transmit_Buffer[0]);
         }
     }
@@ -98,24 +93,25 @@ void handler_who_is_unicast(
         whois_decode_service_request(service_request, service_len, &low_limit,
         &high_limit);
     /* If no limits, then always respond */
-    if (len == 0)
+    if (len == 0) {
         Send_I_Am_Unicast(&Handler_Transmit_Buffer[0], src);
-    else if (len != BACNET_STATUS_ERROR) {
+    } else if (len != BACNET_STATUS_ERROR) {
         /* is my device id within the limits? */
-        if (((Device_Object_Instance_Number() >= (uint32_t) low_limit) &&
-                (Device_Object_Instance_Number() <= (uint32_t) high_limit))
-            ||
-            /* BACnet wildcard is the max instance number - everyone responds */
-            ((BACNET_MAX_INSTANCE >= (uint32_t) low_limit) &&
-                (BACNET_MAX_INSTANCE <= (uint32_t) high_limit)))
+        if ((Device_Object_Instance_Number() >= (uint32_t) low_limit) &&
+                (Device_Object_Instance_Number() <= (uint32_t) high_limit)) {
             Send_I_Am_Unicast(&Handler_Transmit_Buffer[0], src);
+        }
     }
 
     return;
 }
 
 
-#ifdef DEPRECATED       /* was for BAC_ROUTING - delete in 2/2012 if still unused */
+#ifdef BAC_ROUTING      /* was for BAC_ROUTING - delete in 2/2012 if still unused */
+                                                /* EKH: I restored this to BAC_ROUTING (from DEPRECATED) because I found that the server demo with the built-in
+                                                   virtual Router did not insert the SADRs of the virtual devices on the virtual network without it */
+
+
 /** Local function to check Who-Is requests against our Device IDs.
  * Will check the gateway (root Device) and all virtual routed
  * Devices against the range and respond for each that matches.
@@ -147,20 +143,14 @@ static void check_who_is_for_routing(
         /* Invalid; just leave */
         return;
     }
-    /* If len == 0, then high_limit is untouched and still == 0 */
-    /* BACnet wildcard is the max instance number - everyone responds */
-    if ((BACNET_MAX_INSTANCE >= (uint32_t) low_limit) &&
-        (BACNET_MAX_INSTANCE <= (uint32_t) high_limit))
-        high_limit = 0;
-    /* This is the "always accept" case we will test for below */
-
     /* Go through all devices, starting with the root gateway Device */
     memset(&bcast_net, 0, sizeof(BACNET_ADDRESS));
     bcast_net.net = BACNET_BROADCAST_NETWORK;   /* That's all we have to set */
 
     while (Routed_Device_GetNext(&bcast_net, my_list, &cursor)) {
         dev_instance = Device_Object_Instance_Number();
-        if ((high_limit == 0) || ((dev_instance >= low_limit) &&
+        /* If len == 0, no limits and always respond */
+        if ((len == 0) || ((dev_instance >= low_limit) &&
                 (dev_instance <= high_limit))) {
             if (is_unicast)
                 Send_I_Am_Unicast(&Handler_Transmit_Buffer[0], src);

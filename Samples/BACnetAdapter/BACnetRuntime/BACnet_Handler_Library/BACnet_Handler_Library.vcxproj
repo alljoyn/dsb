@@ -30,7 +30,6 @@
     <ProjectGuid>{2001A15D-2D0E-4FFA-8B90-5E7938AE6ECF}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>BACnet_Handler_Library</RootNamespace>
-    <UseAppLocalVCLibs>true</UseAppLocalVCLibs>
     <WindowsSDKDesktopARMSupport>true</WindowsSDKDesktopARMSupport>
     <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
   </PropertyGroup>

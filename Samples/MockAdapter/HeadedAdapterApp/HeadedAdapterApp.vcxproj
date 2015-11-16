@@ -11,11 +11,7 @@
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationType>Windows Store</ApplicationType>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
-    <UseAppLocalVCLibs>true</UseAppLocalVCLibs>
-    <GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
     <AppxPackage>true</AppxPackage>
-    <AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
-    <UapDefaultAssetScale>100</UapDefaultAssetScale>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">

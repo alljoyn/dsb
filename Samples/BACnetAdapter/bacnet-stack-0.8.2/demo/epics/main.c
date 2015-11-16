@@ -48,6 +48,7 @@
 #include "whois.h"
 #include "rp.h"
 #include "proplist.h"
+#include "version.h"
 /* some demo stuff needed */
 #include "filename.h"
 #include "handlers.h"
@@ -170,6 +171,8 @@ static bool Using_Walked_List = false;
 static bool IsLongArray = false;
 /* Show value instead of '?' */
 static bool ShowValues = false;
+/* show only device object properties */
+static bool ShowDeviceObjectOnly = false;
 /* read required and optional properties when RPM ALL does not work */
 static bool Optional_Properties = false;
 
@@ -697,7 +700,7 @@ void PrintReadPropertyData(
                     (value->next != NULL)) {
                     /* There are more. */
                     fprintf(stdout, ", ");
-                    if (!(Walked_List_Index % 4))
+                    if (!(Walked_List_Index % 3))
                         fprintf(stdout, "\n        ");
                 } else {
                     fprintf(stdout, " } \n");
@@ -997,31 +1000,34 @@ EPICS_STATES ProcessRPMData(
     return nextState;
 }
 
-void PrintUsage(
-    )
+static void print_usage(char *filename)
 {
-    printf
-        ("bacepics -- Generates Full EPICS file, including Object and Property List \n");
-    printf("Usage: \n");
-    printf
-        ("  bacepics [-v] [-p sport] [-t target_mac [-n dnet]] device-instance \n");
-    printf("    -v: show values instead of '?' \n");
-    printf
-        ("    -p: Use sport for \"my\" port, instead of 0xBAC0 (BACnet/IP only) \n");
-    printf("        Allows you to communicate with a localhost target. \n");
-    printf
-        ("    -t: declare target's MAC instead of using Who-Is to bind to  \n");
-    printf
-        ("        device-instance. Format is \"C0:A8:00:18:BA:C0\" (as usual) \n");
-    printf("        Use \"7F:00:00:01:BA:C0\" for loopback testing \n");
-    printf("    -n: specify target's DNET if not local BACnet network  \n");
-    printf("        or on routed Virtual Network \n");
+    printf("Usage: %s [-v] [-d] [-p sport] [-t target_mac [-n dnet]]"
+            " device-instance\n", filename);
+    printf("       [--version][--help]\n");
+}
+
+static void print_help(char *filename)
+{
+    printf("Generates Full EPICS file, including Object and Property List\n");
+    printf("device-instance:\n"
+        "BACnet Device Object Instance number that you are\n"
+        "trying to communicate to.  This number will be used\n"
+        "to try and bind with the device using Who-Is and\n"
+        "I-Am services.\n");
     printf("\n");
-    printf
-        ("You may want to redirect the output to a .tpi file for VTS use,\n");
-    printf("    eg, bacepics -v 2701876 > epics-2701876.tpi \n");
+    printf("-v: show values instead of '?' \n");
+    printf("-d: show only device object properties\n");
+    printf("-p: Use sport for \"my\" port.  0xBAC0 is default.\n");
+    printf("    Allows you to communicate with a localhost target.\n");
+    printf("-t: declare target's MAC instead of using Who-Is to bind to  \n");
+    printf("    device-instance. Format is \"C0:A8:00:18:BA:C0\"\n");
+    printf("    Use \"7F:00:00:01:BA:C0\" for loopback testing \n");
+    printf("-n: specify target's DNET if not local BACnet network  \n");
+    printf("    or on routed Virtual Network \n");
     printf("\n");
-    exit(0);
+    printf("You can redirect the output to a .tpi file for VTS use,\n");
+    printf("e.g., bacepics 2701876 > epics-2701876.tpi \n");
 }
 
 int CheckCommandLineArgs(
@@ -1030,12 +1036,28 @@ int CheckCommandLineArgs(
 {
     int i;
     bool bFoundTarget = false;
-    /* FIXME: handle multi homed systems - use an argument passed to the datalink_init() */
+    int argi = 0;
+    char *filename = NULL;
 
-    /* print help if not enough arguments */
+    filename = filename_remove_path(argv[0]);
+    for (argi = 1; argi < argc; argi++) {
+        if (strcmp(argv[argi], "--help") == 0) {
+            print_usage(filename);
+            print_help(filename);
+            exit(0);
+        }
+        if (strcmp(argv[argi], "--version") == 0) {
+            printf("%s %s\n", filename, BACNET_VERSION_TEXT);
+            printf("Copyright (C) 2014 by Steve Karg and others.\n"
+                "This is free software; see the source for copying conditions.\n"
+                "There is NO warranty; not even for MERCHANTABILITY or\n"
+                "FITNESS FOR A PARTICULAR PURPOSE.\n");
+            exit(0);
+        }
+    }
     if (argc < 2) {
-        fprintf(stdout, "Error: Must provide a device-instance \n\n");
-        PrintUsage();   /* Will exit */
+        print_usage(filename);
+        exit(0);
     }
     for (i = 1; i < argc; i++) {
         char *anArg = argv[i];
@@ -1046,6 +1068,9 @@ int CheckCommandLineArgs(
                     break;
                 case 'v':
                     ShowValues = true;
+                    break;
+                case 'd':
+                    ShowDeviceObjectOnly = true;
                     break;
                 case 'p':
                     if (++i < argc) {
@@ -1088,12 +1113,13 @@ int CheckCommandLineArgs(
                         } else
                             printf("ERROR: invalid Target MAC %s \n",
                                 argv[i]);
-                        /* And fall through to PrintUsage */
+                        /* And fall through to print_usage */
                     }
                     /* Either break or fall through, as above */
                     /* break; */
                 default:
-                    PrintUsage();
+                    print_usage(filename);
+                    exit(0);
                     break;
             }
         } else {
@@ -1103,19 +1129,20 @@ int CheckCommandLineArgs(
                 fprintf(stdout,
                     "Error: device-instance=%u - it must be less than %u\n",
                     Target_Device_Object_Instance, BACNET_MAX_INSTANCE + 1);
-                PrintUsage();
+                print_usage(filename);
+                exit(0);
             }
             bFoundTarget = true;
         }
     }
     if (!bFoundTarget) {
         fprintf(stdout, "Error: Must provide a device-instance \n\n");
-        PrintUsage();   /* Will exit */
+        print_usage(filename);
+        exit(0);
     }
 
     return 0;   /* All OK if we reach here */
 }
-
 
 void PrintHeading(
     )
@@ -1327,7 +1354,10 @@ void PrintHeading(
         printf("?");
     }
     printf("\n}\n\n");
+}
 
+void Print_Device_Heading(void)
+{
     printf("List of Objects in Test Device:\n");
     /* Print Opening brace, then kick off the Device Object */
     printf("{\n");
@@ -1503,7 +1533,12 @@ int main(
 
             case PRINT_HEADING:
                 /* Print out the header information */
-                PrintHeading();
+                if (ShowDeviceObjectOnly) {
+                    Print_Device_Heading();
+                } else {
+                    PrintHeading();
+                    Print_Device_Heading();
+                }
                 myState = GET_ALL_REQUEST;
                 /* Fall through now */
 
@@ -1713,6 +1748,13 @@ int main(
                     printf("  -- Found %d Objects \n",
                         Keylist_Count(Object_List));
                     Object_List_Index = -1;     /* start over (will be incr to 0) */
+                    if (ShowDeviceObjectOnly) {
+                        /* Closing brace for the Device Object */
+                        printf("  }, \n");
+                        /* done with all Objects, signal end of this while loop */
+                        myObject.type = MAX_BACNET_OBJECT_TYPE;
+                        break;
+                    }
                 }
                 /* Advance to the next object, as long as it's not the Device object */
                 do {

@@ -39,6 +39,9 @@ namespace AdapterLib
         internal const byte COMMAND_MOVE_WITHONOFF = 0x05;
         internal const byte COMMAND_STEP_WITHONOFF = 0x06;
         internal const byte COMMAND_STOP_WITHONOFF = 0x07;
+
+        internal const string LEVEL_PARAM = "Level";
+        internal const byte MAX_LEVEL = (byte.MaxValue - 1);
         internal LevelControlCluster(ZigBeeEndPoint endPoint, List<UInt16> supportedAttributes)
             : base(endPoint)
         {
@@ -86,7 +89,7 @@ namespace AdapterLib
 
             // move to level command (no response required)
             var command = new ZclCommand(this, COMMAND_MOVETOLEVEL, "MoveToLevel", false);
-            var parameter = new ZclValue(ZclHelper.UINT8_TYPE, "Level");
+            var parameter = new ZclValue(ZclHelper.UINT8_TYPE, LEVEL_PARAM);
             command.AddInParam(parameter);
             parameter = new ZclValue(ZclHelper.UINT16_TYPE, "TransitionTime");
             command.AddInParam(parameter);
@@ -116,7 +119,7 @@ namespace AdapterLib
 
             // move to level with on/off command (no response required)
             command = new ZclCommand(this, COMMAND_MOVETOLEVEL_WITHONOFF, "MoveToLevelWithOnOff", false);
-            parameter = new ZclValue(ZclHelper.UINT8_TYPE, "Level");
+            parameter = new ZclValue(ZclHelper.UINT8_TYPE, LEVEL_PARAM);
             command.AddInParam(parameter);
             parameter = new ZclValue(ZclHelper.UINT16_TYPE, "TransitionTime");
             command.AddInParam(parameter);

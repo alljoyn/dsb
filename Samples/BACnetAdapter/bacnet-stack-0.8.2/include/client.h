@@ -112,7 +112,11 @@ extern "C" {
         uint32_t device_id,
         BACNET_SUBSCRIBE_COV_DATA * cov_data);
 
-
+/* returns the invoke ID for confirmed request, or 0 if failed */
+    uint8_t Send_GetEvent(
+        BACNET_ADDRESS * target_address,
+        BACNET_OBJECT_ID *lastReceivedObjectIdentifier);
+    uint8_t Send_GetEvent_Global(void);
 
 /* returns the invoke ID for confirmed request, or 0 if failed */
     uint8_t Send_Read_Property_Request_Address(
@@ -152,9 +156,9 @@ extern "C" {
         int application_data_len,
         uint8_t priority,
         uint32_t array_index);
-	uint8_t Send_Write_Property_Multiple_Request_Data(
-		uint32_t device_id,
-		BACNET_WRITE_ACCESS_DATA * write_access_data);
+    uint8_t Send_Write_Property_Multiple_Request_Data(
+        uint32_t device_id,
+        BACNET_WRITE_ACCESS_DATA * write_access_data);
 
 /* returns the invoke ID for confirmed request, or 0 if failed */
     uint8_t Send_Reinitialize_Device_Request(
@@ -179,6 +183,8 @@ extern "C" {
     void Send_TimeSyncUTC(
         BACNET_DATE * bdate,
         BACNET_TIME * btime);
+    void Send_TimeSyncUTC_Device(void);
+    void Send_TimeSync_Device(void);
 
     uint8_t Send_Atomic_Read_File_Stream(
         uint32_t device_id,
@@ -230,6 +236,22 @@ extern "C" {
     void Send_UnconfirmedPrivateTransfer(
         BACNET_ADDRESS * dest,
         BACNET_PRIVATE_TRANSFER_DATA * private_data);
+
+    uint8_t Send_Get_Alarm_Summary_Address(
+        BACNET_ADDRESS *dest,
+        uint16_t max_apdu);
+
+    uint8_t Send_Get_Alarm_Summary(
+        uint32_t device_id);
+
+    uint8_t Send_Get_Event_Information_Address(
+        BACNET_ADDRESS *dest,
+        uint16_t max_apdu,
+        BACNET_OBJECT_ID * lastReceivedObjectIdentifier);
+
+    uint8_t Send_Get_Event_Information(
+        uint32_t device_id,
+        BACNET_OBJECT_ID * lastReceivedObjectIdentifier);
 
 #ifdef __cplusplus
 }

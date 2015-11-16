@@ -450,7 +450,6 @@ bool Trend_Log_Write_Property(
 {
     bool status = false;        /* return value */
     int len = 0;
-    int iOffset = 0;
     BACNET_APPLICATION_DATA_VALUE value;
     TL_LOG_INFO *CurrentLog;
     BACNET_DATE TempDate;       /* build here in case of error in time half of datetime */
@@ -705,94 +704,22 @@ bool Trend_Log_Write_Property(
             break;
 
         case PROP_LOG_DEVICE_OBJECT_PROPERTY:
-            memset(&TempSource, 0, sizeof(TempSource)); /* Start with clean sheet */
-            TempSource.arrayIndex = BACNET_ARRAY_ALL;   /* Need this so if no array index set we read properties in full */
-
-            /* First up is the object ID */
-            len =
-                bacapp_decode_context_data(wp_data->application_data,
-                wp_data->application_data_len, &value,
-                PROP_LOG_DEVICE_OBJECT_PROPERTY);
-            if ((len == 0) || (value.context_tag != 0) ||
-                ((wp_data->application_data_len - len) == 0)) {
-                /* Bad decode, wrong tag or following required parameter missing */
+	        len = bacapp_decode_device_obj_property_ref(wp_data->application_data, &TempSource);
+            if((len < 0) || (len > wp_data->application_data_len)) // Hmm, that didn't go as planned...
+                {
                 wp_data->error_class = ERROR_CLASS_PROPERTY;
                 wp_data->error_code = ERROR_CODE_OTHER;
                 break;
-            }
+                }
 
-            TempSource.objectIdentifier = value.type.Object_Id;
-            wp_data->application_data_len -= len;
-            iOffset = len;
-            /* Second up is the property id */
-            len =
-                bacapp_decode_context_data(&wp_data->application_data[iOffset],
-                wp_data->application_data_len, &value,
-                PROP_LOG_DEVICE_OBJECT_PROPERTY);
-            if ((len == 0) || (value.context_tag != 1)) {
-                /* Bad decode or wrong tag */
-                wp_data->error_class = ERROR_CLASS_PROPERTY;
-                wp_data->error_code = ERROR_CODE_OTHER;
-                break;
-            }
-
-            TempSource.propertyIdentifier = value.type.Enumerated;
-            wp_data->application_data_len -= len;
-
-            /* If there is still more to come */
-            if (wp_data->application_data_len != 0) {
-                iOffset += len;
-                len =
-                    bacapp_decode_context_data(&wp_data->application_data
-                    [iOffset], wp_data->application_data_len, &value,
-                    PROP_LOG_DEVICE_OBJECT_PROPERTY);
-                if ((len == 0) || ((value.context_tag != 2) &&
-                        (value.context_tag != 3))) {
-                    /* Bad decode or wrong tag */
+            // We only support references to objects in ourself for now
+            if((TempSource.deviceIndentifier.type == OBJECT_DEVICE) && (TempSource.deviceIndentifier.instance != Device_Object_Instance_Number()))
+                	{
                     wp_data->error_class = ERROR_CLASS_PROPERTY;
-                    wp_data->error_code = ERROR_CODE_OTHER;
+                    wp_data->error_code = ERROR_CODE_OPTIONAL_FUNCTIONALITY_NOT_SUPPORTED;
                     break;
-                }
-
-                if (value.context_tag == 2) {
-                    /* Got an index so deal with it */
-                    TempSource.arrayIndex = value.type.Unsigned_Int;
-                    wp_data->application_data_len -= len;
-                    /* Still some remaining so fetch potential device ID */
-                    if (wp_data->application_data_len != 0) {
-                        iOffset += len;
-                        len =
-                            bacapp_decode_context_data
-                            (&wp_data->application_data[iOffset],
-                            wp_data->application_data_len, &value,
-                            PROP_LOG_DEVICE_OBJECT_PROPERTY);
-                        if ((len == 0) || (value.context_tag != 3)) {
-                            /* Bad decode or wrong tag */
-                            wp_data->error_class = ERROR_CLASS_PROPERTY;
-                            wp_data->error_code = ERROR_CODE_OTHER;
-                            break;
-                        }
                     }
-                }
 
-                if (value.context_tag == 3) {
-                    /* Got a device ID so deal with it */
-                    TempSource.deviceIndentifier = value.type.Object_Id;
-                    if ((TempSource.deviceIndentifier.instance !=
-                            Device_Object_Instance_Number()) ||
-                        (TempSource.deviceIndentifier.type != OBJECT_DEVICE)) {
-                        /* Not our ID so can't handle it at the moment */
-                        wp_data->error_class = ERROR_CLASS_PROPERTY;
-                        wp_data->error_code =
-                            ERROR_CODE_OPTIONAL_FUNCTIONALITY_NOT_SUPPORTED;
-                        break;
-                    }
-                }
-            }
-            /* Make sure device ID is set to ours in case not supplied */
-            TempSource.deviceIndentifier.type = OBJECT_DEVICE;
-            TempSource.deviceIndentifier.instance =
-                Device_Object_Instance_Number();
             /* Quick comparison if structures are packed ... */
             if (memcmp(&TempSource, &CurrentLog->Source,
                     sizeof(BACNET_DEVICE_OBJECT_PROPERTY_REFERENCE)) != 0) {
@@ -828,6 +755,8 @@ bool Trend_Log_Write_Property(
                 } else {
                     /* We only log to 1 sec accuracy so must divide by 100 before passing it on */
                     CurrentLog->ulLogInterval = value.type.Unsigned_Int / 100;
+					if(0 == CurrentLog->ulLogInterval)
+						CurrentLog->ulLogInterval = 1; /* Interval of 0 is not a good idea */
                 }
             }
             break;
@@ -1665,13 +1594,13 @@ static int local_read_property(
  * Attempt to fetch the logged property and store it in the Trend Log       *
  ****************************************************************************/
 
-void TL_fetch_property(
+static void TL_fetch_property(
     int iLog)
 {
     uint8_t ValueBuf[MAX_APDU]; /* This is a big buffer in case someone selects the device object list for example */
     uint8_t StatusBuf[3];       /* Should be tag, bits unused in last octet and 1 byte of data */
-    BACNET_ERROR_CLASS error_class;
-    BACNET_ERROR_CODE error_code;
+    BACNET_ERROR_CLASS error_class = 0;
+    BACNET_ERROR_CODE error_code = ERROR_CODE_SUCCESS;
     int iLen;
     uint8_t ucCount;
     TL_LOG_INFO *CurrentLog;

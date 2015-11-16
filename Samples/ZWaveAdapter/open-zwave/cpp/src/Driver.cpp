@@ -1171,6 +1171,18 @@ bool Driver::WriteMsg
 			// That's it - already tried to send GetMaxSendAttempt() times.
 			Log::Write( LogLevel_Error, nodeId, "ERROR: Dropping command, expected response not received after %d attempt(s)", m_currentMsg->GetMaxSendAttempts() );
 		}
+
+        //if the message is FUNC_ID_SERIAL_API_GET_CAPABILITIES, cannot just drop it as the init sequence/handshaking will not move forward. Hence need to fail the driver
+        if (m_expectedReply == FUNC_ID_SERIAL_API_GET_CAPABILITIES)
+        {
+            m_controller->Close();
+            Manager::Get()->SetDriverReady(this, false);
+            NotifyWatchers();
+
+            //Now stop the driver
+            m_driverThread->Stop(false);
+            return false;
+        }
 		RemoveCurrentMsg();
 		m_dropped++;
 		return false;
@@ -1238,7 +1250,8 @@ bool Driver::WriteMsg
 			QueueNotification(notification);
 			NotifyWatchers();
 
-			m_driverThread->Stop();
+            //Now stop the driver
+			m_driverThread->Stop(false);
 			return false;
 		}
 	}

@@ -41,7 +41,7 @@
 
 /* number of demo objects */
 #ifndef MAX_MULTISTATE_INPUTS
-#define MAX_MULTISTATE_INPUTS 1
+#define MAX_MULTISTATE_INPUTS 4
 #endif
 
 /* how many states? 1 to 254 states - 0 is not allowed. */
@@ -103,6 +103,8 @@ void Multistate_Input_Init(
     /* initialize all the analog output priority arrays to NULL */
     for (i = 0; i < MAX_MULTISTATE_INPUTS; i++) {
         Present_Value[i] = 1;
+        sprintf(&Object_Name[i][0], "MULTISTATE INPUT %u", i);
+        sprintf(&Object_Description[i][0], "MULTISTATE INPUT %u", i);
     }
 
     return;
@@ -218,7 +220,7 @@ void Multistate_Input_Out_Of_Service_Set(
     return;
 }
 
-static char *Multistate_Input_Description(
+char *Multistate_Input_Description(
     uint32_t object_instance)
 {
     unsigned index = 0; /* offset from instance lookup */
@@ -380,7 +382,7 @@ static bool Multistate_Input_Object_Name_Write(
     return status;
 }
 
-static char *Multistate_Input_State_Text(
+char *Multistate_Input_State_Text(
     uint32_t object_instance,
     uint32_t state_index)
 {

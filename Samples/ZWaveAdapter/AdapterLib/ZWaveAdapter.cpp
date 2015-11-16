@@ -36,6 +36,9 @@ using namespace Platform::Collections;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::Storage;
+using namespace Windows::Devices::SerialCommunication;
+using namespace Windows::Devices::Enumeration;
+using namespace Concurrency;
 
 using namespace BridgeRT;
 using namespace DsbCommon;
@@ -49,10 +52,15 @@ namespace AdapterLib
     // {7C78ED73-E66D-4DE0-AE67-085443E1941D}
     static const GUID DSB_ZWAVE_APPLICATION_GUID = { 0x7c78ed73, 0xe66d, 0x4de0,{ 0xae, 0x67, 0x8, 0x54, 0x43, 0xe1, 0x94, 0x1d } };
 
-    // Light Bulb
+    // Light Bulb (from Dimmable Switch)
     // Manufacturer: Linear
     static const std::string LINEAR__LIGHT_BULB__PRODUCT_TYPE = "4754";
     static const std::string LINEAR__LIGHT_BULB__PRODUCT_ID = "3038";
+
+    // Light Bulb (from Switch)
+    // Manufacturer: Aeon switch
+    static const std::string AEON__LIGHT_BULB__PRODUCT_TYPE = "0003";
+    static const std::string AEON__LIGHT_BULB__PRODUCT_ID = "0018";
 
     //
     // ZWaveAdapter class.
@@ -61,7 +69,6 @@ namespace AdapterLib
     //
     ZWaveAdapter::ZWaveAdapter()
         : m_pMgr(nullptr)
-        , m_homeId(0)
         , m_bShutdown(false)
     {
         Windows::ApplicationModel::Package^ package = Windows::ApplicationModel::Package::Current;
@@ -628,27 +635,43 @@ namespace AdapterLib
             Options::Get()->GetOptionAsString("ControllerPath", &path);
             Options::Get()->GetOptionAsInt("ControllerInterface", &inf);
 
-            if (m_pMgr)
+            auto selector = SerialDevice::GetDeviceSelector();
+
+            create_task(DeviceInformation::FindAllAsync(selector))
+                .then([path, inf, this](DeviceInformationCollection ^ devices)
             {
-                //remove the driver first if loaded
-                m_pMgr->RemoveDriver(path);
-                m_pMgr->AddDriver(path, (Driver::ControllerInterface)inf);
-            }
+                for (auto iterator = devices->First(); iterator->HasCurrent; iterator->MoveNext())
+                {
+                    string currentId = ConvertTo<string>(iterator->Current->Id);
+                    if (currentId.find(path) != string::npos && m_pMgr)
+                    {
+                        m_pMgr->AddDriver(currentId, (Driver::ControllerInterface)inf);
+                    }
+                }
+            });
         }
+
+        //Set the time for next discovery
+        TimeSpan ts;
+        ts.Duration = m_networkMonitorTimeout;
+        m_DiscoveryTimer = ThreadPoolTimer::CreateTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ timer)
+        {
+            StartDeviceDiscovery();
+        }), ts);
     }
 
-    void ZWaveAdapter::AddDevice(const uint8 nodeId, bool bPending)
+    void ZWaveAdapter::AddDevice(const uint32 homeId, const uint8 nodeId, bool bPending)
     {
         AutoLock sync(&m_deviceListLock, true);
 
         if(bPending)
         {
-            ZWaveAdapterDevice^ device = ref new ZWaveAdapterDevice(m_homeId, nodeId);
+            ZWaveAdapterDevice^ device = ref new ZWaveAdapterDevice(homeId, nodeId);
             m_pendingDevices.push_back(device);
         }
         else
         {
-            auto iter = FindDevice(m_pendingDevices, m_homeId, nodeId);
+            auto iter = FindDevice(m_pendingDevices, homeId, nodeId);
             if (iter != m_pendingDevices.end())
             {
                 ZWaveAdapterDevice^ currDevice = dynamic_cast<ZWaveAdapterDevice^>(*iter);
@@ -662,11 +685,15 @@ namespace AdapterLib
                 currDevice->ControlPanelHandler = myControlPanel;
 
                 // Create a Lighting Service Handler if the device is a lighting device
-                std::string deviceProductType = m_pMgr->GetNodeProductType(m_homeId, nodeId);
-                std::string deviceProductId = m_pMgr->GetNodeProductId(m_homeId, nodeId);
+                std::string deviceProductType = m_pMgr->GetNodeProductType(homeId, nodeId);
+                std::string deviceProductId = m_pMgr->GetNodeProductId(homeId, nodeId);
 
-                if (LINEAR__LIGHT_BULB__PRODUCT_TYPE == deviceProductType &&
+                if ((LINEAR__LIGHT_BULB__PRODUCT_TYPE == deviceProductType &&
                     LINEAR__LIGHT_BULB__PRODUCT_ID == deviceProductId)
+                    // ||
+                    // (AEON__LIGHT_BULB__PRODUCT_TYPE == deviceProductType &&
+                    //  AEON__LIGHT_BULB__PRODUCT_ID == deviceProductId)
+                    )
                 {
                     currDevice->SetParent(this);
                     currDevice->AddLampStateChangedSignal();
@@ -688,12 +715,12 @@ namespace AdapterLib
         }
     }
 
-    void ZWaveAdapter::RemoveDevice(const uint8 nodeId, bool bMoveToPending)
+    void ZWaveAdapter::RemoveDevice(const uint32 homeId, const uint8 nodeId, bool bMoveToPending)
     {
         AutoLock sync(&m_deviceListLock, true);
 
         // Remove the node from our list
-        auto iter = FindDevice(m_devices, m_homeId, nodeId);
+        auto iter = FindDevice(m_devices, homeId, nodeId);
 
         if (iter != m_devices.end())
         {
@@ -720,7 +747,7 @@ namespace AdapterLib
         else if(!bMoveToPending)
         {
             //check if the device is in pending list and remove it
-            iter = FindDevice(m_pendingDevices, m_homeId, nodeId);
+            iter = FindDevice(m_pendingDevices, homeId, nodeId);
             if (iter != m_pendingDevices.end())
             {
                 m_pendingDevices.erase(iter);  //no need to notify the signal as it was never announced
@@ -728,25 +755,49 @@ namespace AdapterLib
         }
     }
 
-    void ZWaveAdapter::RemoveAllDevices()
+    void ZWaveAdapter::RemoveAllDevices(uint32 homeId)
     {
         AutoLock sync(&m_deviceListLock, true);
         AutoLock sync2(&m_signalLock, true);
 
-        //notify device removal for all devices
-        for (auto device : m_devices)
+        //remove devices from m_devices list
+        auto iter = m_devices.begin();
+        while(iter != m_devices.end())
         {
-            IAdapterSignal^ signal = GetSignal(Constants::DEVICE_REMOVAL_SIGNAL);
-            if (signal != nullptr)
+            auto device = dynamic_cast<ZWaveAdapterDevice^>(*iter);
+            if (device->m_homeId == homeId)
             {
-                // Set the 'Device_Handle' signal parameter
-                signal->Params->GetAt(0)->Data = device;
+                //notify
+                IAdapterSignal^ signal = GetSignal(Constants::DEVICE_REMOVAL_SIGNAL);
+                if (signal != nullptr)
+                {
+                    // Set the 'Device_Handle' signal parameter
+                    signal->Params->GetAt(0)->Data = device;
 
-                NotifySignalListener(signal);
+                    NotifySignalListener(signal);
+                }
+                iter = m_devices.erase(iter);
+            }
+            else
+            {
+                ++iter;
             }
         }
-        m_devices.clear();
-        m_pendingDevices.clear();
+
+        //also remove devices from m_pendingDevices list
+        iter = m_pendingDevices.begin();
+        while (iter != m_pendingDevices.end())
+        {
+            auto device = dynamic_cast<ZWaveAdapterDevice^>(*iter);
+            if (device->m_homeId == homeId)
+            {
+                iter = m_pendingDevices.erase(iter);
+            }
+            else
+            {
+                ++iter;
+            }
+        }
     }
 
     void ZWaveAdapter::OnNotification(Notification const* _notification, void* _context)
@@ -778,7 +829,7 @@ namespace AdapterLib
                     //If the info has not been received yet, leave it in m_pendindDevices as more info will follow.
                     if (Manager::Get()->IsNodeInfoReceived(homeId, nodeId))
                     {
-                        adapter->AddDevice(nodeId, false);
+                        adapter->AddDevice(homeId, nodeId, false);
                     }
 
                     break;
@@ -788,15 +839,6 @@ namespace AdapterLib
             }
             case Notification::Type_DriverReady:
             {
-                adapter->m_homeId = homeId;
-
-                //stop the discovery timer if running
-                if (adapter->m_DiscoveryTimer)
-                {
-                    adapter->m_DiscoveryTimer->Cancel();
-                    adapter->m_DiscoveryTimer = nullptr;
-                }
-
                 //Start the DeviceMonitor timer
                 TimeSpan ts;
                 ts.Duration = adapter->m_networkMonitorTimeout;
@@ -818,17 +860,18 @@ namespace AdapterLib
                     adapter->m_MonitorTimer->Cancel();
                     adapter->m_MonitorTimer = nullptr;
                 }
-                adapter->RemoveAllDevices();
+                adapter->RemoveAllDevices(homeId);
 
                 if ((_notification->GetType() == Notification::Type_DriverFailed) && !(adapter->m_bShutdown))
                 {
-                    //Start the DeviceDiscovery timer
-                    TimeSpan ts;
-                    ts.Duration = adapter->m_networkMonitorTimeout;
-                    adapter->m_DiscoveryTimer = ThreadPoolTimer::CreateTimer(ref new TimerElapsedHandler([adapter](ThreadPoolTimer^ timer)
+                    //remove the driver
+                    if (homeId != 0)
                     {
-                        adapter->StartDeviceDiscovery();
-                    }), ts);
+                        create_task([homeId]()
+                        {
+                            Manager::Get()->RemoveDriver(Manager::Get()->GetControllerPath(homeId));
+                        });
+                    }
                 }
 
                 break;
@@ -836,19 +879,19 @@ namespace AdapterLib
             case Notification::Type_NodeAdded:
             {
                 // Add the new node to our pending device list as we dont yet have all the values for the node
-                adapter->AddDevice(nodeId, true);
+                adapter->AddDevice(homeId, nodeId, true);
                 break;
             }
             case Notification::Type_NodeRemoved:
             {
                 // Remove the node from our list
-                adapter->RemoveDevice(nodeId);
+                adapter->RemoveDevice(homeId, nodeId);
                 break;
             }
             case Notification::Type_NodeQueriesComplete:
             {
                 //move the device from the pending list to actual list and notify the signal
-                adapter->AddDevice(nodeId, false);
+                adapter->AddDevice(homeId, nodeId, false);
                 break;
             }
             case Notification::Type_ValueAdded:

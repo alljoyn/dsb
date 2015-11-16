@@ -11,9 +11,9 @@ LOGFILE = test.log
 
 all: abort address arf awf bacapp bacdcode bacerror bacint bacstr \
 	cov crc datetime dcc event filename fifo getevent iam ihave \
-	indtext keylist key memcopy npdu ptransfer \
+	indtext keylist key memcopy npdu proplist ptransfer \
 	rd reject ringbuf rp rpm sbuf timesync \
-	whohas whois wp objects
+	whohas whois wp objects lighting
 
 clean: logfile
 	rm ${LOGFILE}
@@ -131,6 +131,11 @@ key: logfile test/key.mak
 	( ./test/key >> ${LOGFILE} )
 	$(MAKE) -s -C test -f key.mak clean
 
+lighting: lighting test/lighting.mak
+	$(MAKE) -s -C test -f lighting.mak clean all
+	( ./test/lighting >> ${LOGFILE} )
+	$(MAKE) -s -C test -f lighting.mak clean
+
 memcopy: logfile test/memcopy.mak
 	$(MAKE) -s -C test -f memcopy.mak clean all
 	( ./test/memcopy >> ${LOGFILE} )
@@ -140,6 +145,11 @@ npdu: logfile test/npdu.mak
 	$(MAKE) -s -C test -f npdu.mak clean all
 	( ./test/npdu >> ${LOGFILE} )
 	$(MAKE) -s -C test -f npdu.mak clean
+
+proplist: logfile test/proplist.mak
+	$(MAKE) -s -C test -f proplist.mak clean all
+	( ./test/proplist >> ${LOGFILE} )
+	$(MAKE) -s -C test -f proplist.mak clean
 
 ptransfer: logfile test/ptransfer.mak
 	$(MAKE) -s -C test -f ptransfer.mak clean all
@@ -196,7 +206,7 @@ wp: logfile test/wp.mak
 	( ./test/wp >> ${LOGFILE} )
 	$(MAKE) -s -C test -f wp.mak clean
 
-objects: ai ao av bi bo bv csv lc lo lso lsp mso msv ms-input
+objects: ai ao av bi bo bv csv lc lo lso lsp mso msv ms-input command
 
 ai: logfile demo/object/ai.mak
 	$(MAKE) -s -C demo/object -f ai.mak clean all
@@ -226,6 +236,11 @@ bv: logfile demo/object/bv.mak
 	$(MAKE) -s -C demo/object -f bv.mak clean all
 	( ./demo/object/binary_value >> ${LOGFILE} )
 	$(MAKE) -s -C demo/object -f bv.mak clean
+
+command: logfile demo/object/command.mak
+	$(MAKE) -s -C demo/object -f command.mak clean all
+	( ./demo/object/command >> ${LOGFILE} )
+	$(MAKE) -s -C demo/object -f command.mak clean
 
 csv: logfile demo/object/csv.mak
 	$(MAKE) -s -C demo/object -f csv.mak clean all

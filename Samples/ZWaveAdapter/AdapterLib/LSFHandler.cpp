@@ -10,6 +10,7 @@ using namespace BridgeRT;
 using namespace Windows::Foundation;
 
 #define PROPERTY_SWITCH_MULTILEVEL  L"SwitchMultilevel.Level"
+#define PROPERTY_SWITCH  L"SwitchBinary.Switch"
 #define ATTRIBUTE_VALUE  L"value"
 
 LSFHandler::LSFHandler(ZWaveAdapterDevice^ parentDevice)
@@ -59,9 +60,6 @@ LSFHandler::ClearLampFault(
     return ERROR_SUCCESS;
 }
 
-
-
-
 // LampParameters Interface
 uint32
 LSFHandler::LampParameters_Version::get()
@@ -73,17 +71,15 @@ LSFHandler::LampParameters_Version::get()
 uint32
 LSFHandler::LampParameters_EnergyUsageMilliwatts::get()
 {
-    return 0;
+    return 600;
 }
 
 
 uint32
 LSFHandler::LampParameters_BrightnessLumens::get()
 {
-    return 0;
+    return 1000;
 }
-
-
 
 
 // LampDetails Interface
@@ -97,49 +93,49 @@ LSFHandler::LampDetails_Version::get()
 uint32
 LSFHandler::LampDetails_Make::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampMake::MAKE_OEM1);
 }
 
 
 uint32
 LSFHandler::LampDetails_Model::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampModel::MODEL_LED);
 }
 
 
 uint32
 LSFHandler::LampDetails_Type::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampType::LAMPTYPE_A15);
 }
 
 
 uint32
 LSFHandler::LampDetails_LampType::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampType::LAMPTYPE_A19);
 }
 
 
 uint32
 LSFHandler::LampDetails_LampBaseType::get()
 {
-    return 0;
+    return static_cast<uint32>(BridgeRT::LSFLampBaseType::BASETYPE_E26);
 }
 
 
 uint32
 LSFHandler::LampDetails_LampBeamAngle::get()
 {
-    return 0;
+    return 160;
 }
 
 
 bool
 LSFHandler::LampDetails_Dimmable::get()
 {
-    return true;
+    return false;
 }
 
 
@@ -167,63 +163,63 @@ LSFHandler::LampDetails_HasEffects::get()
 uint32
 LSFHandler::LampDetails_MinVoltage::get()
 {
-    return 0;
+    return 100;
 }
 
 
 uint32
 LSFHandler::LampDetails_MaxVoltage::get()
 {
-    return 0;
+    return 120;
 }
 
 
 uint32
 LSFHandler::LampDetails_Wattage::get()
 {
-    return 0;
+    return 9;
 }
 
 
 uint32
 LSFHandler::LampDetails_IncandescentEquivalent::get()
 {
-    return 0;
+    return 60;
 }
 
 
 uint32
 LSFHandler::LampDetails_MaxLumens::get()
 {
-    return 0;
+    return 620;
 }
 
 
 uint32
 LSFHandler::LampDetails_MinTemperature::get()
 {
-    return 0;
+    return 2700;
 }
 
 
 uint32
 LSFHandler::LampDetails_MaxTemperature::get()
 {
-    return 0;
+    return 9000;
 }
 
 
 uint32
 LSFHandler::LampDetails_ColorRenderingIndex::get()
 {
-    return 0;
+    return 80;
 }
 
 
 Platform::String^
 LSFHandler::LampDetails_LampID::get()
 {
-    return m_parentDevice->SerialNumber;
+    return  m_parentDevice->SerialNumber;
 }
 
 
@@ -240,13 +236,60 @@ LSFHandler::LampState_Version::get()
 bool
 LSFHandler::LampState_OnOff::get()
 {
-    return true;
+    ZWaveAdapterProperty^ adapterProperty = m_parentDevice->GetPropertyByName(PROPERTY_SWITCH);
+    if (adapterProperty == nullptr)
+    {
+        return 0;
+    }
+
+    ZWaveAdapterValue^ adapterValue = adapterProperty->GetAttributeByName(ATTRIBUTE_VALUE);
+    if (adapterValue == nullptr)
+    {
+        return 0;
+    }
+
+    IPropertyValue^ propertyValue = dynamic_cast<IPropertyValue ^>(adapterValue->Data);
+    if (propertyValue == nullptr)
+    {
+        return 0;
+    }
+
+    return propertyValue->GetBoolean();
 }
 
 void
 LSFHandler::LampState_OnOff::set(bool isOn)
 {
-    return;
+    ZWaveAdapterProperty^ adapterProperty = m_parentDevice->GetPropertyByName(PROPERTY_SWITCH);
+    if (adapterProperty == nullptr)
+    {
+        return;
+    }
+
+    ZWaveAdapterValue^ adapterValue = adapterProperty->GetAttributeByName(ATTRIBUTE_VALUE);
+    if (adapterValue == nullptr)
+    {
+        return;
+    }
+
+    IPropertyValue^ propertyValue = dynamic_cast<IPropertyValue ^>(adapterValue->Data);
+    if (propertyValue == nullptr)
+    {
+        return;
+    }
+
+    if (propertyValue->GetBoolean() != isOn)
+    {
+
+        Platform::Object^ object = PropertyValue::CreateBoolean(isOn);
+        if (object == nullptr)
+        {
+            return;
+        }
+
+        adapterProperty->SetValue(object);
+        notifyLampStateChange();
+    }
 }
 
 

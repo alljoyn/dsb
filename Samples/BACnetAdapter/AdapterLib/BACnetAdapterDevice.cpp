@@ -1261,7 +1261,12 @@ namespace AdapterLib
                 continue;
             }
 
-            BACnetAdapterProperty^ newProperty = ref new BACnetAdapterProperty(objectId.Ulong, this, StringReference(AdapterLib::ToString(BACNET_OBJECT_TYPE(objectId.Bits.Type))));
+            const wchar_t* wszIfHint = AdapterLib::ToString(BACNET_OBJECT_TYPE(objectId.Bits.Type));
+            if (wszIfHint == nullptr)
+            {
+                continue;
+            }
+            BACnetAdapterProperty^ newProperty = ref new BACnetAdapterProperty(objectId.Ulong, this, StringReference(wszIfHint) + objectId.Bits.Instance.ToString());
 
             status = this->ReadProperty(objectId.Ulong, newProperty, nullptr);
             if (status != ERROR_SUCCESS)

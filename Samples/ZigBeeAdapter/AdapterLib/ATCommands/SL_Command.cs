@@ -21,6 +21,9 @@ using System.Threading.Tasks;
 
 namespace AdapterLib
 {
+    /// <summary>
+    /// Read the low 32 bits of the module's unique 64-bit address.
+    /// </summary>
     class SL_Command : XBeeATCommand
     {
         private byte[] m_macAddressLowerPart = new byte[AdapterHelper.MAC_ADDR_LENGTH / 2];

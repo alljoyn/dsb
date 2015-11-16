@@ -165,9 +165,9 @@ namespace AdapterLib
         uint32 CreateSignals();
         BridgeRT::IAdapterSignal^ GetSignal(Platform::String^ name);
         void StartDeviceDiscovery();
-        void AddDevice(const uint8 nodeId, bool bPending);
-        void RemoveDevice(const uint8 nodeId, bool bMoveToPending = false);
-        void RemoveAllDevices();
+        void AddDevice(const uint32 homeId, const uint8 nodeId, bool bPending);
+        void RemoveDevice(const uint32 homeId, const uint8 nodeId, bool bMoveToPending = false);
+        void RemoveAllDevices(uint32 homeId);
 
     private:
 
@@ -232,7 +232,6 @@ namespace AdapterLib
         std::multimap<int, SIGNAL_LISTENER_ENTRY> m_signalListeners;
 
         OpenZWave::Manager *m_pMgr;
-        uint32 m_homeId;
         Windows::System::Threading::ThreadPoolTimer^ m_MonitorTimer{ nullptr };
         Windows::System::Threading::ThreadPoolTimer^ m_DiscoveryTimer{ nullptr };
 
