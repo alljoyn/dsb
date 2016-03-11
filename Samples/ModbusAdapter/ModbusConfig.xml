@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModbusConfig>
+  <Settings>
+    <Gateway>
+       <IP>192.168.1.107</IP>
+    </Gateway>
+  </Settings>
+    <AdapterDevices>
+    </AdapterDevices>
+</ModbusConfig>
